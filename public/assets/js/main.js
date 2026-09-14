@@ -46,15 +46,16 @@
   function getPreferredTheme(storageAvailable) {
     var savedTheme = storageAvailable ? window.localStorage.getItem(themeStorageKey) : "";
 
-    if (savedTheme === "dark" || savedTheme === "light") {
+    if (savedTheme === "light" || savedTheme === "dark") {
       return savedTheme;
-    }
+      }
 
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
+      return "light";
+      }
+
       return "dark";
-    }
 
-    return "light";
   }
 
   onReady(function () {
@@ -105,9 +106,9 @@
     }
 
     function updateThemeControls(theme) {
-      var nextTheme = theme === "dark" ? "light" : "dark";
+      var nextTheme = theme === "light" ? "dark" : "light";
       var label = "Switch to " + nextTheme + " mode";
-      var iconClass = theme === "dark" ? "bi bi-sun" : "bi bi-moon-stars";
+      var iconClass = theme === "light" ? "bi bi-sun" : "bi bi-moon-stars";
 
       Array.prototype.forEach.call(themeToggles, function (button) {
         button.setAttribute("aria-label", label);
@@ -135,8 +136,8 @@
 
       Array.prototype.forEach.call(themeToggles, function (button) {
         button.addEventListener("click", function () {
-          var currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-          applyTheme(currentTheme === "dark" ? "light" : "dark");
+          var currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+          applyTheme(currentTheme === "light" ? "dark" : "light");
         });
       });
     }

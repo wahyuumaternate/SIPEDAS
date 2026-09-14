@@ -12,6 +12,19 @@
     <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('logo_kota.png') }}">
+
+    <style>
+        /* Honeypot: sembunyikan dari manusia (bukan display:none agar tetap "terisi" oleh bot form-filler,
+           tapi tetap tidak terlihat & tidak terjangkau oleh pengguna asli / screen reader). */
+        .hp-field {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+    </style>
 </head>
 
 <body class="auth-body">
@@ -57,7 +70,6 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between">
                         <label class="form-label" for="loginPassword">Kata Sandi</label>
-
                     </div>
                     <div class="input-group has-validation">
                         <input class="form-control @error('password') is-invalid @enderror" id="loginPassword"
@@ -74,8 +86,27 @@
                     </div>
                 </div>
 
+                {{-- Honeypot: harus selalu kosong. Bot biasanya otomatis mengisi semua field. --}}
+                <div class="hp-field" aria-hidden="true">
+                    <label for="website">Website</label>
+                    <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                </div>
 
+                {{-- Timestamp render form, dipakai untuk deteksi submit terlalu cepat (bot). --}}
+                <input type="hidden" name="form_rendered_at" value="{{ time() }}">
 
+                {{-- hCaptcha (buzz/laravel-h-captcha) --}}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-center">
+                        {!! app('captcha')->display([], ['data-theme' => 'dark']) !!}
+                    </div>
+
+                    @error('h-captcha-response')
+                        <div class="text-danger small mt-1 text-center">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
                 <button class="btn btn-primary w-100" type="submit"><i class="bi bi-box-arrow-in-right"
                         aria-hidden="true"></i> Masuk</button>
             </form>
@@ -88,6 +119,7 @@
 
     <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/js/main.js') }}"></script>
+    {{-- {!! app('captcha')->renderJs() !!} --}}
     <script>
         (function() {
             const toggleBtn = document.getElementById('togglePassword');
