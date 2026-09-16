@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -45,7 +46,7 @@ class LoginRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * @return array<string, Rule|array|string>
      */
     public function rules(): array
     {
@@ -62,7 +63,9 @@ class LoginRequest extends FormRequest
             // bcrypt sendiri hanya memproses 72 byte pertama.
             'password' => ['required', 'string', 'max:255'],
 
-            'h-captcha-response' => ['required', 'captcha'],
+            // Captcha dilewati di environment local supaya development tidak
+            // perlu setup hCaptcha; tetap wajib di environment lain (staging/production).
+            'h-captcha-response' => [app()->environment('local') ? 'nullable' : 'required', 'captcha'],
             // Honeypot: field ini harus SELALU kosong. Bot biasanya mengisi semua field.
             'website' => ['prohibited'],
         ];
@@ -71,7 +74,7 @@ class LoginRequest extends FormRequest
     /**
      * Attempt to authenticate the request's credentials.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function authenticate(): void
     {
@@ -99,7 +102,7 @@ class LoginRequest extends FormRequest
      * Form dianggap mencurigakan kalau diisi kurang dari 2 detik
      * sejak halaman dimuat — manusia butuh waktu lebih lama dari itu.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function ensureIsNotBot(): void
     {
@@ -121,7 +124,7 @@ class LoginRequest extends FormRequest
     /**
      * Ensure the login request is not rate limited.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function ensureIsNotRateLimited(): void
     {
@@ -137,7 +140,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     protected function throwLockoutException(string $key): void
     {

@@ -95,18 +95,20 @@
                 {{-- Timestamp render form, dipakai untuk deteksi submit terlalu cepat (bot). --}}
                 <input type="hidden" name="form_rendered_at" value="{{ time() }}">
 
-                {{-- hCaptcha (buzz/laravel-h-captcha) --}}
-                <div class="mb-3">
-                    <div class="d-flex justify-content-center">
-                        {!! app('captcha')->display([], ['data-theme' => 'dark']) !!}
-                    </div>
-
-                    @error('h-captcha-response')
-                        <div class="text-danger small mt-1 text-center">
-                            {{ $message }}
+                {{-- hCaptcha (buzz/laravel-h-captcha) — dilewati di environment local --}}
+                @unless (app()->environment('local'))
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-center">
+                            {!! app('captcha')->display([], ['data-theme' => 'dark']) !!}
                         </div>
-                    @enderror
-                </div>
+
+                        @error('h-captcha-response')
+                            <div class="text-danger small mt-1 text-center">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                @endunless
                 <button class="btn btn-primary w-100" type="submit"><i class="bi bi-box-arrow-in-right"
                         aria-hidden="true"></i> Masuk</button>
             </form>
