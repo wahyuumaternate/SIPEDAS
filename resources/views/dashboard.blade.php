@@ -297,7 +297,7 @@
                                 aria-hidden="true"></i><span>Pendataan Kemiskinan Terbaru</span></h2>
                         <p class="text-muted mb-0">Data keluarga yang baru masuk atau diperbarui.</p>
                     </div>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ url('/kemiskinan/data') }}">Lihat Semua Data</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('kemiskinan.index') }}">Lihat Semua Data</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
@@ -399,7 +399,7 @@
                                     </td>
                                     <td>{{ \Illuminate\Support\Carbon::parse($item['tanggal'])->format('d M Y') }}</td>
                                     <td class="text-end"><a class="btn btn-light btn-sm"
-                                            href="{{ url('/kemiskinan/keluarga/' . $item['id']) }}">Detail</a></td>
+                                            href="{{ route('kemiskinan.show', $item['id']) }}">Detail</a></td>
                                 </tr>
                             @empty
                                 <tr>
@@ -583,7 +583,7 @@
                                 aria-hidden="true"></i><span>Pendataan Stunting Terbaru</span></h2>
                         <p class="text-muted mb-0">Data anak yang baru masuk atau diperbarui.</p>
                     </div>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ url('/stunting/data') }}">Lihat Semua Data</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('stunting.index') }}">Lihat Semua Data</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
@@ -682,7 +682,7 @@
                                     </td>
                                     <td>{{ \Illuminate\Support\Carbon::parse($item['tanggal'])->format('d M Y') }}</td>
                                     <td class="text-end"><a class="btn btn-light btn-sm"
-                                            href="{{ url('/stunting/anak/' . $item['id']) }}">Detail</a></td>
+                                            href="{{ route('stunting.show', $item['id']) }}">Detail</a></td>
                                 </tr>
                             @empty
                                 <tr>

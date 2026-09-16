@@ -28,19 +28,19 @@
         </a>
         <div class="collapse nav-collapse-group @if (request()->is('kemiskinan*')) show @endif" id="groupKemiskinan">
             <div class="nav-submenu">
-                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/data*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/data*')) active @endif" href="{{ route('kemiskinan.index') }}"
                     @if (request()->is('kemiskinan/data*')) aria-current="page" @endif>
                     <span class="nav-text">Daftar Data</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/create*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/create*')) active @endif" href="{{ route('kemiskinan.create') }}"
                     @if (request()->is('kemiskinan/create*')) aria-current="page" @endif>
                     <span class="nav-text">Pendataan Baru</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/keluarga/*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/keluarga/*')) active @endif" href="{{ route('kemiskinan.index') }}"
                     @if (request()->is('kemiskinan/keluarga/*')) aria-current="page" @endif>
                     <span class="nav-text">Detail Keluarga</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/verifikasi*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('kemiskinan/verifikasi*')) active @endif" href="{{ route('kemiskinan.verifikasi.index') }}"
                     @if (request()->is('kemiskinan/verifikasi*')) aria-current="page" @endif>
                     <span class="nav-text">Verifikasi</span>
                 </a>
@@ -57,19 +57,19 @@
         </a>
         <div class="collapse nav-collapse-group @if (request()->is('stunting*')) show @endif" id="groupStunting">
             <div class="nav-submenu">
-                <a class="nav-link nav-sublink @if (request()->is('stunting/data*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('stunting/data*')) active @endif" href="{{ route('stunting.index') }}"
                     @if (request()->is('stunting/data*')) aria-current="page" @endif>
                     <span class="nav-text">Daftar Data</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('stunting/create*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('stunting/create*')) active @endif" href="{{ route('stunting.create') }}"
                     @if (request()->is('stunting/create*')) aria-current="page" @endif>
                     <span class="nav-text">Pendataan Baru</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('stunting/anak/*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('stunting/anak/*')) active @endif" href="{{ route('stunting.index') }}"
                     @if (request()->is('stunting/anak/*')) aria-current="page" @endif>
                     <span class="nav-text">Detail Anak</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('stunting/verifikasi*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('stunting/verifikasi*')) active @endif" href="{{ route('stunting.verifikasi.index') }}"
                     @if (request()->is('stunting/verifikasi*')) aria-current="page" @endif>
                     <span class="nav-text">Verifikasi</span>
                 </a>

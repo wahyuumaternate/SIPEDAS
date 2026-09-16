@@ -29,7 +29,7 @@ class Pengukuran extends Model
         // Usia saat pengukuran dihitung otomatis dari tanggal lahir anak (PRD Bagian 21).
         static::saving(function (self $model) {
             if ($model->anak_id && $model->tanggal_pengukuran && $model->anak?->tanggal_lahir) {
-                $model->usia_saat_pengukuran_bulan = $model->anak->tanggal_lahir
+                $model->usia_saat_pengukuran_bulan = (int) $model->anak->tanggal_lahir
                     ->diffInMonths($model->tanggal_pengukuran);
             }
         });

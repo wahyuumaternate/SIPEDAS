@@ -1,0 +1,1825 @@
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+## SISTEM PENDATAAN KEMISKINAN EKSTREM & STUNTING BAPPELITBANGDA
+
+**Versi:** 2.0
+**Status:** Draft
+**Platform:** Web Responsive
+**Wilayah:** Kota Ternate
+**Pemilik Produk:** Bappelitbangda
+**Jenis Sistem:** Sistem Pendataan
+**Dokumen:** Product Requirements Document
+
+---
+
+# 1. RINGKASAN PRODUK
+
+Sistem Pendataan Kemiskinan Ekstrem & Stunting merupakan aplikasi web responsive yang digunakan untuk mengumpulkan,
+menyimpan, memeriksa, memverifikasi, memvalidasi, mengolah, dan menyajikan data pendataan kemiskinan ekstrem dan
+stunting di wilayah Kota Ternate.
+
+Sistem berfungsi sebagai **basis data pendataan Bappelitbangda**.
+
+Sistem tidak digunakan untuk pengelolaan program, intervensi, penganggaran, maupun penyaluran bantuan.
+
+### Alur utama
+
+```text
+DATA LAPANGAN
+↓
+INPUT DATA
+↓
+VALIDASI OTOMATIS
+↓
+SUBMIT
+↓
+VERIFIKASI
+↓
+PERBAIKAN JIKA DIPERLUKAN
+↓
+VALIDASI
+↓
+DATA VALID
+↓
+DATABASE
+↓
+DASHBOARD
+↓
+LAPORAN
+↓
+BAHAN PERENCANAAN
+```
+
+---
+
+# 2. TUJUAN PRODUK
+
+## 2.1 Tujuan Utama
+
+Menyediakan sistem pendataan terpusat yang menghasilkan data:
+
+* terstruktur;
+* lengkap;
+* konsisten;
+* dapat diverifikasi;
+* dapat divalidasi;
+* mudah dicari;
+* mudah direkap;
+* dapat dikelompokkan berdasarkan wilayah;
+* terdokumentasi;
+* dapat digunakan sebagai bahan perencanaan pembangunan daerah.
+
+## 2.2 Tujuan Khusus
+
+1. Memudahkan petugas melakukan pendataan.
+2. Menyeragamkan format data.
+3. Mengurangi penggunaan formulir manual.
+4. Mengurangi potensi duplikasi data.
+5. Mempermudah proses verifikasi.
+6. Menyediakan data berdasarkan wilayah administrasi.
+7. Menghubungkan data keluarga dengan anggota keluarga.
+8. Menghubungkan data anak dengan orang tua.
+9. Menyediakan dokumentasi pendukung.
+10. Menyediakan dashboard statistik.
+11. Menghasilkan laporan otomatis.
+12. Menyediakan audit trail.
+13. Meningkatkan kualitas dan konsistensi data.
+
+---
+
+# 3. PRINSIP PRODUK
+
+Sistem harus mengikuti prinsip berikut:
+
+### 3.1 Single Identity
+
+Satu individu harus memiliki satu identitas utama berdasarkan NIK apabila NIK tersedia.
+
+### 3.2 Data Terstruktur
+
+Data harus disimpan berdasarkan entitas dan relasi yang jelas.
+
+### 3.3 Role Based Access
+
+Pengguna hanya dapat mengakses data dan fungsi sesuai role serta wilayah kewenangannya.
+
+### 3.4 Traceability
+
+Aktivitas penting pengguna harus dapat ditelusuri melalui audit log.
+
+### 3.5 Validation First
+
+Data harus melewati validasi otomatis sebelum dapat dikirim untuk proses verifikasi.
+
+### 3.6 Historical Data
+
+Data historis, khususnya pengukuran anak dan aktivitas verifikasi, tidak boleh ditimpa tanpa mekanisme pencatatan
+perubahan.
+
+### 3.7 Configurable Reference
+
+Data referensi dan parameter yang bersifat administratif harus dapat dikelola melalui Master Data.
+
+### 3.8 Separation of Scope
+
+Sistem hanya berfungsi sebagai sistem pendataan dan tidak menjadi sistem pengelolaan bantuan/intervensi.
+
+---
+
+# 4. PLATFORM
+
+Sistem dikembangkan sebagai:
+
+**Web Responsive**
+
+Sistem harus dapat digunakan melalui:
+
+* desktop;
+* laptop;
+* tablet;
+* smartphone.
+
+Tampilan harus menyesuaikan ukuran layar perangkat.
+
+Sistem **tidak menggunakan PWA**.
+
+Sistem tidak memiliki requirement:
+
+* instalasi aplikasi PWA;
+* service worker;
+* offline application;
+* offline synchronization;
+* web app manifest.
+
+---
+
+# 5. RUANG LINGKUP
+
+## 5.1 Pendataan Kemiskinan Ekstrem
+
+Meliputi:
+
+* identitas keluarga;
+* anggota keluarga;
+* alamat;
+* kondisi ekonomi;
+* kondisi rumah;
+* kepemilikan aset;
+* kondisi sosial;
+* akses layanan dasar;
+* kepesertaan program/bantuan sebagai informasi pendataan;
+* dokumentasi;
+* validasi;
+* verifikasi;
+* laporan;
+* dashboard.
+
+## 5.2 Pendataan Stunting
+
+Meliputi:
+
+* identitas anak;
+* identitas orang tua;
+* hubungan anak dengan keluarga;
+* riwayat kehamilan;
+* riwayat kelahiran;
+* pengukuran antropometri;
+* riwayat kesehatan;
+* ASI dan MPASI;
+* sanitasi dan lingkungan;
+* dokumentasi;
+* validasi;
+* verifikasi;
+* laporan;
+* dashboard.
+
+---
+
+# 6. DI LUAR RUANG LINGKUP
+
+Sistem tidak mencakup:
+
+* pengajuan bantuan;
+* persetujuan bantuan;
+* pencairan bantuan;
+* penyaluran bantuan;
+* monitoring bantuan;
+* pengelolaan intervensi;
+* penganggaran;
+* transaksi keuangan;
+* GPS tracking;
+* peta/GIS;
+* sistem pelayanan kesehatan;
+* sistem kependudukan;
+* penentuan penerima bantuan secara otomatis.
+
+---
+
+# 7. PENGGUNA SISTEM
+
+| Role | Scope |
+| -------------------- | --------------------------------------------- |
+| Super Admin | Seluruh sistem |
+| Admin Bappelitbangda | Seluruh data dan proses validasi |
+| Admin Kecamatan | Data kecamatan dan desa/kelurahan di bawahnya |
+| Admin Desa/Kelurahan | Data desa/kelurahan |
+| Petugas Pendata | Data yang ditugaskan kepadanya |
+| Viewer/Pimpinan | Dashboard, rekapitulasi, dan laporan |
+
+---
+
+# 8. HAK AKSES
+
+## 8.1 Super Admin
+
+Dapat:
+
+* mengelola pengguna;
+* mengelola role;
+* mengelola wilayah;
+* mengelola referensi;
+* mengelola parameter;
+* melihat seluruh data;
+* mengelola konfigurasi;
+* melihat audit log;
+* mengelola status akun.
+
+## 8.2 Admin Bappelitbangda
+
+Dapat:
+
+* melihat seluruh data;
+* melakukan pemeriksaan;
+* melakukan verifikasi;
+* melakukan validasi;
+* melihat dashboard;
+* membuat laporan;
+* melakukan monitoring kualitas data;
+* melihat audit log sesuai kewenangan.
+
+## 8.3 Admin Kecamatan
+
+Dapat:
+
+* melihat data kecamatannya;
+* melihat data desa/kelurahan di kecamatannya;
+* melakukan pemeriksaan;
+* melakukan verifikasi sesuai kewenangan;
+* mengembalikan data untuk perbaikan.
+
+## 8.4 Admin Desa/Kelurahan
+
+Dapat:
+
+* melihat data desa/kelurahan;
+* memeriksa data;
+* melakukan verifikasi awal;
+* mengembalikan data untuk perbaikan.
+
+## 8.5 Petugas Pendata
+
+Dapat:
+
+* membuat data;
+* mengisi formulir;
+* menyimpan draft;
+* mengunggah dokumentasi;
+* melakukan review;
+* mengirim data untuk verifikasi;
+* memperbaiki data yang dikembalikan.
+
+## 8.6 Viewer/Pimpinan
+
+Dapat:
+
+* melihat dashboard;
+* melihat rekapitulasi;
+* melihat laporan;
+* menggunakan filter;
+* melakukan export sesuai hak akses.
+
+Tidak dapat:
+
+* membuat data;
+* mengubah data;
+* menghapus data;
+* melakukan verifikasi.
+
+---
+
+# 9. KONSEP WILAYAH DAN SCOPE AKSES
+
+Sistem menggunakan struktur:
+
+```text
+KOTA TERNATE
+│
+├── KECAMATAN
+│ │
+│ ├── KELURAHAN/DESA
+│ │
+│ └── KELURAHAN/DESA
+│
+└── KECAMATAN
+```
+
+Setiap user dapat memiliki wilayah kerja.
+
+Contoh:
+
+```text
+User
+↓
+Role
+↓
+Wilayah Akses
+```
+
+### Aturan
+
+* Super Admin → seluruh wilayah.
+* Bappelitbangda → seluruh wilayah.
+* Kecamatan → kecamatan dan wilayah bawahannya.
+* Desa/Kelurahan → hanya wilayahnya.
+* Petugas → wilayah yang ditugaskan.
+* Viewer → sesuai scope yang diberikan.
+
+User tidak boleh melihat data di luar scope wilayahnya kecuali memiliki permission khusus.
+
+---
+
+# 10. STRUKTUR MENU
+
+```text
+DASHBOARD
+
+├── PENDATAAN KEMISKINAN EKSTREM
+│ ├── Daftar Data
+│ ├── Pendataan Baru
+│ ├── Detail Keluarga
+│ └── Verifikasi
+│
+├── PENDATAAN STUNTING
+│ ├── Daftar Data
+│ ├── Pendataan Baru
+│ ├── Detail Anak
+│ └── Verifikasi
+│
+├── VERIFIKASI & VALIDASI
+│
+├── LAPORAN
+│
+├── MASTER DATA
+│ ├── Wilayah
+│ ├── Petugas
+│ ├── Referensi
+│ └── Parameter
+│
+└── ADMINISTRASI
+├── Pengguna
+├── Role & Permission
+└── Audit Log
+```
+
+Menu Peta Data tidak digunakan.
+
+---
+
+# 11. DASHBOARD
+
+Dashboard hanya menampilkan hasil pendataan.
+
+Dashboard harus menyediakan filter:
+
+* kecamatan;
+* desa/kelurahan;
+* periode;
+* status data;
+* status verifikasi.
+
+---
+
+# 12. DASHBOARD KEMISKINAN EKSTREM
+
+## 12.1 Statistik Utama
+
+* total keluarga;
+* total anggota keluarga;
+* data draft;
+* data dikirim;
+* data dalam verifikasi;
+* data perlu perbaikan;
+* data valid;
+* data tidak valid;
+* data duplikat.
+
+## 12.2 Grafik
+
+* keluarga berdasarkan kecamatan;
+* keluarga berdasarkan desa/kelurahan;
+* distribusi jumlah anggota;
+* distribusi pekerjaan;
+* distribusi pendapatan;
+* kondisi rumah;
+* akses air;
+* akses sanitasi;
+* kepemilikan aset;
+* kondisi sosial;
+* kepesertaan program/bantuan.
+
+---
+
+# 13. DASHBOARD STUNTING
+
+## 13.1 Statistik Utama
+
+* total anak;
+* anak dengan pengukuran;
+* anak tanpa pengukuran;
+* data draft;
+* data dikirim;
+* data dalam verifikasi;
+* data perlu perbaikan;
+* data valid;
+* data tidak valid;
+* data duplikat.
+
+## 13.2 Grafik
+
+* anak berdasarkan kecamatan;
+* anak berdasarkan desa/kelurahan;
+* jenis kelamin;
+* kelompok usia;
+* hasil pengukuran;
+* riwayat kesehatan;
+* ASI/MPASI;
+* sanitasi;
+* riwayat kelahiran.
+
+---
+
+# 14. MODUL PENDATAAN KEMISKINAN
+
+## 14.1 Identitas Keluarga
+
+| Field | Tipe | Wajib |
+| -------------------- | -------- | ----- |
+| Nomor KK | Text | Ya |
+| NIK Kepala Keluarga | Text | Ya |
+| Nama Kepala Keluarga | Text | Ya |
+| Nomor HP | Text | Tidak |
+| Jumlah Anggota | Number | Ya |
+| Status Perkawinan | Dropdown | Ya |
+| Alamat | Textarea | Ya |
+| RT | Text | Ya |
+| RW | Text | Ya |
+| Kecamatan | Dropdown | Ya |
+| Desa/Kelurahan | Dropdown | Ya |
+
+Sistem otomatis menghasilkan:
+
+* ID pendataan;
+* tanggal input;
+* user pembuat;
+* status data.
+
+---
+
+# 15. ANGGOTA KELUARGA
+
+Satu keluarga dapat mempunyai banyak anggota.
+
+Field:
+
+* NIK;
+* nama lengkap;
+* jenis kelamin;
+* tempat lahir;
+* tanggal lahir;
+* usia;
+* hubungan dengan kepala keluarga;
+* status perkawinan;
+* pendidikan terakhir;
+* status pekerjaan;
+* disabilitas;
+* penyakit kronis.
+
+Usia dihitung otomatis berdasarkan tanggal lahir.
+
+### Aturan
+
+NIK digunakan untuk mendeteksi kemungkinan identitas yang sama.
+
+Sistem harus memberikan peringatan jika NIK telah terdaftar pada data lain.
+
+---
+
+# 16. KONDISI EKONOMI
+
+## Pekerjaan
+
+* status pekerjaan kepala keluarga;
+* pekerjaan utama;
+* pekerjaan tambahan;
+* jumlah anggota bekerja;
+* jumlah anggota tidak bekerja.
+
+## Pendapatan
+
+* pendapatan kepala keluarga;
+* pendapatan pasangan;
+* pendapatan anggota lain;
+* total pendapatan keluarga.
+
+## Pengeluaran
+
+* makanan;
+* pendidikan;
+* kesehatan;
+* listrik;
+* air;
+* transportasi;
+* pengeluaran lainnya;
+* total pengeluaran.
+
+Total pendapatan dan pengeluaran dihitung otomatis.
+
+---
+
+# 17. KONDISI RUMAH
+
+## Kepemilikan
+
+* milik sendiri;
+* sewa;
+* menumpang;
+* rumah dinas;
+* lainnya.
+
+## Kondisi Bangunan
+
+* permanen;
+* semi permanen;
+* tidak layak huni.
+
+## Material
+
+* jenis atap;
+* jenis dinding;
+* jenis lantai.
+
+## Fasilitas
+
+* sumber listrik;
+* sumber air;
+* jamban;
+* septic tank;
+* drainase;
+* pengelolaan sampah.
+
+## Kondisi Fisik
+
+* luas tanah;
+* luas bangunan;
+* jumlah kamar;
+* jumlah penghuni.
+
+---
+
+# 18. KEPEMILIKAN ASET
+
+Jenis aset:
+
+* rumah;
+* tanah;
+* sawah;
+* kebun;
+* sepeda motor;
+* mobil;
+* ternak;
+* usaha;
+* peralatan usaha;
+* tabungan;
+* aset lainnya.
+
+Field:
+
+* jenis aset;
+* jumlah;
+* status kepemilikan;
+* perkiraan nilai;
+* keterangan.
+
+Satu keluarga dapat memiliki banyak record aset.
+
+---
+
+# 19. KONDISI SOSIAL & LAYANAN DASAR
+
+Data:
+
+* jumlah anak usia sekolah;
+* jumlah anak bersekolah;
+* jumlah anak putus sekolah;
+* jumlah lansia;
+* jumlah penyandang disabilitas;
+* jumlah anggota keluarga sakit;
+* akses fasilitas kesehatan;
+* jarak fasilitas kesehatan;
+* akses pendidikan;
+* jarak sekolah;
+* kepemilikan dokumen kependudukan.
+
+---
+
+# 20. KEPESERTAAN PROGRAM/ BANTUAN
+
+Modul hanya digunakan sebagai **informasi pendataan status kepesertaan**.
+
+Contoh:
+
+* PKH;
+* Sembako;
+* PBI JKN;
+* BLT;
+* bantuan daerah;
+* bantuan desa;
+* bantuan pendidikan;
+* program lainnya.
+
+Field:
+
+* nama program;
+* status penerima;
+* tahun menerima;
+* sumber/instansi;
+* keterangan.
+
+Tidak terdapat fungsi:
+
+* pengajuan;
+* persetujuan;
+* pencairan;
+* penyaluran;
+* monitoring bantuan.
+
+---
+
+# 21. DOKUMENTASI KELUARGA
+
+Jenis dokumentasi:
+
+* foto rumah;
+* foto kondisi lingkungan;
+* foto dokumen pendukung;
+* foto lainnya.
+
+Metadata:
+
+* nama file;
+* jenis dokumentasi;
+* tanggal upload;
+* user pengunggah;
+* keterangan.
+
+Tidak menyimpan koordinat GPS.
+
+### Aturan File
+
+Sistem harus:
+
+* memvalidasi ekstensi;
+* memvalidasi MIME type;
+* membatasi ukuran file;
+* membatasi jumlah file;
+* menyimpan metadata;
+* menghubungkan file dengan record pendataan;
+* mencatat aktivitas upload/delete pada audit log.
+
+---
+
+# 22. MODUL PENDATAAN STUNTING
+
+# 22.1 Identitas Anak
+
+| Field | Tipe | Wajib |
+| ------------------ | -------- | ----- |
+| NIK Anak | Text | Ya |
+| Nomor KK | Text | Ya |
+| Nama Anak | Text | Ya |
+| Jenis Kelamin | Dropdown | Ya |
+| Tempat Lahir | Text | Ya |
+| Tanggal Lahir | Date | Ya |
+| Nama Ayah | Text | Ya |
+| Nama Ibu | Text | Ya |
+| Nomor HP Orang Tua | Text | Tidak |
+| Alamat | Textarea | Ya |
+| Kecamatan | Dropdown | Ya |
+| Desa/Kelurahan | Dropdown | Ya |
+
+Usia dihitung otomatis.
+
+---
+
+# 23. RELASI KELUARGA ↔ ANGGOTA ↔ ANAK/ORANG TUA
+
+## 23.1 Struktur
+
+```text
+KELUARGA
+│
+├── 1 : N
+│
+▼
+ANGGOTA KELUARGA
+│
+├── Ayah
+├── Ibu
+├── Anak
+└── Anggota lainnya
+```
+
+Data anak pada modul stunting dapat terhubung dengan:
+
+```text
+KELUARGA
+↓
+ANGGOTA KELUARGA
+↓
+ANAK
+```
+
+## 23.2 Relasi Anak
+
+Field yang direkomendasikan:
+
+* `anggota_keluarga_id`;
+* `ayah_anggota_id`;
+* `ibu_anggota_id`.
+
+Jika ayah/ibu sudah tersedia sebagai anggota keluarga, sistem harus menggunakan referensi tersebut daripada membuat
+identitas baru.
+
+## 23.3 Jika Orang Tua Belum Terdaftar
+
+Sistem dapat menyimpan data orang tua sementara pada entitas `orang_tua`.
+
+Jika kemudian identitas tersebut ditemukan dalam `anggota_keluarga`, sistem dapat menghubungkannya.
+
+## 23.4 Aturan Identitas
+
+NIK digunakan sebagai identifier utama individu apabila tersedia.
+
+Sistem harus:
+
+* memeriksa format NIK;
+* mendeteksi NIK duplikat;
+* memberikan peringatan;
+* tidak menghapus otomatis record yang dianggap duplikat.
+
+## 23.5 Relasi
+
+```text
+1 keluarga
+↓
+N anggota keluarga
+
+1 anggota keluarga
+↓
+dapat menjadi 1 anak
+
+1 anak
+↓
+dapat memiliki 1 ayah
+↓
+dapat memiliki 1 ibu
+
+1 anak
+↓
+N pengukuran
+```
+
+---
+
+# 24. DATA ORANG TUA
+
+## Ayah
+
+* NIK;
+* nama;
+* tanggal lahir;
+* pendidikan;
+* pekerjaan;
+* penghasilan.
+
+## Ibu
+
+* NIK;
+* nama;
+* tanggal lahir;
+* pendidikan;
+* pekerjaan;
+* penghasilan.
+
+Jika orang tua telah ada pada `anggota_keluarga`, data harus menggunakan referensi identitas tersebut.
+
+---
+
+# 25. RIWAYAT KEHAMILAN
+
+Data:
+
+* usia ibu saat hamil;
+* kehamilan ke;
+* jumlah kehamilan;
+* pemeriksaan kehamilan;
+* tempat pemeriksaan;
+* kondisi kehamilan;
+* risiko kehamilan;
+* konsumsi tablet tambah darah;
+* status KEK;
+* LILA;
+* komplikasi kehamilan.
+
+---
+
+# 26. RIWAYAT KELAHIRAN
+
+Data:
+
+* tanggal lahir;
+* tempat lahir;
+* penolong persalinan;
+* cara persalinan;
+* berat badan lahir;
+* panjang badan lahir;
+* status prematur;
+* status BBLR;
+* IMD;
+* kondisi bayi saat lahir.
+
+---
+
+# 27. PENGUKURAN ANAK
+
+Satu anak dapat memiliki banyak record pengukuran.
+
+## Input
+
+* tanggal pengukuran;
+* berat badan;
+* panjang/tinggi badan;
+* lingkar kepala;
+* lingkar lengan atas;
+* petugas pengukur;
+* tempat pengukuran.
+
+## Otomatis
+
+Sistem menghitung:
+
+* usia saat pengukuran;
+* indikator antropometri yang relevan;
+* hasil/kategori sesuai standar yang dikonfigurasi.
+
+Data pengukuran lama tidak ditimpa ketika pengukuran baru dimasukkan.
+
+### Aturan Historis
+
+Setiap pengukuran merupakan record tersendiri.
+
+Contoh:
+
+```text
+Anak A
+
+Pengukuran 01
+10 Januari
+
+Pengukuran 02
+10 Februari
+
+Pengukuran 03
+10 Maret
+```
+
+Ketiga pengukuran harus tetap tersimpan.
+
+---
+
+# 28. STANDAR ANTROPOMETRI
+
+Sistem harus menggunakan standar antropometri yang ditetapkan atau diadopsi oleh instansi terkait.
+
+Standar harus dapat dikonfigurasi.
+
+Sistem harus menyimpan:
+
+* nama standar;
+* versi standar;
+* tanggal mulai berlaku;
+* parameter;
+* status aktif/nonaktif.
+
+Hasil perhitungan historis harus menyimpan referensi versi standar yang digunakan.
+
+Perubahan standar tidak boleh secara otomatis mengubah hasil historis tanpa proses yang ditentukan.
+
+---
+
+# 29. RIWAYAT KESEHATAN ANAK
+
+Data:
+
+* status imunisasi;
+* imunisasi terakhir;
+* riwayat penyakit;
+* riwayat diare;
+* riwayat ISPA;
+* penyakit kronis;
+* penyakit bawaan;
+* riwayat rawat inap;
+* akses pelayanan kesehatan.
+
+---
+
+# 30. ASI & MPASI
+
+## ASI
+
+* IMD;
+* ASI eksklusif;
+* lama pemberian ASI;
+* kendala pemberian ASI.
+
+## MPASI
+
+* usia mulai MPASI;
+* frekuensi makan;
+* jenis makanan;
+* sumber protein;
+* konsumsi sayur;
+* konsumsi buah;
+* keragaman makanan.
+
+---
+
+# 31. SANITASI & LINGKUNGAN
+
+Data:
+
+* sumber air minum;
+* sumber air memasak;
+* kepemilikan jamban;
+* jenis jamban;
+* septic tank;
+* saluran pembuangan;
+* pengelolaan sampah;
+* kondisi rumah;
+* kepadatan hunian.
+
+---
+
+# 32. DOKUMENTASI ANAK
+
+Jenis:
+
+* dokumentasi anak;
+* dokumen pendukung;
+* dokumentasi pengukuran;
+* dokumentasi lainnya.
+
+Metadata:
+
+* nama file;
+* jenis;
+* tanggal upload;
+* user;
+* keterangan.
+
+Tidak menggunakan GPS.
+
+---
+
+# 33. VALIDASI OTOMATIS
+
+## 33.1 Validasi Identitas
+
+Sistem melakukan:
+
+* validasi NIK 16 digit;
+* validasi KK 16 digit;
+* field wajib;
+* format tanggal;
+* format nomor telepon.
+
+## 33.2 Validasi Konsistensi
+
+Contoh:
+
+* tanggal lahir tidak boleh lebih besar dari tanggal pendataan;
+* tanggal pengukuran tidak boleh sebelum tanggal lahir;
+* usia dihitung otomatis;
+* jumlah anggota harus sesuai jumlah record anggota;
+* total pendapatan sesuai sumber pendapatan;
+* total pengeluaran sesuai rincian pengeluaran;
+* tanggal kelahiran konsisten dengan tanggal lahir anak;
+* jenis kelamin konsisten dengan data identitas.
+
+## 33.3 Validasi Duplikasi
+
+Sistem mendeteksi:
+
+* NIK sama;
+* KK sama;
+* kombinasi identitas sama;
+* anak yang sama;
+* keluarga yang sama.
+
+Sistem tidak boleh menghapus data otomatis hanya karena terindikasi duplikat.
+
+---
+
+# 34. STATUS DATA
+
+Status data:
+
+```text
+DRAFT
+↓
+DIKIRIM
+↓
+DALAM VERIFIKASI
+├──→ VALID
+├──→ PERLU PERBAIKAN
+├──→ TIDAK VALID
+└──→ DUPLIKAT
+```
+
+Jika diperbaiki:
+
+```text
+PERLU PERBAIKAN
+↓
+DIPERBAIKI
+↓
+DIKIRIM KEMBALI
+↓
+DALAM VERIFIKASI
+```
+
+---
+
+# 35. ATURAN TRANSISI STATUS
+
+| Status | Aksi | Aktor |
+| ---------------- | ---------------- | ----------- |
+| Draft | Edit | Petugas |
+| Draft | Submit | Petugas |
+| Dikirim | Mulai verifikasi | Verifikator |
+| Dalam Verifikasi | Valid | Verifikator |
+| Dalam Verifikasi | Perlu Perbaikan | Verifikator |
+| Dalam Verifikasi | Tidak Valid | Verifikator |
+| Dalam Verifikasi | Duplikat | Verifikator |
+| Perlu Perbaikan | Edit | Petugas |
+| Perlu Perbaikan | Kirim kembali | Petugas |
+
+### Data VALID
+
+Data VALID tidak dapat diedit oleh petugas.
+
+Perubahan terhadap data VALID hanya dapat dilakukan oleh role yang memiliki permission khusus dan harus tercatat di
+audit log.
+
+---
+
+# 36. VERIFIKASI
+
+Verifikator dapat melihat:
+
+* identitas;
+* seluruh field;
+* dokumentasi;
+* hasil validasi otomatis;
+* riwayat perubahan;
+* status duplikasi.
+
+Verifikator dapat memberikan:
+
+* VALID;
+* PERLU PERBAIKAN;
+* TIDAK VALID;
+* DUPLIKAT.
+
+Jika memilih `PERLU PERBAIKAN`, verifikator wajib memberikan catatan.
+
+---
+
+# 37. CATATAN VERIFIKASI
+
+Setiap proses verifikasi dapat memiliki:
+
+* user;
+* tanggal;
+* status;
+* catatan;
+* field yang perlu diperbaiki.
+
+Contoh:
+
+```text
+Status:
+PERLU PERBAIKAN
+
+Catatan:
+"Nomor KK tidak sesuai dengan dokumen pendukung."
+```
+
+Riwayat verifikasi tidak boleh dihapus.
+
+---
+
+# 38. PENCARIAN
+
+## Kemiskinan
+
+Pencarian berdasarkan:
+
+* NIK;
+* nomor KK;
+* nama kepala keluarga;
+* kecamatan;
+* desa/kelurahan;
+* status data;
+* status verifikasi;
+* petugas;
+* periode.
+
+## Stunting
+
+Pencarian berdasarkan:
+
+* NIK anak;
+* nomor KK;
+* nama anak;
+* jenis kelamin;
+* usia;
+* kecamatan;
+* desa/kelurahan;
+* status data;
+* status verifikasi;
+* periode.
+
+---
+
+# 39. FILTER
+
+Filter dapat dikombinasikan.
+
+Contoh:
+
+```text
+Kecamatan = Ternate Selatan
++
+Kelurahan = Bastiong
++
+Status = VALID
++
+Periode = Januari–Maret
+```
+
+Hasil filter harus konsisten antara:
+
+* tabel;
+* dashboard;
+* laporan;
+* export.
+
+---
+
+# 40. LAPORAN
+
+## 40.1 Kemiskinan
+
+* rekap keluarga;
+* rekap anggota;
+* kondisi ekonomi;
+* kondisi rumah;
+* kepemilikan aset;
+* kondisi sosial;
+* layanan dasar;
+* kepesertaan program;
+* rekap kecamatan;
+* rekap desa/kelurahan;
+* status validasi.
+
+## 40.2 Stunting
+
+* rekap anak;
+* usia;
+* jenis kelamin;
+* pengukuran;
+* kesehatan;
+* ASI/MPASI;
+* sanitasi;
+* riwayat kelahiran;
+* kecamatan;
+* desa/kelurahan;
+* status validasi.
+
+---
+
+# 41. EXPORT
+
+Format:
+
+* Excel;
+* CSV;
+* PDF.
+
+Export harus mengikuti:
+
+* permission user;
+* scope wilayah;
+* filter aktif.
+
+User tidak boleh melakukan export data di luar wilayah kewenangannya.
+
+---
+
+# 42. MASTER DATA
+
+## 42.1 Wilayah
+
+* kota;
+* kecamatan;
+* desa/kelurahan;
+* kode wilayah.
+
+## 42.2 Referensi
+
+Contoh:
+
+* jenis kelamin;
+* pendidikan;
+* pekerjaan;
+* status perkawinan;
+* jenis rumah;
+* jenis atap;
+* jenis dinding;
+* jenis lantai;
+* sumber air;
+* jenis jamban;
+* jenis aset;
+* jenis bantuan;
+* penyakit;
+* jenis persalinan;
+* dan referensi lainnya.
+
+## 42.3 Parameter
+
+Parameter digunakan untuk nilai yang dapat dikonfigurasi.
+
+Contoh:
+
+* batas usia;
+* batas ukuran file;
+* standar antropometri;
+* parameter validasi;
+* konfigurasi laporan.
+
+---
+
+# 43. MANAJEMEN PENGGUNA
+
+Admin berwenang dapat:
+
+* membuat user;
+* mengubah user;
+* menonaktifkan user;
+* mengaktifkan user;
+* reset password;
+* menetapkan role;
+* menetapkan wilayah;
+* melihat status user.
+
+Status:
+
+* aktif;
+* tidak aktif.
+
+User tidak aktif tidak dapat login.
+
+---
+
+# 44. ROLE & PERMISSION
+
+Permission harus dapat dibedakan antara:
+
+* view;
+* create;
+* edit;
+* delete;
+* submit;
+* verify;
+* validate;
+* export;
+* manage master;
+* manage user.
+
+Contoh:
+
+```text
+PETUGAS
+view
+create
+edit
+submit
+
+VERIFIKATOR
+view
+verify
+validate
+
+VIEWER
+view
+export
+```
+
+---
+
+# 45. ATURAN PENGHAPUSAN DATA
+
+Data yang sudah masuk proses verifikasi tidak boleh dihapus secara permanen oleh petugas.
+
+Jika penghapusan diperlukan:
+
+* harus memiliki permission;
+* harus tercatat dalam audit log;
+* harus mencatat alasan;
+* tidak boleh menghilangkan histori penting.
+
+Soft delete direkomendasikan untuk record utama.
+
+---
+
+# 46. AUDIT LOG
+
+Sistem harus mencatat aktivitas penting.
+
+Minimal:
+
+* user;
+* tanggal/waktu;
+* action;
+* module;
+* record ID;
+* status sebelum;
+* status sesudah;
+* informasi perubahan;
+* IP address;
+* session/device identifier jika tersedia.
+
+Contoh:
+
+```text
+User: Admin Kecamatan
+Action: VERIFY
+Record: Keluarga #12345
+Before: DALAM VERIFIKASI
+After: PERLU PERBAIKAN
+Time: 16-09-2026 10:32
+```
+
+Audit log tidak dapat diubah oleh user biasa.
+
+---
+
+# 47. KEAMANAN DATA
+
+Minimal harus tersedia:
+
+* HTTPS;
+* password hashing;
+* role-based access;
+* permission-based access;
+* pembatasan wilayah;
+* session timeout;
+* audit log;
+* backup database;
+* validasi file;
+* pembatasan export;
+* pencatatan aktivitas;
+* proteksi terhadap akses tidak sah;
+* proteksi terhadap SQL injection;
+* proteksi terhadap XSS;
+* proteksi terhadap CSRF;
+* rate limiting untuk endpoint sensitif.
+
+---
+
+# 48. PASSWORD & SESSION
+
+Password harus:
+
+* tidak disimpan dalam bentuk plaintext;
+* menggunakan password hashing yang aman;
+* memiliki kebijakan minimum password.
+
+Session harus:
+
+* memiliki timeout;
+* dapat invalid setelah logout;
+* tidak dapat digunakan kembali setelah session invalid.
+
+---
+
+# 49. PERLINDUNGAN DATA PRIBADI
+
+Karena sistem menyimpan data pribadi, kesehatan, sosial, dan ekonomi, sistem harus menerapkan prinsip:
+
+* akses berdasarkan kebutuhan;
+* pembatasan data;
+* pencatatan aktivitas;
+* perlindungan kredensial;
+* pengamanan penyimpanan;
+* pembatasan export;
+* backup;
+* pemulihan data.
+
+Data tidak boleh ditampilkan kepada pengguna yang tidak memiliki kewenangan.
+
+---
+
+# 50. DATABASE
+
+## 50.1 Kemiskinan
+
+```text
+keluarga
+anggota_keluarga
+kondisi_ekonomi
+kondisi_rumah
+aset_keluarga
+kondisi_sosial
+kepesertaan_program
+dokumen_keluarga
+verifikasi_kemiskinan
+```
+
+## 50.2 Stunting
+
+```text
+anak
+orang_tua
+riwayat_kehamilan
+riwayat_kelahiran
+pengukuran
+riwayat_kesehatan
+asi_mpasi
+sanitasi
+dokumen_anak
+verifikasi_stunting
+```
+
+## 50.3 Sistem
+
+```text
+users
+roles
+permissions
+user_roles
+user_wilayah
+wilayah
+referensi
+parameter
+audit_logs
+```
+
+---
+
+# 51. RELASI DATABASE UTAMA
+
+```text
+KELUARGA
+│
+├──< ANGGOTA_KELUARGA │ ├──< KONDISI_EKONOMI │ ├──< KONDISI_RUMAH │ ├──< ASET_KELUARGA │ ├──< KONDISI_SOSIAL │ ├──<
+    KEPESERTAAN_PROGRAM │ └──< DOKUMEN_KELUARGA ANGGOTA_KELUARGA │ └──> ANAK
+    │
+    ├──< PENGUKURAN ├──< RIWAYAT_KESEHATAN ├──< DOKUMEN_ANAK │ ├── RIWAYAT_KEHAMILAN ├── RIWAYAT_KELAHIRAN ├── ASI_MPASI
+        └── SANITASI ``` --- # 52. INTEGRITAS DATABASE Database harus menggunakan: * primary key; * foreign key; *
+        unique constraint; * index; * not null sesuai kebutuhan; * check constraint jika diperlukan. Field audit
+        minimal: ```text created_at updated_at created_by updated_by ``` Record yang membutuhkan histori dapat
+        menggunakan: ```text deleted_at deleted_by ``` --- # 53. BUSINESS RULES ## BR-001 Setiap keluarga harus memiliki
+        Nomor KK. ## BR-002 Setiap anggota keluarga harus terhubung dengan satu keluarga aktif. ## BR-003 NIK harus
+        memiliki format 16 digit apabila tersedia. ## BR-004 NIK yang sama harus menghasilkan peringatan duplikasi. ##
+        BR-005 Anak yang sudah terdaftar sebagai anggota keluarga harus dapat direferensikan dari modul stunting. ##
+        BR-006 Orang tua yang sudah menjadi anggota keluarga harus direferensikan daripada dibuat ulang. ## BR-007 Satu
+        anak dapat memiliki banyak pengukuran. ## BR-008 Pengukuran lama tidak boleh ditimpa oleh pengukuran baru. ##
+        BR-009 Data VALID tidak dapat diedit oleh petugas. ## BR-010 Data PERLU PERBAIKAN dapat dikembalikan kepada
+        petugas. ## BR-011 Perubahan status harus tercatat dalam audit log. ## BR-012 Export mengikuti permission dan
+        scope wilayah. ## BR-013 Data yang terindikasi duplikat tidak otomatis dihapus. ## BR-014 Usia dihitung sistem
+        berdasarkan tanggal lahir. ## BR-015 Total pendapatan dihitung dari komponen pendapatan. ## BR-016 Total
+        pengeluaran dihitung dari komponen pengeluaran. ## BR-017 Tanggal pengukuran tidak boleh lebih awal dari tanggal
+        lahir. ## BR-018 Data referensi harus menggunakan master data. --- # 54. STATE MACHINE ```text ┌───────────────┐
+        │ DRAFT │ └───────┬───────┘ │ SUBMIT ▼ ┌───────────────┐ │ DIKIRIM │ └───────┬───────┘ │ ▼
+        ┌─────────────────────┐ │ DALAM VERIFIKASI │ └──────┬──────┬───────┘ │ │ VALID │ │ PERBAIKAN │ ▼ │
+        ┌──────────────┐ │ │ PERBAIKAN │ │ └──────┬───────┘ │ │ │ ▼ │ DIKIRIM KEMBALI │ │ │ ▼ │ DALAM VERIFIKASI │ ├──
+        TIDAK VALID │ └── DUPLIKAT ``` --- # 55. ALUR BISNIS KEMISKINAN ```text LOGIN ↓ Pilih Kemiskinan ↓ Identitas
+        Keluarga ↓ Anggota Keluarga ↓ Kondisi Ekonomi ↓ Kondisi Rumah ↓ Kepemilikan Aset ↓ Kondisi Sosial ↓ Kepesertaan
+        Program ↓ Dokumentasi ↓ Validasi Otomatis ↓ Review ↓ Submit ↓ Verifikasi ↓ Valid / Perbaikan / Tidak Valid /
+        Duplikat ``` --- # 56. ALUR BISNIS STUNTING ```text LOGIN ↓ Pilih Stunting ↓ Identitas Anak ↓ Hubungkan Keluarga
+        ↓ Orang Tua ↓ Riwayat Kehamilan ↓ Riwayat Kelahiran ↓ Pengukuran ↓ Riwayat Kesehatan ↓ ASI & MPASI ↓ Sanitasi ↓
+        Dokumentasi ↓ Validasi Otomatis ↓ Review ↓ Submit ↓ Verifikasi ↓ Valid / Perbaikan / Tidak Valid / Duplikat ```
+        --- # 57. ALUR PETUGAS ```text LOGIN ↓ DASHBOARD ↓ Pilih Modul ↓ Pilih / Buat Pendataan ↓ Isi Form ↓ Validasi ↓
+        Upload Dokumentasi ↓ Review ↓ Simpan Draft / Submit ``` --- # 58. ALUR VERIFIKATOR ```text LOGIN ↓ Verifikasi &
+        Validasi ↓ Daftar Data Menunggu Verifikasi ↓ Pilih Data ↓ Periksa Identitas ↓ Periksa Form ↓ Periksa Dokumentasi
+        ↓ Periksa Warning Validasi ↓ Keputusan ├── VALID ├── PERLU PERBAIKAN ├── TIDAK VALID └── DUPLIKAT ``` --- # 59.
+        NOTIFIKASI STATUS Sistem dapat memberikan notifikasi internal mengenai: * data berhasil disubmit; * data masuk
+        verifikasi; * data perlu perbaikan; * data telah valid; * data tidak valid; * data terindikasi duplikat.
+        Notifikasi harus mencantumkan: * nomor/ID data; * jenis data; * status; * waktu; * catatan jika ada. --- # 60.
+        NON-FUNCTIONAL REQUIREMENTS ## 60.1 Responsiveness Sistem harus nyaman digunakan pada: * desktop; * laptop; *
+        tablet; * smartphone. ## 60.2 Performance Halaman umum harus memberikan respons dalam waktu yang wajar pada
+        kondisi jaringan normal. Query daftar data harus menggunakan pagination. ## 60.3 Scalability Struktur sistem
+        harus memungkinkan pertambahan: * user; * keluarga; * anggota; * anak; * pengukuran; * dokumentasi. ## 60.4
+        Availability Sistem harus memiliki mekanisme monitoring dan backup untuk menjaga ketersediaan layanan. ## 60.5
+        Maintainability Kode harus modular dan mudah dipelihara. --- # 61. PAGINATION Daftar data harus menggunakan
+        pagination. Contoh: ```text 10 / 25 / 50 / 100 data per halaman ``` Pengguna dapat: * next; * previous; * first;
+        * last; * memilih halaman. --- # 62. SORTING Data dapat diurutkan berdasarkan: * tanggal input; * nama; *
+        wilayah; * status; * tanggal update. Sorting harus dilakukan secara konsisten antara frontend dan backend. --- #
+        63. FORM UX Form harus: * menggunakan section/tab; * memiliki indikator field wajib; * memberikan pesan error
+        yang jelas; * mempertahankan input ketika validasi gagal; * menggunakan dropdown untuk referensi; * menggunakan
+        date picker untuk tanggal; * menggunakan numeric input untuk angka; * menampilkan ringkasan sebelum submit. ---
+        # 64. ERROR HANDLING Pesan error harus mudah dipahami. Contoh: **Tidak valid:**> NIK harus terdiri dari 16
+        digit.
+
+        **Data duplikat:**
+
+        > NIK tersebut sudah ditemukan pada data lain. Silakan periksa data sebelum melanjutkan.
+
+        **Permission:**
+
+        > Anda tidak memiliki akses untuk melakukan tindakan ini.
+
+        ---
+
+        # 65. ACCEPTANCE CRITERIA — PENDATAAN
+
+        ### AC-001
+
+        **Given** petugas memiliki akses
+        **When** petugas mengisi seluruh field wajib
+        **Then** sistem dapat menyimpan data.
+
+        ### AC-002
+
+        **Given** terdapat field wajib kosong
+        **When** petugas melakukan submit
+        **Then** sistem menolak submit dan menampilkan field yang harus dilengkapi.
+
+        ### AC-003
+
+        **Given** data belum selesai
+        **When** petugas memilih Simpan Draft
+        **Then** data disimpan dengan status DRAFT.
+
+        ---
+
+        # 66. ACCEPTANCE CRITERIA — VERIFIKASI
+
+        ### AC-004
+
+        **Given** data telah dikirim
+        **When** verifikator membuka data
+        **Then** seluruh data dan dokumentasi dapat diperiksa.
+
+        ### AC-005
+
+        **Given** data benar
+        **When** verifikator memilih VALID
+        **Then** status berubah menjadi VALID dan aktivitas tercatat.
+
+        ### AC-006
+
+        **Given** terdapat kesalahan
+        **When** verifikator memilih PERLU PERBAIKAN
+        **Then** catatan wajib diberikan dan data dikembalikan kepada petugas.
+
+        ---
+
+        # 67. ACCEPTANCE CRITERIA — DUPLIKASI
+
+        ### AC-007
+
+        **Given** NIK telah digunakan
+        **When** user memasukkan NIK yang sama
+        **Then** sistem menampilkan peringatan potensi duplikasi.
+
+        ### AC-008
+
+        **Given** data terindikasi duplikat
+        **When** verifikator menetapkan DUPLIKAT
+        **Then** status berubah menjadi DUPLIKAT dan tercatat dalam audit log.
+
+        ---
+
+        # 68. ACCEPTANCE CRITERIA — PENGUKURAN
+
+        ### AC-009
+
+        **Given** anak telah memiliki tanggal lahir
+        **When** petugas memasukkan tanggal pengukuran
+        **Then** sistem menghitung usia saat pengukuran.
+
+        ### AC-010
+
+        **Given** anak telah memiliki pengukuran sebelumnya
+        **When** pengukuran baru dimasukkan
+        **Then** record lama tetap tersedia.
+
+        ---
+
+        # 69. ACCEPTANCE CRITERIA — DOKUMENTASI
+
+        ### AC-011
+
+        **Given** user mengunggah file
+        **When** file memenuhi ketentuan
+        **Then** sistem menyimpan file dan metadata.
+
+        ### AC-012
+
+        **Given** file tidak memenuhi ketentuan
+        **When** user melakukan upload
+        **Then** sistem menolak file dan memberikan alasan.
+
+        ---
+
+        # 70. ACCEPTANCE CRITERIA — LAPORAN
+
+        ### AC-013
+
+        **Given** terdapat data
+        **When** user memilih filter wilayah/periode/status
+        **Then** sistem menampilkan data sesuai filter.
+
+        ### AC-014
+
+        **Given** user memiliki permission export
+        **When** user memilih Excel/CSV/PDF
+        **Then** sistem menghasilkan file sesuai filter dan scope akses.
+
+        ---
+
+        # 71. ACCEPTANCE CRITERIA — AKSES
+
+        ### AC-015
+
+        **Given** user hanya memiliki akses Kecamatan A
+        **When** user mencari data Kecamatan B
+        **Then** data Kecamatan B tidak ditampilkan.
+
+        ### AC-016
+
+        **Given** user tidak memiliki permission edit
+        **When** user membuka detail data
+        **Then** tombol edit tidak tersedia atau tindakan ditolak.
+
+        ---
+
+        # 72. MVP
+
+        ## P0 — WAJIB
+
+        ### Sistem
+
+        * login;
+        * role;
+        * permission;
+        * user management;
+        * wilayah;
+        * master referensi;
+        * parameter;
+        * audit log.
+
+        ### Kemiskinan
+
+        * keluarga;
+        * anggota keluarga;
+        * kondisi ekonomi;
+        * kondisi rumah;
+        * aset;
+        * kondisi sosial;
+        * layanan dasar;
+        * kepesertaan program;
+        * dokumentasi.
+
+        ### Stunting
+
+        * anak;
+        * hubungan keluarga;
+        * orang tua;
+        * riwayat kehamilan;
+        * riwayat kelahiran;
+        * pengukuran;
+        * riwayat kesehatan;
+        * ASI/MPASI;
+        * sanitasi;
+        * dokumentasi.
+
+        ### Workflow
+
+        * validasi otomatis;
+        * submit;
+        * verifikasi;
+        * perbaikan;
+        * valid;
+        * tidak valid;
+        * duplikat.
+
+        ### Output
+
+        * dashboard;
+        * pencarian;
+        * filter;
+        * laporan;
+        * Excel export.
+
+        ---
+
+        # 73. P1
+
+        * PDF report;
+        * CSV export;
+        * import Excel;
+        * notifikasi status;
+        * duplicate detection lanjutan;
+        * configurable validation;
+        * advanced audit viewer;
+        * advanced dashboard filter.
+
+        ---
+
+        # 74. P2
+
+        * integrasi data kependudukan;
+        * integrasi sistem kesehatan;
+        * API;
+        * SSO;
+        * analitik lanjutan;
+        * integrasi eksternal lainnya sesuai kebutuhan dan kewenangan.
+
+        ---
+
+        # 75. KPI SISTEM
+
+        ## System KPI
+
+        | KPI | Target Awal |
+        | ---------------------------- | ----------: |
+        | Data berhasil tersimpan | ≥ 95% |
+        | Aktivitas tercatat audit log | 100% |
+        | Laporan berhasil dibuat | ≥ 95% |
+        | Export berhasil | ≥ 95% |
+        | Error aplikasi kritis | < 1% | | Permission enforcement | 100% | ## Data Quality KPI | KPI | Target Awal | |
+            ----------------------- | ----------: | | Kelengkapan data | ≥ 95% | | Data terverifikasi | ≥ 90% | | Data
+            valid | ≥ 90% | | Data duplikat | < 2% | | Data dengan dokumentasi | ≥ 90% | Target KPI dapat disesuaikan
+            setelah baseline pendataan tersedia. --- # 76. DATA QUALITY MONITORING Dashboard kualitas data dapat
+            menampilkan: * field kosong; * data duplikat; * data belum diverifikasi; * data perlu perbaikan; * data
+            tidak valid; * data tanpa dokumentasi; * data dengan inkonsistensi; * distribusi data per wilayah. Tujuannya
+            adalah membantu administrator memantau kualitas database, bukan menilai kinerja individu secara otomatis.
+            --- # 77. BACKUP & RECOVERY Sistem harus memiliki: * backup database berkala; * backup file dokumentasi; *
+            prosedur restore; * pengujian restore secara berkala; * pemisahan backup dari server aplikasi utama. Jadwal
+            dan retensi backup ditentukan pada tahap deployment/infrastruktur. --- # 78. SECURITY LOGGING Sistem harus
+            mencatat kejadian keamanan penting seperti: * login berhasil; * login gagal; * logout; * perubahan password;
+            * reset password; * perubahan permission; * perubahan role; * perubahan wilayah user; * export data; *
+            penghapusan data; * perubahan status verifikasi. --- # 79. DEFINISI DATA VALID Data dianggap **VALID**
+            apabila: 1. field wajib telah lengkap; 2. validasi format terpenuhi; 3. tidak memiliki error validasi
+            kritis; 4. telah diperiksa oleh verifikator; 5. dokumentasi yang diwajibkan tersedia; 6. tidak ditetapkan
+            sebagai duplikat; 7. verifikator menetapkan status VALID. --- # 80. DEFINISI DATA DUPLIKAT Data ditetapkan
+            sebagai DUPLIKAT apabila setelah pemeriksaan ditemukan bahwa record tersebut merupakan identitas/data yang
+            sama dengan record lain. Indikator dapat meliputi: * NIK sama; * KK sama dengan identitas keluarga yang
+            sama; * kombinasi nama dan tanggal lahir; * kombinasi identitas lainnya. Penetapan akhir dilakukan oleh
+            pengguna yang memiliki kewenangan verifikasi. --- # 81. DEFINISI DATA TIDAK VALID Data dapat ditetapkan
+            TIDAK VALID apabila setelah proses pemeriksaan ditemukan bahwa data tidak dapat digunakan sebagai data
+            pendataan yang sah sesuai aturan yang ditetapkan oleh Bappelitbangda. Alasan harus dicatat. --- # 82. OPEN
+            QUESTIONS Hal berikut harus ditetapkan oleh stakeholder sebelum development final: 1. Daftar kecamatan dan
+            kelurahan/desa resmi yang digunakan. 2. Struktur kewenangan verifikasi. 3. Standar antropometri yang
+            digunakan. 4. Daftar referensi resmi. 5. Batas ukuran dan jumlah dokumentasi. 6. Retensi audit log. 7.
+            Retensi backup. 8. Kebijakan perubahan data VALID. 9. Aturan penggabungan data duplikat. 10. Format laporan
+            resmi. 11. Daftar user dan wilayah awal. 12. Apakah nomor KK boleh digunakan pada lebih dari satu record
+            historis. 13. Aturan ketika anggota keluarga berpindah KK. 14. Aturan ketika anak berpindah keluarga. 15.
+            Kebijakan export data yang mengandung data pribadi. --- # 83. DEFINITION OF DONE Modul dianggap selesai
+            apabila: * requirement telah diimplementasikan; * permission telah diterapkan; * validasi telah berjalan; *
+            audit log telah berjalan; * UI responsive; * error handling tersedia; * acceptance criteria terpenuhi; *
+            test case QA lulus; * tidak terdapat bug kritis; * database migration tersedia; * dokumentasi API tersedia
+            untuk endpoint terkait; * laporan/export telah diuji; * security check dasar telah dilakukan. --- # 84.
+            RINGKASAN ARSITEKTUR PRODUK ```text WEB RESPONSIVE │ ▼ AUTHENTICATION │ ▼ ROLE & PERMISSION │
+            ┌────────────┴────────────┐ ▼ ▼ KEMISKINAN STUNTING │ │ ▼ ▼ KELUARGA ANAK │ │ ▼ ├── ORANG TUA ANGGOTA
+            KELUARGA ├── PENGUKURAN │ ├── KESEHATAN │ ├── ASI/MPASI │ └── SANITASI │ ▼ VALIDASI │ ▼ VERIFIKASI │ ▼ DATA
+            VALID │ ▼ DATABASE │ ┌──┴───┐ ▼ ▼ DASHBOARD LAPORAN ``` --- # 85. PRINSIP AKHIR SISTEM Sistem ini merupakan
+            **sistem pendataan**, bukan sistem bantuan. ```text DATA LAPANGAN ↓ PENDATAAN ↓ VALIDASI OTOMATIS ↓
+            VERIFIKASI ↓ DATA VALID ↓ DATABASE BAPPELITBANGDA ↓ DASHBOARD ↓ LAPORAN ↓ BAHAN PERENCANAAN ``` Sistem tidak
+            menentukan kebijakan pembangunan, tidak menentukan penerima bantuan, dan tidak menggantikan kewenangan
+            instansi terkait. Fungsi utama sistem adalah menyediakan **data pendataan yang terstruktur, terdokumentasi,
+            dapat diverifikasi, dapat ditelusuri, dan dapat digunakan sebagai bahan perencanaan pembangunan daerah.**
