@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\ResetPasswordPetugasRequest;
 use App\Http\Requests\Master\StorePetugasRequest;
 use App\Http\Requests\Master\UpdatePetugasRequest;
+use App\Models\AuditLog;
 use App\Models\Kecamatan;
 use App\Models\Role;
 use App\Models\User;
@@ -54,10 +55,12 @@ class PetugasController extends Controller
     {
         $data = $request->validated();
 
-        User::create([
+        $petugas = User::create([
             ...$data,
             'password' => Hash::make($data['password']),
         ]);
+
+        AuditLog::catat('petugas', 'create', $petugas, null, $petugas->only(['nama', 'username', 'email', 'role_id', 'status']), "Membuat akun petugas \"{$petugas->nama}\".");
 
         return redirect()->route('master.petugas.index')->with('status', 'Petugas berhasil ditambahkan.');
     }
@@ -69,14 +72,22 @@ class PetugasController extends Controller
 
     public function update(UpdatePetugasRequest $request, User $petugas): RedirectResponse
     {
+        $dataLama = $petugas->only(['nama', 'username', 'email', 'role_id', 'kecamatan_id', 'desa_kelurahan_id', 'status']);
+
         $petugas->update($request->validated());
+
+        AuditLog::catat('petugas', 'update', $petugas, $dataLama, $petugas->only(['nama', 'username', 'email', 'role_id', 'kecamatan_id', 'desa_kelurahan_id', 'status']), "Mengubah data petugas \"{$petugas->nama}\".");
 
         return redirect()->route('master.petugas.index')->with('status', 'Data petugas berhasil diperbarui.');
     }
 
     public function toggleStatus(User $petugas): RedirectResponse
     {
+        $statusLama = $petugas->status;
+
         $petugas->update(['status' => $petugas->status === 'aktif' ? 'nonaktif' : 'aktif']);
+
+        AuditLog::catat('petugas', 'update', $petugas, ['status' => $statusLama], ['status' => $petugas->status], "Mengubah status petugas \"{$petugas->nama}\" dari {$statusLama} menjadi {$petugas->status}.");
 
         $pesan = $petugas->status === 'aktif' ? 'Petugas berhasil diaktifkan.' : 'Petugas berhasil dinonaktifkan.';
 
@@ -86,6 +97,8 @@ class PetugasController extends Controller
     public function resetPassword(ResetPasswordPetugasRequest $request, User $petugas): RedirectResponse
     {
         $petugas->update(['password' => Hash::make($request->validated('password'))]);
+
+        AuditLog::catat('petugas', 'reset_password', $petugas, null, null, "Mereset kata sandi petugas \"{$petugas->nama}\".");
 
         return back()->with('status', 'Kata sandi petugas berhasil direset.');
     }

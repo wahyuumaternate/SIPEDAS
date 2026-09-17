@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Stunting\StoreAnakRequest;
 use App\Http\Requests\Stunting\UpdateAnakRequest;
 use App\Models\Anak;
+use App\Models\AuditLog;
 use App\Models\DokumenAnak;
 use App\Models\Kecamatan;
 use App\Models\Pengukuran;
@@ -194,7 +195,11 @@ class AnakController extends Controller
 
     public function destroy(Anak $anak): RedirectResponse
     {
+        $dataLama = $anak->only(['kode_pendataan', 'nama_anak', 'nik_anak', 'nomor_kk', 'status_data']);
+
         $anak->delete();
+
+        AuditLog::catat('anak', 'delete', $anak, $dataLama, null, "Menghapus data anak \"{$dataLama['nama_anak']}\" ({$dataLama['kode_pendataan']}).");
 
         return redirect()->route('stunting.index')->with('status', 'Data anak berhasil dihapus.');
     }

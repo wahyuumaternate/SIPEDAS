@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Stunting;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Stunting\StoreVerifikasiStuntingRequest;
 use App\Models\Anak;
+use App\Models\AuditLog;
 use App\Models\Kecamatan;
 use App\Models\VerifikasiStunting;
 use Illuminate\Contracts\View\View;
@@ -49,7 +50,8 @@ class VerifikasiStuntingController extends Controller
     public function store(StoreVerifikasiStuntingRequest $request, Anak $anak): RedirectResponse
     {
         $status = $request->validated('status');
-        $diizinkan = self::TRANSISI_DIIZINKAN[$anak->status_data] ?? [];
+        $statusLama = $anak->status_data;
+        $diizinkan = self::TRANSISI_DIIZINKAN[$statusLama] ?? [];
 
         if (! in_array($status, $diizinkan, true)) {
             return back()->with('error', "Data berstatus \"{$anak->status_data}\" tidak dapat diubah menjadi \"{$status}\".");
@@ -64,6 +66,8 @@ class VerifikasiStuntingController extends Controller
             'catatan' => $request->validated('catatan'),
             'tanggal_verifikasi' => now(),
         ]);
+
+        AuditLog::catat('verifikasi_stunting', 'verify', $anak, ['status_data' => $statusLama], ['status_data' => $status], "Mengubah status verifikasi anak \"{$anak->nama_anak}\" dari {$statusLama} menjadi {$status}.");
 
         return redirect()->route('stunting.show', $anak)->with('status', 'Status verifikasi berhasil diperbarui.');
     }

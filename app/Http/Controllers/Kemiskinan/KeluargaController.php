@@ -7,6 +7,7 @@ use App\Http\Requests\Kemiskinan\StoreKeluargaRequest;
 use App\Http\Requests\Kemiskinan\UpdateKeluargaRequest;
 use App\Models\AnggotaKeluarga;
 use App\Models\AsetKeluarga;
+use App\Models\AuditLog;
 use App\Models\DokumenKeluarga;
 use App\Models\Kecamatan;
 use App\Models\Keluarga;
@@ -189,7 +190,11 @@ class KeluargaController extends Controller
 
     public function destroy(Keluarga $keluarga): RedirectResponse
     {
+        $dataLama = $keluarga->only(['kode_pendataan', 'nama_kepala_keluarga', 'nik_kepala_keluarga', 'nomor_kk', 'status_data']);
+
         $keluarga->delete();
+
+        AuditLog::catat('keluarga', 'delete', $keluarga, $dataLama, null, "Menghapus data keluarga \"{$dataLama['nama_kepala_keluarga']}\" ({$dataLama['kode_pendataan']}).");
 
         return redirect()->route('kemiskinan.index')->with('status', 'Data keluarga berhasil dihapus.');
     }

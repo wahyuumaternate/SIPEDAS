@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Permission;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -89,5 +89,20 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->role?->slug === 'super-admin';
+    }
+
+    /**
+     * Cek apakah user memiliki permission tertentu, lewat hak_akses role-nya.
+     * Super Admin selalu punya seluruh permission.
+     */
+    public function hasPermission(Permission|string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $value = $permission instanceof Permission ? $permission->value : $permission;
+
+        return in_array($value, $this->role?->hak_akses ?? [], true);
     }
 }

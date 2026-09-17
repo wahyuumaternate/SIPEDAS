@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Kemiskinan;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kemiskinan\StoreVerifikasiRequest;
+use App\Models\AuditLog;
 use App\Models\Kecamatan;
 use App\Models\Keluarga;
 use App\Models\VerifikasiKemiskinan;
@@ -49,7 +50,8 @@ class VerifikasiKemiskinanController extends Controller
     public function store(StoreVerifikasiRequest $request, Keluarga $keluarga): RedirectResponse
     {
         $status = $request->validated('status');
-        $diizinkan = self::TRANSISI_DIIZINKAN[$keluarga->status_data] ?? [];
+        $statusLama = $keluarga->status_data;
+        $diizinkan = self::TRANSISI_DIIZINKAN[$statusLama] ?? [];
 
         if (! in_array($status, $diizinkan, true)) {
             return back()->with('error', "Data berstatus \"{$keluarga->status_data}\" tidak dapat diubah menjadi \"{$status}\".");
@@ -64,6 +66,8 @@ class VerifikasiKemiskinanController extends Controller
             'catatan' => $request->validated('catatan'),
             'tanggal_verifikasi' => now(),
         ]);
+
+        AuditLog::catat('verifikasi_kemiskinan', 'verify', $keluarga, ['status_data' => $statusLama], ['status_data' => $status], "Mengubah status verifikasi keluarga \"{$keluarga->nama_kepala_keluarga}\" dari {$statusLama} menjadi {$status}.");
 
         return redirect()->route('kemiskinan.show', $keluarga)->with('status', 'Status verifikasi berhasil diperbarui.');
     }

@@ -33,7 +33,7 @@
                 </span>
 
                 <span>
-                    <strong>SIPEDAS</strong>
+                    <strong>SIPENTAS</strong>
                     <small>ERROR</small>
                 </span>
             </a>

@@ -3,56 +3,117 @@
 namespace App\Http\Controllers;
 
 use App\Models\Anak;
+use App\Models\DesaKelurahan;
+use App\Models\Kecamatan;
 use App\Models\Keluarga;
-use Illuminate\Contracts\View\View;
+use App\Models\Pengukuran;
+use App\Permission;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    /**
+     * @var array<string, string>
+     */
+    private const STATUS_LABEL = [
+        'draft' => 'Draft',
+        'dikirim' => 'Dikirim',
+        'dalam_verifikasi' => 'Dalam Verifikasi',
+        'perlu_perbaikan' => 'Perlu Perbaikan',
+        'valid' => 'Valid',
+        'tidak_valid' => 'Tidak Valid',
+        'duplikat' => 'Duplikat',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const STATUS_COLOR = [
+        'draft' => '#94a3b8',
+        'dikirim' => '#38bdf8',
+        'dalam_verifikasi' => '#f59e0b',
+        'perlu_perbaikan' => '#f97316',
+        'valid' => '#22c55e',
+        'tidak_valid' => '#ef4444',
+        'duplikat' => '#a855f7',
+    ];
+
+    public function __invoke(Request $request): View
     {
-        $totalKeluarga = Keluarga::count();
+        $user = $request->user();
+        $bisaLihatKemiskinan = $user->hasPermission(Permission::KemiskinanView);
+        $bisaLihatStunting = $user->hasPermission(Permission::StuntingView);
+
+        $filters = $request->only(['kecamatan_id', 'desa_kelurahan_id', 'status_data', 'dari', 'sampai']);
+
+        return view('dashboard', [
+            'bisaLihatKemiskinan' => $bisaLihatKemiskinan,
+            'bisaLihatStunting' => $bisaLihatStunting,
+            'filters' => $filters,
+            'statusOptions' => self::STATUS_LABEL,
+            'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
+            'desaKelurahans' => DesaKelurahan::where('is_active', true)->orderBy('nama')->get(),
+            ...($bisaLihatKemiskinan ? $this->dataKemiskinan($filters) : []),
+            ...($bisaLihatStunting ? $this->dataStunting($filters) : []),
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function dataKemiskinan(array $filters): array
+    {
+        $base = fn () => $this->terapkanFilter(Keluarga::query(), $filters);
+
+        $statusCounts = collect(self::STATUS_LABEL)->mapWithKeys(
+            fn ($label, $status) => [$status => (clone $base())->where('status_data', $status)->count()]
+        );
 
         $kemiskinanStats = [
-            'total_keluarga' => $totalKeluarga,
-            'total_anggota' => (int) Keluarga::sum('jumlah_anggota_keluarga'),
-            'belum_diverifikasi' => Keluarga::where('status_data', 'dikirim')->count(),
-            'sedang_diverifikasi' => Keluarga::where('status_data', 'dalam_verifikasi')->count(),
-            'valid' => Keluarga::where('status_data', 'valid')->count(),
-            'perlu_perbaikan' => Keluarga::where('status_data', 'perlu_perbaikan')->count(),
-            'tidak_valid' => Keluarga::where('status_data', 'tidak_valid')->count(),
-            'duplikat' => Keluarga::where('status_data', 'duplikat')->count(),
+            'total_keluarga' => $statusCounts->sum(),
+            'total_anggota' => (int) (clone $base())->sum('jumlah_anggota_keluarga'),
+            'draft' => $statusCounts['draft'],
+            'belum_diverifikasi' => $statusCounts['dikirim'],
+            'sedang_diverifikasi' => $statusCounts['dalam_verifikasi'],
+            'valid' => $statusCounts['valid'],
+            'perlu_perbaikan' => $statusCounts['perlu_perbaikan'],
+            'tidak_valid' => $statusCounts['tidak_valid'],
+            'duplikat' => $statusCounts['duplikat'],
         ];
 
-        $maxPerKecamatan = Keluarga::selectRaw('kecamatan_id, count(*) as jumlah')
-            ->groupBy('kecamatan_id')->max('jumlah') ?: 1;
-
-        $keluargaPerKecamatan = Keluarga::query()
+        $perKecamatan = (clone $base())
             ->join('kecamatans', 'kecamatans.id', '=', 'keluargas.kecamatan_id')
             ->selectRaw('kecamatans.nama as label, count(*) as jumlah')
             ->groupBy('kecamatans.id', 'kecamatans.nama')
             ->orderByDesc('jumlah')
-            ->get()
-            ->map(fn ($row) => [
-                'label' => $row->label,
-                'percent' => (int) round(($row->jumlah / $maxPerKecamatan) * 100),
-            ])
-            ->all();
+            ->get();
+        $maxJumlah = $perKecamatan->max('jumlah') ?: 1;
 
-        $statusColor = [
-            'draft' => '#94a3b8', 'dikirim' => '#38bdf8', 'dalam_verifikasi' => '#f59e0b',
-            'perlu_perbaikan' => '#f97316', 'valid' => '#22c55e', 'tidak_valid' => '#ef4444', 'duplikat' => '#a855f7',
-        ];
-        $statusLabel = [
-            'draft' => 'Draft', 'dikirim' => 'Dikirim', 'dalam_verifikasi' => 'Dalam Verifikasi',
-            'perlu_perbaikan' => 'Perlu Perbaikan', 'valid' => 'Valid', 'tidak_valid' => 'Tidak Valid', 'duplikat' => 'Duplikat',
-        ];
-        $statusPipelineKemiskinan = collect($statusLabel)->map(fn ($label, $status) => [
+        $keluargaPerKecamatan = $perKecamatan->map(fn ($row) => [
+            'label' => $row->label,
+            'percent' => (int) round(($row->jumlah / $maxJumlah) * 100),
+        ])->all();
+
+        $statusPipelineKemiskinan = collect(self::STATUS_LABEL)->map(fn ($label, $status) => [
             'label' => $label,
-            'count' => Keluarga::where('status_data', $status)->count(),
-            'color' => $statusColor[$status],
+            'count' => $statusCounts[$status],
+            'color' => self::STATUS_COLOR[$status],
         ])->values()->all();
 
-        $keluargaTerbaru = Keluarga::with(['kecamatan', 'desaKelurahan', 'petugas'])
+        $rekapProgram = (clone $base())
+            ->join('kepesertaan_programs', 'kepesertaan_programs.keluarga_id', '=', 'keluargas.id')
+            ->where('kepesertaan_programs.status_penerima', 'penerima')
+            ->selectRaw('kepesertaan_programs.nama_program as label, count(*) as jumlah')
+            ->groupBy('kepesertaan_programs.nama_program')
+            ->orderByDesc('jumlah')
+            ->limit(5)
+            ->get();
+
+        $keluargaTerbaru = (clone $base())
+            ->with(['kecamatan', 'desaKelurahan', 'petugas'])
             ->latest('tanggal_input')
             ->take(5)
             ->get()
@@ -64,47 +125,80 @@ class DashboardController extends Controller
                 'kelurahan' => $k->desaKelurahan?->nama,
                 'jumlah_anggota' => $k->jumlah_anggota_keluarga,
                 'petugas' => $k->petugas?->nama,
-                'status' => $statusLabel[$k->status_data] ?? $k->status_data,
+                'status' => self::STATUS_LABEL[$k->status_data] ?? $k->status_data,
                 'tanggal' => optional($k->tanggal_input)->format('Y-m-d'),
             ])
             ->all();
 
-        $totalAnak = Anak::count();
+        return compact('kemiskinanStats', 'keluargaPerKecamatan', 'statusPipelineKemiskinan', 'rekapProgram', 'keluargaTerbaru');
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function dataStunting(array $filters): array
+    {
+        $base = fn () => $this->terapkanFilter(Anak::query(), $filters);
+
+        $statusCounts = collect(self::STATUS_LABEL)->mapWithKeys(
+            fn ($label, $status) => [$status => (clone $base())->where('status_data', $status)->count()]
+        );
 
         $stuntingStats = [
-            'total_anak' => $totalAnak,
-            'sudah_diukur' => Anak::has('pengukurans')->count(),
-            'belum_diukur' => Anak::doesntHave('pengukurans')->count(),
-            'belum_diverifikasi' => Anak::where('status_data', 'dikirim')->count(),
-            'sedang_diverifikasi' => Anak::where('status_data', 'dalam_verifikasi')->count(),
-            'valid' => Anak::where('status_data', 'valid')->count(),
-            'perlu_perbaikan' => Anak::where('status_data', 'perlu_perbaikan')->count(),
-            'tidak_valid' => Anak::where('status_data', 'tidak_valid')->count(),
-            'duplikat' => Anak::where('status_data', 'duplikat')->count(),
+            'total_anak' => $statusCounts->sum(),
+            'sudah_diukur' => (clone $base())->has('pengukurans')->count(),
+            'belum_diukur' => (clone $base())->doesntHave('pengukurans')->count(),
+            'draft' => $statusCounts['draft'],
+            'belum_diverifikasi' => $statusCounts['dikirim'],
+            'sedang_diverifikasi' => $statusCounts['dalam_verifikasi'],
+            'valid' => $statusCounts['valid'],
+            'perlu_perbaikan' => $statusCounts['perlu_perbaikan'],
+            'tidak_valid' => $statusCounts['tidak_valid'],
+            'duplikat' => $statusCounts['duplikat'],
         ];
 
-        $maxAnakPerKecamatan = Anak::selectRaw('kecamatan_id, count(*) as jumlah')
-            ->groupBy('kecamatan_id')->max('jumlah') ?: 1;
-
-        $anakPerKecamatan = Anak::query()
+        $perKecamatan = (clone $base())
             ->join('kecamatans', 'kecamatans.id', '=', 'anaks.kecamatan_id')
             ->selectRaw('kecamatans.nama as label, count(*) as jumlah')
             ->groupBy('kecamatans.id', 'kecamatans.nama')
             ->orderByDesc('jumlah')
-            ->get()
-            ->map(fn ($row) => [
-                'label' => $row->label,
-                'percent' => (int) round(($row->jumlah / $maxAnakPerKecamatan) * 100),
-            ])
-            ->all();
+            ->get();
+        $maxJumlah = $perKecamatan->max('jumlah') ?: 1;
 
-        $statusPipelineStunting = collect($statusLabel)->map(fn ($label, $status) => [
+        $anakPerKecamatan = $perKecamatan->map(fn ($row) => [
+            'label' => $row->label,
+            'percent' => (int) round(($row->jumlah / $maxJumlah) * 100),
+        ])->all();
+
+        $statusPipelineStunting = collect(self::STATUS_LABEL)->map(fn ($label, $status) => [
             'label' => $label,
-            'count' => Anak::where('status_data', $status)->count(),
-            'color' => $statusColor[$status],
+            'count' => $statusCounts[$status],
+            'color' => self::STATUS_COLOR[$status],
         ])->values()->all();
 
-        $anakTerbaru = Anak::with(['kecamatan', 'desaKelurahan'])
+        $rekapJenisKelamin = (clone $base())
+            ->selectRaw('jenis_kelamin as label, count(*) as jumlah')
+            ->groupBy('jenis_kelamin')
+            ->get();
+
+        $anakIds = (clone $base())->pluck('id');
+        $latestPengukuranIds = Pengukuran::query()
+            ->whereIn('anak_id', $anakIds)
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('anak_id')
+            ->pluck('id');
+
+        $rekapKategoriStunting = Pengukuran::query()
+            ->whereIn('id', $latestPengukuranIds)
+            ->whereNotNull('hasil_kategori')
+            ->selectRaw('hasil_kategori as label, count(*) as jumlah')
+            ->groupBy('hasil_kategori')
+            ->orderByDesc('jumlah')
+            ->get();
+
+        $anakTerbaru = (clone $base())
+            ->with(['kecamatan', 'desaKelurahan'])
             ->withCount('pengukurans')
             ->latest('tanggal_input')
             ->take(5)
@@ -117,20 +211,41 @@ class DashboardController extends Controller
                 'kecamatan' => $a->kecamatan?->nama,
                 'kelurahan' => $a->desaKelurahan?->nama,
                 'sudah_diukur' => $a->pengukurans_count > 0,
-                'status' => $statusLabel[$a->status_data] ?? $a->status_data,
+                'status' => self::STATUS_LABEL[$a->status_data] ?? $a->status_data,
                 'tanggal' => optional($a->tanggal_input)->format('Y-m-d'),
             ])
             ->all();
 
-        return view('dashboard', [
-            'kemiskinanStats' => $totalKeluarga > 0 ? $kemiskinanStats : null,
-            'keluargaPerKecamatan' => $keluargaPerKecamatan,
-            'statusPipelineKemiskinan' => $totalKeluarga > 0 ? $statusPipelineKemiskinan : null,
-            'keluargaTerbaru' => $keluargaTerbaru,
-            'stuntingStats' => $totalAnak > 0 ? $stuntingStats : null,
-            'anakPerKecamatan' => $anakPerKecamatan,
-            'statusPipelineStunting' => $totalAnak > 0 ? $statusPipelineStunting : null,
-            'anakTerbaru' => $anakTerbaru,
-        ]);
+        return compact('stuntingStats', 'anakPerKecamatan', 'statusPipelineStunting', 'rekapJenisKelamin', 'rekapKategoriStunting', 'anakTerbaru');
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function terapkanFilter(Builder $query, array $filters): Builder
+    {
+        $tabel = $query->getModel()->getTable();
+
+        if ($kecamatanId = $filters['kecamatan_id'] ?? null) {
+            $query->where("{$tabel}.kecamatan_id", $kecamatanId);
+        }
+
+        if ($desaKelurahanId = $filters['desa_kelurahan_id'] ?? null) {
+            $query->where("{$tabel}.desa_kelurahan_id", $desaKelurahanId);
+        }
+
+        if ($status = $filters['status_data'] ?? null) {
+            $query->where("{$tabel}.status_data", $status);
+        }
+
+        if ($dari = $filters['dari'] ?? null) {
+            $query->whereDate("{$tabel}.tanggal_input", '>=', $dari);
+        }
+
+        if ($sampai = $filters['sampai'] ?? null) {
+            $query->whereDate("{$tabel}.tanggal_input", '<=', $sampai);
+        }
+
+        return $query;
     }
 }

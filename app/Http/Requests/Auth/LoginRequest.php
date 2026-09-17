@@ -63,9 +63,10 @@ class LoginRequest extends FormRequest
             // bcrypt sendiri hanya memproses 72 byte pertama.
             'password' => ['required', 'string', 'max:255'],
 
-            // Captcha dilewati di environment local supaya development tidak
-            // perlu setup hCaptcha; tetap wajib di environment lain (staging/production).
-            'h-captcha-response' => [app()->environment('local') ? 'nullable' : 'required', 'captcha'],
+            // Captcha dilewati di environment local & testing — development tidak perlu
+            // setup hCaptcha, dan test otomatis tidak mungkin menyelesaikan captcha
+            // sungguhan. Tetap wajib di environment lain (staging/production).
+            'h-captcha-response' => [app()->environment(['local', 'testing']) ? 'nullable' : 'required', 'captcha'],
             // Honeypot: field ini harus SELALU kosong. Bot biasanya mengisi semua field.
             'website' => ['prohibited'],
         ];
@@ -90,6 +91,14 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        if (Auth::user()->status === 'nonaktif') {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan. Hubungi administrator sistem.',
             ]);
         }
 

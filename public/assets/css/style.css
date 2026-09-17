@@ -113,6 +113,8 @@ a {
   display: block;
   line-height: 1.2;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand-title {
