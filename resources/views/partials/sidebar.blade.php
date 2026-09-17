@@ -100,21 +100,20 @@
         </a>
         <div class="collapse nav-collapse-group @if (request()->is('master*')) show @endif" id="groupMaster">
             <div class="nav-submenu">
-                <a class="nav-link nav-sublink @if (request()->is('master/wilayah*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('master/wilayah*')) active @endif"
+                    href="{{ route('master.wilayah.index') }}"
                     @if (request()->is('master/wilayah*')) aria-current="page" @endif>
                     <span class="nav-text">Wilayah</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('master/petugas*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('master/petugas*')) active @endif"
+                    href="{{ route('master.petugas.index') }}"
                     @if (request()->is('master/petugas*')) aria-current="page" @endif>
                     <span class="nav-text">Petugas</span>
                 </a>
-                <a class="nav-link nav-sublink @if (request()->is('master/referensi*')) active @endif" href="#"
+                <a class="nav-link nav-sublink @if (request()->is('master/referensi*')) active @endif"
+                    href="{{ route('master.referensi.index') }}"
                     @if (request()->is('master/referensi*')) aria-current="page" @endif>
                     <span class="nav-text">Referensi</span>
-                </a>
-                <a class="nav-link nav-sublink @if (request()->is('master/parameter*')) active @endif" href="#"
-                    @if (request()->is('master/parameter*')) aria-current="page" @endif>
-                    <span class="nav-text">Parameter</span>
                 </a>
             </div>
         </div>

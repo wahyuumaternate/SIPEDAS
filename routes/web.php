@@ -4,6 +4,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kemiskinan\DokumenKeluargaController;
 use App\Http\Controllers\Kemiskinan\KeluargaController;
 use App\Http\Controllers\Kemiskinan\VerifikasiKemiskinanController;
+use App\Http\Controllers\Master\DesaKelurahanController;
+use App\Http\Controllers\Master\KecamatanController;
+use App\Http\Controllers\Master\PetugasController;
+use App\Http\Controllers\Master\ReferensiController;
+use App\Http\Controllers\Master\WilayahController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Stunting\AnakController;
 use App\Http\Controllers\Stunting\DokumenAnakController;
@@ -62,6 +67,29 @@ Route::middleware(['auth', 'verified'])->prefix('stunting')->name('stunting.')->
 
     Route::post('/anak/{anak}/pengukuran', [PengukuranController::class, 'store'])->name('pengukuran.store');
     Route::delete('/anak/{anak}/pengukuran/{pengukuran}', [PengukuranController::class, 'destroy'])->name('pengukuran.destroy');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
+    Route::get('/wilayah', [WilayahController::class, 'index'])->name('wilayah.index');
+    Route::post('/wilayah/kecamatan', [KecamatanController::class, 'store'])->name('wilayah.kecamatan.store');
+    Route::put('/wilayah/kecamatan/{kecamatan}', [KecamatanController::class, 'update'])->name('wilayah.kecamatan.update');
+    Route::delete('/wilayah/kecamatan/{kecamatan}', [KecamatanController::class, 'destroy'])->name('wilayah.kecamatan.destroy');
+    Route::post('/wilayah/desa-kelurahan', [DesaKelurahanController::class, 'store'])->name('wilayah.desa-kelurahan.store');
+    Route::put('/wilayah/desa-kelurahan/{desaKelurahan}', [DesaKelurahanController::class, 'update'])->name('wilayah.desa-kelurahan.update');
+    Route::delete('/wilayah/desa-kelurahan/{desaKelurahan}', [DesaKelurahanController::class, 'destroy'])->name('wilayah.desa-kelurahan.destroy');
+
+    Route::get('/referensi', [ReferensiController::class, 'index'])->name('referensi.index');
+    Route::post('/referensi', [ReferensiController::class, 'store'])->name('referensi.store');
+    Route::put('/referensi/{referensi}', [ReferensiController::class, 'update'])->name('referensi.update');
+    Route::delete('/referensi/{referensi}', [ReferensiController::class, 'destroy'])->name('referensi.destroy');
+
+    Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas.index');
+    Route::get('/petugas/create', [PetugasController::class, 'create'])->name('petugas.create');
+    Route::post('/petugas', [PetugasController::class, 'store'])->name('petugas.store');
+    Route::get('/petugas/{petugas}/edit', [PetugasController::class, 'edit'])->name('petugas.edit');
+    Route::put('/petugas/{petugas}', [PetugasController::class, 'update'])->name('petugas.update');
+    Route::patch('/petugas/{petugas}/status', [PetugasController::class, 'toggleStatus'])->name('petugas.toggle-status');
+    Route::post('/petugas/{petugas}/reset-password', [PetugasController::class, 'resetPassword'])->name('petugas.reset-password');
 });
 
 require __DIR__.'/auth.php';

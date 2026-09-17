@@ -118,7 +118,7 @@ perubahan.
 
 ### 3.7 Configurable Reference
 
-Data referensi dan parameter yang bersifat administratif harus dapat dikelola melalui Master Data.
+Data referensi yang bersifat administratif harus dapat dikelola melalui Master Data.
 
 ### 3.8 Separation of Scope
 
@@ -238,7 +238,6 @@ Dapat:
 * mengelola role;
 * mengelola wilayah;
 * mengelola referensi;
-* mengelola parameter;
 * melihat seluruh data;
 * mengelola konfigurasi;
 * melihat audit log;
@@ -372,8 +371,7 @@ DASHBOARD
 ├── MASTER DATA
 │ ├── Wilayah
 │ ├── Petugas
-│ ├── Referensi
-│ └── Parameter
+│ └── Referensi
 │
 └── ADMINISTRASI
 ├── Pengguna
@@ -1276,18 +1274,6 @@ Contoh:
 * jenis persalinan;
 * dan referensi lainnya.
 
-## 42.3 Parameter
-
-Parameter digunakan untuk nilai yang dapat dikonfigurasi.
-
-Contoh:
-
-* batas usia;
-* batas ukuran file;
-* standar antropometri;
-* parameter validasi;
-* konfigurasi laporan.
-
 ---
 
 # 43. MANAJEMEN PENGGUNA
@@ -1492,7 +1478,6 @@ user_roles
 user_wilayah
 wilayah
 referensi
-parameter
 audit_logs
 ```
 
@@ -1699,7 +1684,6 @@ KELUARGA
         * user management;
         * wilayah;
         * master referensi;
-        * parameter;
         * audit log.
 
         ### Kemiskinan
