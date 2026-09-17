@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('nama_kepala_keluarga');
             $table->string('nomor_hp')->nullable();
             $table->unsignedInteger('jumlah_anggota_keluarga');
-            $table->foreignId('status_perkawinan_id')->nullable()->constrained('referensis')->nullOnDelete();
+            $table->string('status_perkawinan')->nullable(); // kode dari config('referensi.status_perkawinan')
 
             // Alamat
             $table->text('alamat');

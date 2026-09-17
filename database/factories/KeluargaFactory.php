@@ -22,7 +22,7 @@ class KeluargaFactory extends Factory
             'nama_kepala_keluarga' => fake()->name('male'),
             'nomor_hp' => fake()->numerify('08##########'),
             'jumlah_anggota_keluarga' => fake()->numberBetween(1, 8),
-            'status_perkawinan_id' => null,
+            'status_perkawinan' => null,
             'alamat' => fake()->streetAddress(),
             'rt' => fake()->numerify('##'),
             'rw' => fake()->numerify('##'),

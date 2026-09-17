@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Kemiskinan;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreKeluargaRequest extends FormRequest
@@ -25,7 +26,7 @@ class StoreKeluargaRequest extends FormRequest
             'nik_kepala_keluarga' => ['required', 'digits:16'],
             'nama_kepala_keluarga' => ['required', 'string', 'max:255'],
             'nomor_hp' => ['nullable', 'string', 'max:20'],
-            'status_perkawinan_id' => ['nullable', 'exists:referensis,id'],
+            'status_perkawinan' => ['nullable', Rule::in($this->kodeReferensi('status_perkawinan'))],
             'alamat' => ['required', 'string'],
             'rt' => ['required', 'string', 'max:5'],
             'rw' => ['required', 'string', 'max:5'],
@@ -41,16 +42,16 @@ class StoreKeluargaRequest extends FormRequest
             'anggota.*.tempat_lahir' => ['nullable', 'string', 'max:255'],
             'anggota.*.tanggal_lahir' => ['required_with:anggota.*.nama_lengkap', 'date', 'before_or_equal:today'],
             'anggota.*.hubungan_keluarga' => ['required_with:anggota.*.nama_lengkap', 'string', 'max:255'],
-            'anggota.*.status_perkawinan_id' => ['nullable', 'exists:referensis,id'],
-            'anggota.*.pendidikan_terakhir_id' => ['nullable', 'exists:referensis,id'],
-            'anggota.*.status_pekerjaan_id' => ['nullable', 'exists:referensis,id'],
+            'anggota.*.status_perkawinan' => ['nullable', Rule::in($this->kodeReferensi('status_perkawinan'))],
+            'anggota.*.pendidikan_terakhir' => ['nullable', Rule::in($this->kodeReferensi('pendidikan_terakhir'))],
+            'anggota.*.status_pekerjaan' => ['nullable', Rule::in($this->kodeReferensi('status_pekerjaan'))],
             'anggota.*.disabilitas' => ['nullable', 'boolean'],
             'anggota.*.jenis_disabilitas' => ['nullable', 'string', 'max:255'],
             'anggota.*.penyakit_kronis' => ['nullable', 'boolean'],
             'anggota.*.jenis_penyakit_kronis' => ['nullable', 'string', 'max:255'],
 
             // Kondisi ekonomi (PRD Bagian 11) - total dihitung otomatis oleh model
-            'kondisi_ekonomi.status_pekerjaan_kepala_keluarga_id' => ['nullable', 'exists:referensis,id'],
+            'kondisi_ekonomi.status_pekerjaan_kepala_keluarga' => ['nullable', Rule::in($this->kodeReferensi('status_pekerjaan'))],
             'kondisi_ekonomi.pekerjaan_utama' => ['nullable', 'string', 'max:255'],
             'kondisi_ekonomi.pekerjaan_tambahan' => ['nullable', 'string', 'max:255'],
             'kondisi_ekonomi.jumlah_anggota_bekerja' => ['nullable', 'integer', 'min:0'],
@@ -70,15 +71,15 @@ class StoreKeluargaRequest extends FormRequest
             // draft boleh disimpan tanpa mengisi bagian ini.
             'kondisi_rumah.status_kepemilikan' => ['nullable', 'required_if:action,kirim', 'in:milik_sendiri,sewa,menumpang,rumah_dinas,lainnya'],
             'kondisi_rumah.kondisi_bangunan' => ['nullable', 'required_if:action,kirim', 'in:permanen,semi_permanen,tidak_layak_huni'],
-            'kondisi_rumah.jenis_atap_id' => ['nullable', 'exists:referensis,id'],
-            'kondisi_rumah.jenis_dinding_id' => ['nullable', 'exists:referensis,id'],
-            'kondisi_rumah.jenis_lantai_id' => ['nullable', 'exists:referensis,id'],
-            'kondisi_rumah.sumber_listrik_id' => ['nullable', 'exists:referensis,id'],
-            'kondisi_rumah.sumber_air_id' => ['nullable', 'exists:referensis,id'],
+            'kondisi_rumah.jenis_atap' => ['nullable', Rule::in($this->kodeReferensi('jenis_atap'))],
+            'kondisi_rumah.jenis_dinding' => ['nullable', Rule::in($this->kodeReferensi('jenis_dinding'))],
+            'kondisi_rumah.jenis_lantai' => ['nullable', Rule::in($this->kodeReferensi('jenis_lantai'))],
+            'kondisi_rumah.sumber_listrik' => ['nullable', Rule::in($this->kodeReferensi('sumber_listrik'))],
+            'kondisi_rumah.sumber_air' => ['nullable', Rule::in($this->kodeReferensi('sumber_air'))],
             'kondisi_rumah.jamban' => ['nullable', 'boolean'],
             'kondisi_rumah.septic_tank' => ['nullable', 'boolean'],
             'kondisi_rumah.drainase' => ['nullable', 'boolean'],
-            'kondisi_rumah.pengelolaan_sampah_id' => ['nullable', 'exists:referensis,id'],
+            'kondisi_rumah.pengelolaan_sampah' => ['nullable', Rule::in($this->kodeReferensi('pengelolaan_sampah'))],
             'kondisi_rumah.luas_tanah' => ['nullable', 'numeric', 'min:0'],
             'kondisi_rumah.luas_bangunan' => ['nullable', 'numeric', 'min:0'],
             'kondisi_rumah.jumlah_kamar' => ['nullable', 'integer', 'min:0'],
@@ -86,7 +87,7 @@ class StoreKeluargaRequest extends FormRequest
 
             // Kepemilikan aset (PRD Bagian 13)
             'aset' => ['nullable', 'array'],
-            'aset.*.jenis_aset_id' => ['nullable', 'exists:referensis,id'],
+            'aset.*.jenis_aset' => ['nullable', Rule::in($this->kodeReferensi('jenis_aset'))],
             'aset.*.jumlah' => ['nullable', 'integer', 'min:1'],
             'aset.*.status_kepemilikan' => ['nullable', 'in:milik_sendiri,sewa,lainnya'],
             'aset.*.perkiraan_nilai' => ['nullable', 'numeric', 'min:0'],
@@ -150,5 +151,13 @@ class StoreKeluargaRequest extends FormRequest
                 $validator->errors()->add('anggota', 'Minimal satu anggota keluarga harus diisi sebelum data dikirim untuk verifikasi.');
             }
         });
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function kodeReferensi(string $kategori): array
+    {
+        return array_keys(config("referensi.{$kategori}", []));
     }
 }

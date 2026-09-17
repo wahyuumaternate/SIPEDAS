@@ -53,7 +53,7 @@
                     aria-expanded="false">
                     <img class="avatar-img avatar-sm"
                         src="{{ auth()->user()->avatar_url ?? asset('assets/images/avatar/avatar.jpg') }}"
-                        alt="{{ auth()->user()->name }}">
+                        alt="{{ auth()->user()->nama }}">
                     <span class="profile-name d-none d-sm-inline">{{ auth()->user()->nama }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">

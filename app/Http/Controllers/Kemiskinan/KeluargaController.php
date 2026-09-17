@@ -12,7 +12,6 @@ use App\Models\DokumenKeluarga;
 use App\Models\Kecamatan;
 use App\Models\Keluarga;
 use App\Models\KepesertaanProgram;
-use App\Models\Referensi;
 use App\Models\VerifikasiKemiskinan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -86,7 +85,7 @@ class KeluargaController extends Controller
                 'nama_kepala_keluarga' => $data['nama_kepala_keluarga'],
                 'nomor_hp' => $data['nomor_hp'] ?? null,
                 'jumlah_anggota_keluarga' => count(array_filter($data['anggota'] ?? [], fn ($row) => filled($row['nama_lengkap'] ?? null))),
-                'status_perkawinan_id' => $data['status_perkawinan_id'] ?? null,
+                'status_perkawinan' => $data['status_perkawinan'] ?? null,
                 'alamat' => $data['alamat'],
                 'rt' => $data['rt'],
                 'rw' => $data['rw'],
@@ -125,12 +124,11 @@ class KeluargaController extends Controller
     public function show(Keluarga $keluarga): View
     {
         $keluarga->load([
-            'kecamatan', 'desaKelurahan', 'petugas', 'statusPerkawinan',
-            'anggotaKeluarga.statusPerkawinan', 'anggotaKeluarga.pendidikanTerakhir', 'anggotaKeluarga.statusPekerjaan',
-            'kondisiEkonomi.statusPekerjaanKepalaKeluarga',
-            'kondisiRumah.jenisAtap', 'kondisiRumah.jenisDinding', 'kondisiRumah.jenisLantai',
-            'kondisiRumah.sumberListrik', 'kondisiRumah.sumberAir', 'kondisiRumah.pengelolaanSampah',
-            'asetKeluarga.jenisAset',
+            'kecamatan', 'desaKelurahan', 'petugas',
+            'anggotaKeluarga',
+            'kondisiEkonomi',
+            'kondisiRumah',
+            'asetKeluarga',
             'kondisiSosial',
             'kepesertaanProgram',
             'dokumen.pengunggah',
@@ -161,7 +159,7 @@ class KeluargaController extends Controller
                 'nama_kepala_keluarga' => $data['nama_kepala_keluarga'],
                 'nomor_hp' => $data['nomor_hp'] ?? null,
                 'jumlah_anggota_keluarga' => count(array_filter($data['anggota'] ?? [], fn ($row) => filled($row['nama_lengkap'] ?? null))),
-                'status_perkawinan_id' => $data['status_perkawinan_id'] ?? null,
+                'status_perkawinan' => $data['status_perkawinan'] ?? null,
                 'alamat' => $data['alamat'],
                 'rt' => $data['rt'],
                 'rw' => $data['rw'],
@@ -216,21 +214,18 @@ class KeluargaController extends Controller
      */
     private function formReferenceData(): array
     {
-        $referensi = Referensi::aktif()->orderBy('urutan')->get()->groupBy('kategori');
-
         return [
             'kecamatans' => Kecamatan::where('is_active', true)->with(['desaKelurahans' => fn ($q) => $q->where('is_active', true)->orderBy('nama')])->orderBy('nama')->get(),
-            'refStatusPerkawinan' => $referensi->get('status_perkawinan', collect()),
-            'refPendidikanTerakhir' => $referensi->get('pendidikan_terakhir', collect()),
-            'refStatusPekerjaan' => $referensi->get('status_pekerjaan', collect()),
-            'refJenisAtap' => $referensi->get('jenis_atap', collect()),
-            'refJenisDinding' => $referensi->get('jenis_dinding', collect()),
-            'refJenisLantai' => $referensi->get('jenis_lantai', collect()),
-            'refSumberListrik' => $referensi->get('sumber_listrik', collect()),
-            'refSumberAir' => $referensi->get('sumber_air', collect()),
-            'refPengelolaanSampah' => $referensi->get('pengelolaan_sampah', collect()),
-            'refJenisAset' => $referensi->get('jenis_aset', collect()),
-            'refNamaProgram' => $referensi->get('nama_program', collect()),
+            'refStatusPerkawinan' => config('referensi.status_perkawinan'),
+            'refPendidikanTerakhir' => config('referensi.pendidikan_terakhir'),
+            'refStatusPekerjaan' => config('referensi.status_pekerjaan'),
+            'refJenisAtap' => config('referensi.jenis_atap'),
+            'refJenisDinding' => config('referensi.jenis_dinding'),
+            'refJenisLantai' => config('referensi.jenis_lantai'),
+            'refSumberListrik' => config('referensi.sumber_listrik'),
+            'refSumberAir' => config('referensi.sumber_air'),
+            'refPengelolaanSampah' => config('referensi.pengelolaan_sampah'),
+            'refJenisAset' => config('referensi.jenis_aset'),
         ];
     }
 
@@ -264,9 +259,9 @@ class KeluargaController extends Controller
                 'tanggal_lahir' => $row['tanggal_lahir'],
                 'usia' => now()->diffInYears($row['tanggal_lahir']),
                 'hubungan_keluarga' => $row['hubungan_keluarga'],
-                'status_perkawinan_id' => $row['status_perkawinan_id'] ?? null,
-                'pendidikan_terakhir_id' => $row['pendidikan_terakhir_id'] ?? null,
-                'status_pekerjaan_id' => $row['status_pekerjaan_id'] ?? null,
+                'status_perkawinan' => $row['status_perkawinan'] ?? null,
+                'pendidikan_terakhir' => $row['pendidikan_terakhir'] ?? null,
+                'status_pekerjaan' => $row['status_pekerjaan'] ?? null,
                 'disabilitas' => (bool) ($row['disabilitas'] ?? false),
                 'jenis_disabilitas' => $row['jenis_disabilitas'] ?? null,
                 'penyakit_kronis' => (bool) ($row['penyakit_kronis'] ?? false),
@@ -281,7 +276,7 @@ class KeluargaController extends Controller
     private function syncKondisiEkonomi(Keluarga $keluarga, array $row): void
     {
         $keluarga->kondisiEkonomi()->updateOrCreate(['keluarga_id' => $keluarga->id], [
-            'status_pekerjaan_kepala_keluarga_id' => $row['status_pekerjaan_kepala_keluarga_id'] ?? null,
+            'status_pekerjaan_kepala_keluarga' => $row['status_pekerjaan_kepala_keluarga'] ?? null,
             'pekerjaan_utama' => $row['pekerjaan_utama'] ?? null,
             'pekerjaan_tambahan' => $row['pekerjaan_tambahan'] ?? null,
             'jumlah_anggota_bekerja' => $row['jumlah_anggota_bekerja'] ?? 0,
@@ -313,15 +308,15 @@ class KeluargaController extends Controller
         $keluarga->kondisiRumah()->updateOrCreate(['keluarga_id' => $keluarga->id], [
             'status_kepemilikan' => $row['status_kepemilikan'],
             'kondisi_bangunan' => $row['kondisi_bangunan'],
-            'jenis_atap_id' => $row['jenis_atap_id'] ?? null,
-            'jenis_dinding_id' => $row['jenis_dinding_id'] ?? null,
-            'jenis_lantai_id' => $row['jenis_lantai_id'] ?? null,
-            'sumber_listrik_id' => $row['sumber_listrik_id'] ?? null,
-            'sumber_air_id' => $row['sumber_air_id'] ?? null,
+            'jenis_atap' => $row['jenis_atap'] ?? null,
+            'jenis_dinding' => $row['jenis_dinding'] ?? null,
+            'jenis_lantai' => $row['jenis_lantai'] ?? null,
+            'sumber_listrik' => $row['sumber_listrik'] ?? null,
+            'sumber_air' => $row['sumber_air'] ?? null,
             'jamban' => (bool) ($row['jamban'] ?? false),
             'septic_tank' => (bool) ($row['septic_tank'] ?? false),
             'drainase' => (bool) ($row['drainase'] ?? false),
-            'pengelolaan_sampah_id' => $row['pengelolaan_sampah_id'] ?? null,
+            'pengelolaan_sampah' => $row['pengelolaan_sampah'] ?? null,
             'luas_tanah' => $row['luas_tanah'] ?? null,
             'luas_bangunan' => $row['luas_bangunan'] ?? null,
             'jumlah_kamar' => $row['jumlah_kamar'] ?? null,
@@ -337,13 +332,13 @@ class KeluargaController extends Controller
         $keluarga->asetKeluarga()->delete();
 
         foreach ($rows as $row) {
-            if (blank($row['jenis_aset_id'] ?? null)) {
+            if (blank($row['jenis_aset'] ?? null)) {
                 continue;
             }
 
             AsetKeluarga::create([
                 'keluarga_id' => $keluarga->id,
-                'jenis_aset_id' => $row['jenis_aset_id'],
+                'jenis_aset' => $row['jenis_aset'],
                 'jumlah' => $row['jumlah'] ?? 1,
                 'status_kepemilikan' => $row['status_kepemilikan'] ?? 'milik_sendiri',
                 'perkiraan_nilai' => $row['perkiraan_nilai'] ?? null,

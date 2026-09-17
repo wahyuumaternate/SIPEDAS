@@ -16,18 +16,18 @@ return new class extends Migration
             $table->enum('status_kepemilikan', ['milik_sendiri', 'sewa', 'menumpang', 'rumah_dinas', 'lainnya']);
             $table->enum('kondisi_bangunan', ['permanen', 'semi_permanen', 'tidak_layak_huni']);
 
-            // Material
-            $table->foreignId('jenis_atap_id')->nullable()->constrained('referensis')->nullOnDelete();
-            $table->foreignId('jenis_dinding_id')->nullable()->constrained('referensis')->nullOnDelete();
-            $table->foreignId('jenis_lantai_id')->nullable()->constrained('referensis')->nullOnDelete();
+            // Material — kode dari config('referensi.*), bukan lagi foreign key.
+            $table->string('jenis_atap')->nullable();
+            $table->string('jenis_dinding')->nullable();
+            $table->string('jenis_lantai')->nullable();
 
             // Fasilitas
-            $table->foreignId('sumber_listrik_id')->nullable()->constrained('referensis')->nullOnDelete();
-            $table->foreignId('sumber_air_id')->nullable()->constrained('referensis')->nullOnDelete();
+            $table->string('sumber_listrik')->nullable();
+            $table->string('sumber_air')->nullable();
             $table->boolean('jamban')->default(false);
             $table->boolean('septic_tank')->default(false);
             $table->boolean('drainase')->default(false);
-            $table->foreignId('pengelolaan_sampah_id')->nullable()->constrained('referensis')->nullOnDelete();
+            $table->string('pengelolaan_sampah')->nullable();
 
             // Kondisi fisik
             $table->decimal('luas_tanah', 10, 2)->nullable(); // m2

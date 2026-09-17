@@ -175,7 +175,7 @@
                         <dl class="row mb-0">
                             <dt class="col-sm-5">NIK</dt><dd class="col-sm-7">{{ $ortu->nik_ayah ?: '-' }}</dd>
                             <dt class="col-sm-5">Nama</dt><dd class="col-sm-7">{{ $ortu->nama_ayah_lengkap ?: '-' }}</dd>
-                            <dt class="col-sm-5">Pendidikan</dt><dd class="col-sm-7">{{ $ortu->pendidikanAyah?->nilai ?: '-' }}</dd>
+                            <dt class="col-sm-5">Pendidikan</dt><dd class="col-sm-7">{{ $ortu->pendidikan_ayah_label ?: '-' }}</dd>
                             <dt class="col-sm-5">Pekerjaan</dt><dd class="col-sm-7">{{ $ortu->pekerjaan_ayah ?: '-' }}</dd>
                             <dt class="col-sm-5">Penghasilan</dt><dd class="col-sm-7">Rp {{ number_format($ortu->penghasilan_ayah ?? 0, 0, ',', '.') }}</dd>
                         </dl>
@@ -185,7 +185,7 @@
                         <dl class="row mb-0">
                             <dt class="col-sm-5">NIK</dt><dd class="col-sm-7">{{ $ortu->nik_ibu ?: '-' }}</dd>
                             <dt class="col-sm-5">Nama</dt><dd class="col-sm-7">{{ $ortu->nama_ibu_lengkap ?: '-' }}</dd>
-                            <dt class="col-sm-5">Pendidikan</dt><dd class="col-sm-7">{{ $ortu->pendidikanIbu?->nilai ?: '-' }}</dd>
+                            <dt class="col-sm-5">Pendidikan</dt><dd class="col-sm-7">{{ $ortu->pendidikan_ibu_label ?: '-' }}</dd>
                             <dt class="col-sm-5">Pekerjaan</dt><dd class="col-sm-7">{{ $ortu->pekerjaan_ibu ?: '-' }}</dd>
                             <dt class="col-sm-5">Penghasilan</dt><dd class="col-sm-7">Rp {{ number_format($ortu->penghasilan_ibu ?? 0, 0, ',', '.') }}</dd>
                         </dl>
@@ -341,10 +341,10 @@
             @php($san = $anak->sanitasi)
             @if ($san)
                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Sumber Air Minum / Memasak</dt><dd class="col-sm-8">{{ $san->sumberAirMinum?->nilai ?: '-' }} / {{ $san->sumberAirMemasak?->nilai ?: '-' }}</dd>
-                    <dt class="col-sm-4">Jamban</dt><dd class="col-sm-8">{{ $san->kepemilikan_jamban ? 'Ada' : 'Tidak Ada' }} ({{ $san->jenisJamban?->nilai ?: '-' }}) {{ $san->septic_tank ? '+ Septic Tank' : '' }}</dd>
+                    <dt class="col-sm-4">Sumber Air Minum / Memasak</dt><dd class="col-sm-8">{{ $san->sumber_air_minum_label ?: '-' }} / {{ $san->sumber_air_memasak_label ?: '-' }}</dd>
+                    <dt class="col-sm-4">Jamban</dt><dd class="col-sm-8">{{ $san->kepemilikan_jamban ? 'Ada' : 'Tidak Ada' }} ({{ $san->jenis_jamban_label ?: '-' }}) {{ $san->septic_tank ? '+ Septic Tank' : '' }}</dd>
                     <dt class="col-sm-4">Saluran Pembuangan</dt><dd class="col-sm-8">{{ $san->saluran_pembuangan ?: '-' }}</dd>
-                    <dt class="col-sm-4">Pengelolaan Sampah</dt><dd class="col-sm-8">{{ $san->pengelolaanSampah?->nilai ?: '-' }}</dd>
+                    <dt class="col-sm-4">Pengelolaan Sampah</dt><dd class="col-sm-8">{{ $san->pengelolaan_sampah_label ?: '-' }}</dd>
                     <dt class="col-sm-4">Kondisi Rumah</dt><dd class="col-sm-8">{{ str($san->kondisi_rumah ?? '-')->replace('_', ' ')->title() }}</dd>
                     <dt class="col-sm-4">Kepadatan Hunian</dt><dd class="col-sm-8">{{ $san->kepadatan_hunian }} m²/orang</dd>
                 </dl>

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('keluarga_id')->constrained('keluargas')->cascadeOnDelete();
 
-            $table->foreignId('jenis_aset_id')->constrained('referensis')->restrictOnDelete();
+            $table->string('jenis_aset'); // kode dari config('referensi.jenis_aset')
             $table->unsignedInteger('jumlah')->default(1);
             $table->enum('status_kepemilikan', ['milik_sendiri', 'sewa', 'lainnya'])->default('milik_sendiri');
             $table->decimal('perkiraan_nilai', 15, 2)->nullable();

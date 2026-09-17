@@ -116,9 +116,9 @@ Data harus melewati validasi otomatis sebelum dapat dikirim untuk proses verifik
 Data historis, khususnya pengukuran anak dan aktivitas verifikasi, tidak boleh ditimpa tanpa mekanisme pencatatan
 perubahan.
 
-### 3.7 Configurable Reference
+### 3.7 Fixed Reference Values
 
-Data referensi yang bersifat administratif harus dapat dikelola melalui Master Data.
+Nilai referensi (dropdown) untuk formulir pendataan bersifat tetap dan dikelola sebagai bagian dari kode aplikasi, bukan melalui Master Data yang dapat diubah admin lewat antarmuka.
 
 ### 3.8 Separation of Scope
 
@@ -237,7 +237,6 @@ Dapat:
 * mengelola pengguna;
 * mengelola role;
 * mengelola wilayah;
-* mengelola referensi;
 * melihat seluruh data;
 * mengelola konfigurasi;
 * melihat audit log;
@@ -370,8 +369,7 @@ DASHBOARD
 │
 ├── MASTER DATA
 │ ├── Wilayah
-│ ├── Petugas
-│ └── Referensi
+│ └── Petugas
 │
 └── ADMINISTRASI
 ├── Pengguna
@@ -1254,26 +1252,6 @@ User tidak boleh melakukan export data di luar wilayah kewenangannya.
 * desa/kelurahan;
 * kode wilayah.
 
-## 42.2 Referensi
-
-Contoh:
-
-* jenis kelamin;
-* pendidikan;
-* pekerjaan;
-* status perkawinan;
-* jenis rumah;
-* jenis atap;
-* jenis dinding;
-* jenis lantai;
-* sumber air;
-* jenis jamban;
-* jenis aset;
-* jenis bantuan;
-* penyakit;
-* jenis persalinan;
-* dan referensi lainnya.
-
 ---
 
 # 43. MANAJEMEN PENGGUNA
@@ -1477,7 +1455,6 @@ permissions
 user_roles
 user_wilayah
 wilayah
-referensi
 audit_logs
 ```
 
@@ -1506,7 +1483,7 @@ KELUARGA
         scope wilayah. ## BR-013 Data yang terindikasi duplikat tidak otomatis dihapus. ## BR-014 Usia dihitung sistem
         berdasarkan tanggal lahir. ## BR-015 Total pendapatan dihitung dari komponen pendapatan. ## BR-016 Total
         pengeluaran dihitung dari komponen pengeluaran. ## BR-017 Tanggal pengukuran tidak boleh lebih awal dari tanggal
-        lahir. ## BR-018 Data referensi harus menggunakan master data. --- # 54. STATE MACHINE ```text ┌───────────────┐
+        lahir. ## BR-018 Data referensi menggunakan daftar tetap yang dikelola sebagai konfigurasi aplikasi. --- # 54. STATE MACHINE ```text ┌───────────────┐
         │ DRAFT │ └───────┬───────┘ │ SUBMIT ▼ ┌───────────────┐ │ DIKIRIM │ └───────┬───────┘ │ ▼
         ┌─────────────────────┐ │ DALAM VERIFIKASI │ └──────┬──────┬───────┘ │ │ VALID │ │ PERBAIKAN │ ▼ │
         ┌──────────────┐ │ │ PERBAIKAN │ │ └──────┬───────┘ │ │ │ ▼ │ DIKIRIM KEMBALI │ │ │ ▼ │ DALAM VERIFIKASI │ ├──
@@ -1683,7 +1660,6 @@ KELUARGA
         * permission;
         * user management;
         * wilayah;
-        * master referensi;
         * audit log.
 
         ### Kemiskinan

@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasReferensiLabel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KondisiRumah extends Model
 {
-    use HasFactory;
+    use HasFactory, HasReferensiLabel;
 
     protected $fillable = [
         'keluarga_id', 'status_kepemilikan', 'kondisi_bangunan',
-        'jenis_atap_id', 'jenis_dinding_id', 'jenis_lantai_id',
-        'sumber_listrik_id', 'sumber_air_id', 'jamban', 'septic_tank', 'drainase',
-        'pengelolaan_sampah_id', 'luas_tanah', 'luas_bangunan', 'jumlah_kamar', 'jumlah_penghuni',
+        'jenis_atap', 'jenis_dinding', 'jenis_lantai',
+        'sumber_listrik', 'sumber_air', 'jamban', 'septic_tank', 'drainase',
+        'pengelolaan_sampah', 'luas_tanah', 'luas_bangunan', 'jumlah_kamar', 'jumlah_penghuni',
     ];
 
     protected $casts = [
@@ -30,33 +31,33 @@ class KondisiRumah extends Model
         return $this->belongsTo(Keluarga::class);
     }
 
-    public function jenisAtap(): BelongsTo
+    public function getJenisAtapLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'jenis_atap_id');
+        return $this->labelReferensi('jenis_atap', $this->jenis_atap);
     }
 
-    public function jenisDinding(): BelongsTo
+    public function getJenisDindingLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'jenis_dinding_id');
+        return $this->labelReferensi('jenis_dinding', $this->jenis_dinding);
     }
 
-    public function jenisLantai(): BelongsTo
+    public function getJenisLantaiLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'jenis_lantai_id');
+        return $this->labelReferensi('jenis_lantai', $this->jenis_lantai);
     }
 
-    public function sumberListrik(): BelongsTo
+    public function getSumberListrikLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'sumber_listrik_id');
+        return $this->labelReferensi('sumber_listrik', $this->sumber_listrik);
     }
 
-    public function sumberAir(): BelongsTo
+    public function getSumberAirLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'sumber_air_id');
+        return $this->labelReferensi('sumber_air', $this->sumber_air);
     }
 
-    public function pengelolaanSampah(): BelongsTo
+    public function getPengelolaanSampahLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'pengelolaan_sampah_id');
+        return $this->labelReferensi('pengelolaan_sampah', $this->pengelolaan_sampah);
     }
 }

@@ -15,13 +15,13 @@ class SanitasiFactory extends Factory
     {
         return [
             'anak_id' => Anak::factory(),
-            'sumber_air_minum_id' => null,
-            'sumber_air_memasak_id' => null,
+            'sumber_air_minum' => null,
+            'sumber_air_memasak' => null,
             'kepemilikan_jamban' => fake()->boolean(80),
-            'jenis_jamban_id' => null,
+            'jenis_jamban' => null,
             'septic_tank' => fake()->boolean(70),
             'saluran_pembuangan' => fake()->randomElement(['Selokan', 'Sungai', 'Tidak Ada']),
-            'pengelolaan_sampah_id' => null,
+            'pengelolaan_sampah' => null,
             'kondisi_rumah' => fake()->randomElement(['permanen', 'semi_permanen', 'tidak_layak_huni']),
             'kepadatan_hunian' => fake()->randomFloat(2, 2, 15),
         ];

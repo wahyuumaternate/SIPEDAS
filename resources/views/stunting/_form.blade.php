@@ -162,10 +162,10 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Pendidikan Ayah</label>
-                    <select name="orang_tua[pendidikan_ayah_id]" class="form-select">
+                    <select name="orang_tua[pendidikan_ayah]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refPendidikan as $ref)
-                            <option value="{{ $ref->id }}" @selected(($orangTua['pendidikan_ayah_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refPendidikan as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($orangTua['pendidikan_ayah'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -200,10 +200,10 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Pendidikan Ibu</label>
-                    <select name="orang_tua[pendidikan_ibu_id]" class="form-select">
+                    <select name="orang_tua[pendidikan_ibu]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refPendidikan as $ref)
-                            <option value="{{ $ref->id }}" @selected(($orangTua['pendidikan_ibu_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refPendidikan as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($orangTua['pendidikan_ibu'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -526,28 +526,28 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label small">Sumber Air Minum</label>
-                    <select name="sanitasi[sumber_air_minum_id]" class="form-select">
+                    <select name="sanitasi[sumber_air_minum]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refSumberAir as $ref)
-                            <option value="{{ $ref->id }}" @selected(($sanitasi['sumber_air_minum_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refSumberAir as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($sanitasi['sumber_air_minum'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label small">Sumber Air Memasak</label>
-                    <select name="sanitasi[sumber_air_memasak_id]" class="form-select">
+                    <select name="sanitasi[sumber_air_memasak]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refSumberAir as $ref)
-                            <option value="{{ $ref->id }}" @selected(($sanitasi['sumber_air_memasak_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refSumberAir as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($sanitasi['sumber_air_memasak'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label small">Jenis Jamban</label>
-                    <select name="sanitasi[jenis_jamban_id]" class="form-select">
+                    <select name="sanitasi[jenis_jamban]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refJenisJamban as $ref)
-                            <option value="{{ $ref->id }}" @selected(($sanitasi['jenis_jamban_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refJenisJamban as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($sanitasi['jenis_jamban'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -563,10 +563,10 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Pengelolaan Sampah</label>
-                    <select name="sanitasi[pengelolaan_sampah_id]" class="form-select">
+                    <select name="sanitasi[pengelolaan_sampah]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refPengelolaanSampah as $ref)
-                            <option value="{{ $ref->id }}" @selected(($sanitasi['pengelolaan_sampah_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refPengelolaanSampah as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($sanitasi['pengelolaan_sampah'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>

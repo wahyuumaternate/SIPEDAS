@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\AsetKeluarga;
 use App\Models\Keluarga;
-use App\Models\Referensi;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,7 +15,7 @@ class AsetKeluargaFactory extends Factory
     {
         return [
             'keluarga_id' => Keluarga::factory(),
-            'jenis_aset_id' => Referensi::factory()->state(['kategori' => 'jenis_aset']),
+            'jenis_aset' => fake()->randomElement(array_keys(config('referensi.jenis_aset'))),
             'jumlah' => fake()->numberBetween(1, 3),
             'status_kepemilikan' => fake()->randomElement(['milik_sendiri', 'sewa', 'lainnya']),
             'perkiraan_nilai' => fake()->numberBetween(500000, 50000000),

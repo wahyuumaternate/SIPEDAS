@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('nik_ayah', 16)->nullable();
             $table->string('nama_ayah_lengkap')->nullable();
             $table->date('tanggal_lahir_ayah')->nullable();
-            $table->foreignId('pendidikan_ayah_id')->nullable()->constrained('referensis')->nullOnDelete();
+            $table->string('pendidikan_ayah')->nullable(); // kode dari config('referensi.pendidikan_terakhir')
             $table->string('pekerjaan_ayah')->nullable();
             $table->decimal('penghasilan_ayah', 15, 2)->nullable();
 
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('nik_ibu', 16)->nullable();
             $table->string('nama_ibu_lengkap')->nullable();
             $table->date('tanggal_lahir_ibu')->nullable();
-            $table->foreignId('pendidikan_ibu_id')->nullable()->constrained('referensis')->nullOnDelete();
+            $table->string('pendidikan_ibu')->nullable(); // kode dari config('referensi.pendidikan_terakhir')
             $table->string('pekerjaan_ibu')->nullable();
             $table->decimal('penghasilan_ibu', 15, 2)->nullable();
 

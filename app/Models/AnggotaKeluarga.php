@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasReferensiLabel;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnggotaKeluarga extends Model
 {
-    use HasFactory;
+    use HasFactory, HasReferensiLabel;
 
     protected $fillable = [
         'keluarga_id', 'nik', 'nama_lengkap', 'jenis_kelamin', 'tempat_lahir',
-        'tanggal_lahir', 'usia', 'hubungan_keluarga', 'status_perkawinan_id',
-        'pendidikan_terakhir_id', 'status_pekerjaan_id',
+        'tanggal_lahir', 'usia', 'hubungan_keluarga', 'status_perkawinan',
+        'pendidikan_terakhir', 'status_pekerjaan',
         'disabilitas', 'jenis_disabilitas', 'penyakit_kronis', 'jenis_penyakit_kronis',
     ];
 
@@ -29,24 +30,24 @@ class AnggotaKeluarga extends Model
         return $this->belongsTo(Keluarga::class);
     }
 
-    public function statusPerkawinan(): BelongsTo
-    {
-        return $this->belongsTo(Referensi::class, 'status_perkawinan_id');
-    }
-
-    public function pendidikanTerakhir(): BelongsTo
-    {
-        return $this->belongsTo(Referensi::class, 'pendidikan_terakhir_id');
-    }
-
-    public function statusPekerjaan(): BelongsTo
-    {
-        return $this->belongsTo(Referensi::class, 'status_pekerjaan_id');
-    }
-
     /** Usia terkini dihitung otomatis dari tanggal_lahir (dalam tahun). */
     public function getUsiaTerkiniAttribute(): ?int
     {
         return $this->tanggal_lahir ? Carbon::parse($this->tanggal_lahir)->age : null;
+    }
+
+    public function getStatusPerkawinanLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('status_perkawinan', $this->status_perkawinan);
+    }
+
+    public function getPendidikanTerakhirLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('pendidikan_terakhir', $this->pendidikan_terakhir);
+    }
+
+    public function getStatusPekerjaanLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('status_pekerjaan', $this->status_pekerjaan);
     }
 }

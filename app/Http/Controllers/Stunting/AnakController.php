@@ -10,7 +10,6 @@ use App\Models\AuditLog;
 use App\Models\DokumenAnak;
 use App\Models\Kecamatan;
 use App\Models\Pengukuran;
-use App\Models\Referensi;
 use App\Models\VerifikasiStunting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -128,14 +127,14 @@ class AnakController extends Controller
     {
         $anak->load([
             'kecamatan', 'desaKelurahan', 'petugas',
-            'orangTua.pendidikanAyah', 'orangTua.pendidikanIbu',
+            'orangTua',
             'riwayatKehamilan',
             'riwayatKelahiran',
             'pengukurans' => fn ($q) => $q->orderByDesc('tanggal_pengukuran'),
             'pengukurans.petugasPengukur',
             'riwayatKesehatan',
             'asiMpasi',
-            'sanitasi.sumberAirMinum', 'sanitasi.sumberAirMemasak', 'sanitasi.jenisJamban', 'sanitasi.pengelolaanSampah',
+            'sanitasi',
             'dokumen.pengunggah',
             'riwayatVerifikasi.verifikator',
         ]);
@@ -221,14 +220,12 @@ class AnakController extends Controller
      */
     private function formReferenceData(): array
     {
-        $referensi = Referensi::aktif()->orderBy('urutan')->get()->groupBy('kategori');
-
         return [
             'kecamatans' => Kecamatan::where('is_active', true)->with(['desaKelurahans' => fn ($q) => $q->where('is_active', true)->orderBy('nama')])->orderBy('nama')->get(),
-            'refPendidikan' => $referensi->get('pendidikan_terakhir', collect()),
-            'refSumberAir' => $referensi->get('sumber_air', collect()),
-            'refJenisJamban' => $referensi->get('jenis_jamban', collect()),
-            'refPengelolaanSampah' => $referensi->get('pengelolaan_sampah', collect()),
+            'refPendidikan' => config('referensi.pendidikan_terakhir'),
+            'refSumberAir' => config('referensi.sumber_air'),
+            'refJenisJamban' => config('referensi.jenis_jamban'),
+            'refPengelolaanSampah' => config('referensi.pengelolaan_sampah'),
         ];
     }
 
@@ -254,13 +251,13 @@ class AnakController extends Controller
             'nik_ayah' => $row['nik_ayah'] ?? null,
             'nama_ayah_lengkap' => $row['nama_ayah_lengkap'] ?? null,
             'tanggal_lahir_ayah' => $row['tanggal_lahir_ayah'] ?? null,
-            'pendidikan_ayah_id' => $row['pendidikan_ayah_id'] ?? null,
+            'pendidikan_ayah' => $row['pendidikan_ayah'] ?? null,
             'pekerjaan_ayah' => $row['pekerjaan_ayah'] ?? null,
             'penghasilan_ayah' => $row['penghasilan_ayah'] ?? null,
             'nik_ibu' => $row['nik_ibu'] ?? null,
             'nama_ibu_lengkap' => $row['nama_ibu_lengkap'] ?? null,
             'tanggal_lahir_ibu' => $row['tanggal_lahir_ibu'] ?? null,
-            'pendidikan_ibu_id' => $row['pendidikan_ibu_id'] ?? null,
+            'pendidikan_ibu' => $row['pendidikan_ibu'] ?? null,
             'pekerjaan_ibu' => $row['pekerjaan_ibu'] ?? null,
             'penghasilan_ibu' => $row['penghasilan_ibu'] ?? null,
         ]);
@@ -396,13 +393,13 @@ class AnakController extends Controller
         }
 
         $anak->sanitasi()->updateOrCreate(['anak_id' => $anak->id], [
-            'sumber_air_minum_id' => $row['sumber_air_minum_id'] ?? null,
-            'sumber_air_memasak_id' => $row['sumber_air_memasak_id'] ?? null,
+            'sumber_air_minum' => $row['sumber_air_minum'] ?? null,
+            'sumber_air_memasak' => $row['sumber_air_memasak'] ?? null,
             'kepemilikan_jamban' => (bool) ($row['kepemilikan_jamban'] ?? false),
-            'jenis_jamban_id' => $row['jenis_jamban_id'] ?? null,
+            'jenis_jamban' => $row['jenis_jamban'] ?? null,
             'septic_tank' => (bool) ($row['septic_tank'] ?? false),
             'saluran_pembuangan' => $row['saluran_pembuangan'] ?? null,
-            'pengelolaan_sampah_id' => $row['pengelolaan_sampah_id'] ?? null,
+            'pengelolaan_sampah' => $row['pengelolaan_sampah'] ?? null,
             'kondisi_rumah' => $row['kondisi_rumah'] ?? null,
             'kepadatan_hunian' => $row['kepadatan_hunian'] ?? null,
         ]);

@@ -21,12 +21,9 @@
       <p class="text-muted mb-0">{{ $description ?? '' }}</p>
     </div>
   </div>
-  <div class="heading-actions">
-    @hasSection('page-actions')
+  @hasSection('page-actions')
+    <div class="heading-actions">
       @yield('page-actions')
-    @else
-      <button class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-download" aria-hidden="true"></i> Export</button>
-      <button class="btn btn-primary btn-sm" type="button"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i> Create Report</button>
-    @endif
-  </div>
+    </div>
+  @endif
 </div>

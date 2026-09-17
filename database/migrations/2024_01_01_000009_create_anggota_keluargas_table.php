@@ -26,9 +26,10 @@ return new class extends Migration
             $table->unsignedInteger('usia')->nullable();
 
             $table->string('hubungan_keluarga'); // hubungan dengan kepala keluarga
-            $table->foreignId('status_perkawinan_id')->nullable()->constrained('referensis')->nullOnDelete();
-            $table->foreignId('pendidikan_terakhir_id')->nullable()->constrained('referensis')->nullOnDelete();
-            $table->foreignId('status_pekerjaan_id')->nullable()->constrained('referensis')->nullOnDelete();
+            // Kode-kode berikut mengacu ke config('referensi.*), bukan lagi foreign key.
+            $table->string('status_perkawinan')->nullable();
+            $table->string('pendidikan_terakhir')->nullable();
+            $table->string('status_pekerjaan')->nullable();
 
             $table->boolean('disabilitas')->default(false);
             $table->string('jenis_disabilitas')->nullable();

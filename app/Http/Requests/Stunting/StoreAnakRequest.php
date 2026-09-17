@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Stunting;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAnakRequest extends FormRequest
 {
@@ -37,13 +38,13 @@ class StoreAnakRequest extends FormRequest
             'orang_tua.nik_ayah' => ['nullable', 'digits:16'],
             'orang_tua.nama_ayah_lengkap' => ['nullable', 'string', 'max:255'],
             'orang_tua.tanggal_lahir_ayah' => ['nullable', 'date'],
-            'orang_tua.pendidikan_ayah_id' => ['nullable', 'exists:referensis,id'],
+            'orang_tua.pendidikan_ayah' => ['nullable', Rule::in($this->kodeReferensi('pendidikan_terakhir'))],
             'orang_tua.pekerjaan_ayah' => ['nullable', 'string', 'max:255'],
             'orang_tua.penghasilan_ayah' => ['nullable', 'numeric', 'min:0'],
             'orang_tua.nik_ibu' => ['nullable', 'digits:16'],
             'orang_tua.nama_ibu_lengkap' => ['nullable', 'string', 'max:255'],
             'orang_tua.tanggal_lahir_ibu' => ['nullable', 'date'],
-            'orang_tua.pendidikan_ibu_id' => ['nullable', 'exists:referensis,id'],
+            'orang_tua.pendidikan_ibu' => ['nullable', Rule::in($this->kodeReferensi('pendidikan_terakhir'))],
             'orang_tua.pekerjaan_ibu' => ['nullable', 'string', 'max:255'],
             'orang_tua.penghasilan_ibu' => ['nullable', 'numeric', 'min:0'],
 
@@ -108,13 +109,13 @@ class StoreAnakRequest extends FormRequest
             'asi_mpasi.keragaman_makanan' => ['nullable', 'string', 'max:255'],
 
             // Sanitasi & lingkungan (PRD Bagian 24) - opsional untuk draft.
-            'sanitasi.sumber_air_minum_id' => ['nullable', 'exists:referensis,id'],
-            'sanitasi.sumber_air_memasak_id' => ['nullable', 'exists:referensis,id'],
+            'sanitasi.sumber_air_minum' => ['nullable', Rule::in($this->kodeReferensi('sumber_air'))],
+            'sanitasi.sumber_air_memasak' => ['nullable', Rule::in($this->kodeReferensi('sumber_air'))],
             'sanitasi.kepemilikan_jamban' => ['nullable', 'boolean'],
-            'sanitasi.jenis_jamban_id' => ['nullable', 'exists:referensis,id'],
+            'sanitasi.jenis_jamban' => ['nullable', Rule::in($this->kodeReferensi('jenis_jamban'))],
             'sanitasi.septic_tank' => ['nullable', 'boolean'],
             'sanitasi.saluran_pembuangan' => ['nullable', 'string', 'max:255'],
-            'sanitasi.pengelolaan_sampah_id' => ['nullable', 'exists:referensis,id'],
+            'sanitasi.pengelolaan_sampah' => ['nullable', Rule::in($this->kodeReferensi('pengelolaan_sampah'))],
             'sanitasi.kondisi_rumah' => ['nullable', 'in:permanen,semi_permanen,tidak_layak_huni'],
             'sanitasi.kepadatan_hunian' => ['nullable', 'numeric', 'min:0'],
 
@@ -138,5 +139,13 @@ class StoreAnakRequest extends FormRequest
             'kecamatan_id' => 'kecamatan',
             'desa_kelurahan_id' => 'desa/kelurahan',
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function kodeReferensi(string $kategori): array
+    {
+        return array_keys(config("referensi.{$kategori}", []));
     }
 }

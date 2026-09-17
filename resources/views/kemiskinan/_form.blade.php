@@ -9,9 +9,9 @@
         'tempat_lahir' => $a->tempat_lahir,
         'tanggal_lahir' => optional($a->tanggal_lahir)->format('Y-m-d'),
         'hubungan_keluarga' => $a->hubungan_keluarga,
-        'status_perkawinan_id' => $a->status_perkawinan_id,
-        'pendidikan_terakhir_id' => $a->pendidikan_terakhir_id,
-        'status_pekerjaan_id' => $a->status_pekerjaan_id,
+        'status_perkawinan' => $a->status_perkawinan,
+        'pendidikan_terakhir' => $a->pendidikan_terakhir,
+        'status_pekerjaan' => $a->status_pekerjaan,
         'disabilitas' => $a->disabilitas,
         'jenis_disabilitas' => $a->jenis_disabilitas,
         'penyakit_kronis' => $a->penyakit_kronis,
@@ -23,7 +23,7 @@
     $sosial = old('kondisi_sosial', $isEdit ? ($keluarga->kondisiSosial?->toArray() ?? []) : []);
 
     $asetRows = old('aset', $isEdit ? $keluarga->asetKeluarga->map(fn ($a) => $a->only([
-        'jenis_aset_id', 'jumlah', 'status_kepemilikan', 'perkiraan_nilai', 'keterangan',
+        'jenis_aset', 'jumlah', 'status_kepemilikan', 'perkiraan_nilai', 'keterangan',
     ]))->all() : []);
 
     $programRows = old('program', $isEdit ? $keluarga->kepesertaanProgram->map(fn ($p) => $p->only([
@@ -118,10 +118,10 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Status Perkawinan</label>
-                    <select name="status_perkawinan_id" class="form-select">
+                    <select name="status_perkawinan" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refStatusPerkawinan as $ref)
-                            <option value="{{ $ref->id }}" @selected(old('status_perkawinan_id', $keluarga?->status_perkawinan_id) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refStatusPerkawinan as $kode => $label)
+                            <option value="{{ $kode }}" @selected(old('status_perkawinan', $keluarga?->status_perkawinan) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -178,10 +178,10 @@
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Status Pekerjaan Kepala Keluarga</label>
-                    <select name="kondisi_ekonomi[status_pekerjaan_kepala_keluarga_id]" class="form-select">
+                    <select name="kondisi_ekonomi[status_pekerjaan_kepala_keluarga]" class="form-select">
                         <option value="">Pilih</option>
-                        @foreach ($refStatusPekerjaan as $ref)
-                            <option value="{{ $ref->id }}" @selected(($ekonomi['status_pekerjaan_kepala_keluarga_id'] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                        @foreach ($refStatusPekerjaan as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($ekonomi['status_pekerjaan_kepala_keluarga'] ?? null) === $kode)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -269,19 +269,19 @@
                     </select>
                 </div>
                 @foreach ([
-                    'jenis_atap_id' => ['Jenis Atap', $refJenisAtap],
-                    'jenis_dinding_id' => ['Jenis Dinding', $refJenisDinding],
-                    'jenis_lantai_id' => ['Jenis Lantai', $refJenisLantai],
-                    'sumber_listrik_id' => ['Sumber Listrik', $refSumberListrik],
-                    'sumber_air_id' => ['Sumber Air', $refSumberAir],
-                    'pengelolaan_sampah_id' => ['Pengelolaan Sampah', $refPengelolaanSampah],
+                    'jenis_atap' => ['Jenis Atap', $refJenisAtap],
+                    'jenis_dinding' => ['Jenis Dinding', $refJenisDinding],
+                    'jenis_lantai' => ['Jenis Lantai', $refJenisLantai],
+                    'sumber_listrik' => ['Sumber Listrik', $refSumberListrik],
+                    'sumber_air' => ['Sumber Air', $refSumberAir],
+                    'pengelolaan_sampah' => ['Pengelolaan Sampah', $refPengelolaanSampah],
                 ] as $field => [$label, $refs])
                     <div class="col-md-4">
                         <label class="form-label">{{ $label }}</label>
                         <select name="kondisi_rumah[{{ $field }}]" class="form-select">
                             <option value="">Pilih</option>
-                            @foreach ($refs as $ref)
-                                <option value="{{ $ref->id }}" @selected(($rumah[$field] ?? null) == $ref->id)>{{ $ref->nilai }}</option>
+                            @foreach ($refs as $kode => $refLabel)
+                                <option value="{{ $kode }}" @selected(($rumah[$field] ?? null) === $kode)>{{ $refLabel }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -522,15 +522,15 @@
             if (kecamatanSelect.value) renderDesaOptions();
 
             const refs = {
-                statusPerkawinan: @json($refStatusPerkawinan->map->only(['id', 'nilai'])->values()),
-                pendidikan: @json($refPendidikanTerakhir->map->only(['id', 'nilai'])->values()),
-                pekerjaan: @json($refStatusPekerjaan->map->only(['id', 'nilai'])->values()),
-                jenisAset: @json($refJenisAset->map->only(['id', 'nilai'])->values()),
+                statusPerkawinan: @json($refStatusPerkawinan),
+                pendidikan: @json($refPendidikanTerakhir),
+                pekerjaan: @json($refStatusPekerjaan),
+                jenisAset: @json($refJenisAset),
             };
 
-            function selectOptions(list, selected) {
-                return '<option value="">Pilih</option>' + list.map(function (r) {
-                    return '<option value="' + r.id + '"' + (String(selected) === String(r.id) ? ' selected' : '') + '>' + r.nilai + '</option>';
+            function selectOptions(map, selected) {
+                return '<option value="">Pilih</option>' + Object.entries(map).map(function ([kode, label]) {
+                    return '<option value="' + kode + '"' + (String(selected) === kode ? ' selected' : '') + '>' + label + '</option>';
                 }).join('');
             }
 
@@ -563,11 +563,11 @@
                         <div class="col-md-3"><label class="form-label small">Tanggal Lahir *</label>
                             <input type="date" name="anggota[${i}][tanggal_lahir]" class="form-control form-control-sm" value="${data.tanggal_lahir || ''}" data-required-kirim="1"></div>
                         <div class="col-md-3"><label class="form-label small">Status Perkawinan</label>
-                            <select name="anggota[${i}][status_perkawinan_id]" class="form-select form-select-sm">${selectOptions(refs.statusPerkawinan, data.status_perkawinan_id)}</select></div>
+                            <select name="anggota[${i}][status_perkawinan]" class="form-select form-select-sm">${selectOptions(refs.statusPerkawinan, data.status_perkawinan)}</select></div>
                         <div class="col-md-3"><label class="form-label small">Pendidikan Terakhir</label>
-                            <select name="anggota[${i}][pendidikan_terakhir_id]" class="form-select form-select-sm">${selectOptions(refs.pendidikan, data.pendidikan_terakhir_id)}</select></div>
+                            <select name="anggota[${i}][pendidikan_terakhir]" class="form-select form-select-sm">${selectOptions(refs.pendidikan, data.pendidikan_terakhir)}</select></div>
                         <div class="col-md-3"><label class="form-label small">Status Pekerjaan</label>
-                            <select name="anggota[${i}][status_pekerjaan_id]" class="form-select form-select-sm">${selectOptions(refs.pekerjaan, data.status_pekerjaan_id)}</select></div>
+                            <select name="anggota[${i}][status_pekerjaan]" class="form-select form-select-sm">${selectOptions(refs.pekerjaan, data.status_pekerjaan)}</select></div>
                         <div class="col-md-3 d-flex align-items-end gap-3">
                             <div class="form-check"><input type="hidden" name="anggota[${i}][disabilitas]" value="0"><input type="checkbox" class="form-check-input" name="anggota[${i}][disabilitas]" value="1" ${data.disabilitas ? 'checked' : ''}><label class="form-check-label small">Disabilitas</label></div>
                             <div class="form-check"><input type="hidden" name="anggota[${i}][penyakit_kronis]" value="0"><input type="checkbox" class="form-check-input" name="anggota[${i}][penyakit_kronis]" value="1" ${data.penyakit_kronis ? 'checked' : ''}><label class="form-check-label small">Penyakit Kronis</label></div>
@@ -594,7 +594,7 @@
                     <button type="button" class="btn btn-sm btn-outline-danger btn-remove-row"><i class="bi bi-trash"></i></button>
                     <div class="row g-2">
                         <div class="col-md-3"><label class="form-label small">Jenis Aset</label>
-                            <select name="aset[${i}][jenis_aset_id]" class="form-select form-select-sm">${selectOptions(refs.jenisAset, data.jenis_aset_id)}</select></div>
+                            <select name="aset[${i}][jenis_aset]" class="form-select form-select-sm">${selectOptions(refs.jenisAset, data.jenis_aset)}</select></div>
                         <div class="col-md-2"><label class="form-label small">Jumlah</label>
                             <input type="number" min="1" name="aset[${i}][jumlah]" class="form-control form-control-sm" value="${data.jumlah || ''}"></div>
                         <div class="col-md-3"><label class="form-label small">Status Kepemilikan</label>

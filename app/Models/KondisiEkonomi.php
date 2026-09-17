@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasReferensiLabel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class KondisiEkonomi extends Model
 {
-    use HasFactory;
+    use HasFactory, HasReferensiLabel;
 
     protected $fillable = [
         'keluarga_id',
-        'status_pekerjaan_kepala_keluarga_id', 'pekerjaan_utama', 'pekerjaan_tambahan',
+        'status_pekerjaan_kepala_keluarga', 'pekerjaan_utama', 'pekerjaan_tambahan',
         'jumlah_anggota_bekerja', 'jumlah_anggota_tidak_bekerja',
         'pendapatan_kepala_keluarga', 'pendapatan_pasangan', 'pendapatan_anggota_lainnya', 'total_pendapatan',
         'pengeluaran_makanan', 'pengeluaran_pendidikan', 'pengeluaran_kesehatan',
@@ -62,8 +63,8 @@ class KondisiEkonomi extends Model
         return $this->belongsTo(Keluarga::class);
     }
 
-    public function statusPekerjaanKepalaKeluarga(): BelongsTo
+    public function getStatusPekerjaanKepalaKeluargaLabelAttribute(): ?string
     {
-        return $this->belongsTo(Referensi::class, 'status_pekerjaan_kepala_keluarga_id');
+        return $this->labelReferensi('status_pekerjaan', $this->status_pekerjaan_kepala_keluarga);
     }
 }

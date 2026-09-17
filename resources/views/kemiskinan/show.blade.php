@@ -151,7 +151,7 @@
                 <dt class="col-sm-3">Nomor KK</dt><dd class="col-sm-9">{{ $keluarga->nomor_kk }}</dd>
                 <dt class="col-sm-3">NIK Kepala Keluarga</dt><dd class="col-sm-9">{{ $keluarga->nik_kepala_keluarga }}</dd>
                 <dt class="col-sm-3">Nomor HP</dt><dd class="col-sm-9">{{ $keluarga->nomor_hp ?: '-' }}</dd>
-                <dt class="col-sm-3">Status Perkawinan</dt><dd class="col-sm-9">{{ $keluarga->statusPerkawinan?->nilai ?: '-' }}</dd>
+                <dt class="col-sm-3">Status Perkawinan</dt><dd class="col-sm-9">{{ $keluarga->status_perkawinan_label ?: '-' }}</dd>
                 <dt class="col-sm-3">Alamat</dt><dd class="col-sm-9">{{ $keluarga->alamat }} (RT {{ $keluarga->rt }}/RW {{ $keluarga->rw }})</dd>
                 <dt class="col-sm-3">Wilayah</dt><dd class="col-sm-9">{{ $keluarga->desaKelurahan?->nama }}, {{ $keluarga->kecamatan?->nama }}</dd>
             </dl>
@@ -170,8 +170,8 @@
                                 <td>{{ optional($a->tanggal_lahir)->format('d M Y') }}</td>
                                 <td>{{ $a->usia_terkini }} th</td>
                                 <td>{{ $a->hubungan_keluarga }}</td>
-                                <td>{{ $a->pendidikanTerakhir?->nilai ?: '-' }}</td>
-                                <td>{{ $a->statusPekerjaan?->nilai ?: '-' }}</td>
+                                <td>{{ $a->pendidikan_terakhir_label ?: '-' }}</td>
+                                <td>{{ $a->status_pekerjaan_label ?: '-' }}</td>
                                 <td>
                                     @if ($a->disabilitas) <span class="badge text-bg-warning">Disabilitas</span> @endif
                                     @if ($a->penyakit_kronis) <span class="badge text-bg-danger">Penyakit Kronis</span> @endif
@@ -190,7 +190,7 @@
             @if ($ek)
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Pekerjaan Utama</dt><dd class="col-sm-8">{{ $ek->pekerjaan_utama ?: '-' }}</dd>
-                    <dt class="col-sm-4">Status Pekerjaan Kepala Keluarga</dt><dd class="col-sm-8">{{ $ek->statusPekerjaanKepalaKeluarga?->nilai ?: '-' }}</dd>
+                    <dt class="col-sm-4">Status Pekerjaan Kepala Keluarga</dt><dd class="col-sm-8">{{ $ek->status_pekerjaan_kepala_keluarga_label ?: '-' }}</dd>
                     <dt class="col-sm-4">Total Pendapatan</dt><dd class="col-sm-8">Rp {{ number_format($ek->total_pendapatan, 0, ',', '.') }}</dd>
                     <dt class="col-sm-4">Total Pengeluaran</dt><dd class="col-sm-8">Rp {{ number_format($ek->total_pengeluaran, 0, ',', '.') }}</dd>
                 </dl>
@@ -205,8 +205,8 @@
                 <dl class="row mb-0">
                     <dt class="col-sm-4">Status Kepemilikan</dt><dd class="col-sm-8">{{ str($rmh->status_kepemilikan)->replace('_', ' ')->title() }}</dd>
                     <dt class="col-sm-4">Kondisi Bangunan</dt><dd class="col-sm-8">{{ str($rmh->kondisi_bangunan)->replace('_', ' ')->title() }}</dd>
-                    <dt class="col-sm-4">Jenis Atap / Dinding / Lantai</dt><dd class="col-sm-8">{{ $rmh->jenisAtap?->nilai }} / {{ $rmh->jenisDinding?->nilai }} / {{ $rmh->jenisLantai?->nilai }}</dd>
-                    <dt class="col-sm-4">Sumber Listrik / Air</dt><dd class="col-sm-8">{{ $rmh->sumberListrik?->nilai }} / {{ $rmh->sumberAir?->nilai }}</dd>
+                    <dt class="col-sm-4">Jenis Atap / Dinding / Lantai</dt><dd class="col-sm-8">{{ $rmh->jenis_atap_label }} / {{ $rmh->jenis_dinding_label }} / {{ $rmh->jenis_lantai_label }}</dd>
+                    <dt class="col-sm-4">Sumber Listrik / Air</dt><dd class="col-sm-8">{{ $rmh->sumber_listrik_label }} / {{ $rmh->sumber_air_label }}</dd>
                     <dt class="col-sm-4">Fasilitas</dt>
                     <dd class="col-sm-8">
                         @if ($rmh->jamban) <span class="badge text-bg-success">Jamban</span> @endif
@@ -228,7 +228,7 @@
                     <tbody>
                         @forelse ($keluarga->asetKeluarga as $a)
                             <tr>
-                                <td>{{ $a->jenisAset?->nilai }}</td>
+                                <td>{{ $a->jenis_aset_label }}</td>
                                 <td>{{ $a->jumlah }}</td>
                                 <td>{{ str($a->status_kepemilikan)->replace('_', ' ')->title() }}</td>
                                 <td>Rp {{ number_format($a->perkiraan_nilai ?? 0, 0, ',', '.') }}</td>

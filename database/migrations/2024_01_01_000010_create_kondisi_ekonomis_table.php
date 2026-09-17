@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('keluarga_id')->unique()->constrained('keluargas')->cascadeOnDelete();
 
             // Pekerjaan
-            $table->foreignId('status_pekerjaan_kepala_keluarga_id')->nullable()->constrained('referensis')->nullOnDelete();
+            $table->string('status_pekerjaan_kepala_keluarga')->nullable(); // kode dari config('referensi.status_pekerjaan')
             $table->string('pekerjaan_utama')->nullable();
             $table->string('pekerjaan_tambahan')->nullable();
             $table->unsignedInteger('jumlah_anggota_bekerja')->default(0);

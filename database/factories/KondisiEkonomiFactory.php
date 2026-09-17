@@ -15,7 +15,7 @@ class KondisiEkonomiFactory extends Factory
     {
         return [
             'keluarga_id' => Keluarga::factory(),
-            'status_pekerjaan_kepala_keluarga_id' => null,
+            'status_pekerjaan_kepala_keluarga' => null,
             'pekerjaan_utama' => fake()->jobTitle(),
             'pekerjaan_tambahan' => null,
             'jumlah_anggota_bekerja' => fake()->numberBetween(0, 3),
