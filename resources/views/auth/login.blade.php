@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="SIPENTAS - Sistem Informasi Pendataan Kemiskinan Ekstrem dan Stunting Bappelitbangda">
+    <meta name="description"
+        content="SIPENTAS - Sistem Informasi Pendataan Kemiskinan Ekstrem dan Stunting Bappelitbangda">
     <title>Login | SIPENTAS</title>
 
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
@@ -34,12 +35,10 @@
     </button>
     <main class="auth-page">
         <section class="auth-card">
-            <a class="auth-brand" href="{{ url('/') }}"><img src="{{ asset('logo_kota.png') }}" alt=""
-                    class="img-fluid" width="50"><span><strong>SIPENTAS</strong><small>Sistem Informasi Pendataan
-                        Kemiskinan
-                        Ekstrem dan Stunting Bappelitbangda</small></span></a>
-            {{-- <div class="auth-visual"><img src="{{ asset('LogoKotaRempah.png') }}" alt="SIPENTAS dashboard interface">
-            </div> --}}
+            {{-- <a class="auth-brand" href="{{ url('/') }}"><img src="{{ asset('logo_kota.png') }}" alt=""
+                    class="img-fluid" width="50"><span><strong>SIPENTAS</strong></span></a> --}}
+            <div class="auth-visual"><img src="{{ asset('LogoKotaRempah.png') }}" alt="SIPENTAS dashboard interface">
+            </div>
 
             @if (session('status'))
                 <div class="alert alert-success" role="alert">
