@@ -24,13 +24,10 @@ class LaporanController extends Controller
      * @var array<string, string>
      */
     private const STATUS_LABEL = [
-        'draft' => 'Draft',
-        'dikirim' => 'Dikirim',
         'dalam_verifikasi' => 'Dalam Verifikasi',
         'perlu_perbaikan' => 'Perlu Perbaikan',
         'valid' => 'Valid',
         'tidak_valid' => 'Tidak Valid',
-        'duplikat' => 'Duplikat',
     ];
 
     public function index(Request $request): View

@@ -17,7 +17,7 @@ class VerifikasiKemiskinanFactory extends Factory
         return [
             'keluarga_id' => Keluarga::factory(),
             'verifikator_id' => User::factory(),
-            'status' => 'dikirim',
+            'status' => 'dalam_verifikasi',
             'catatan' => fake()->optional()->sentence(),
             'tanggal_verifikasi' => now(),
         ];

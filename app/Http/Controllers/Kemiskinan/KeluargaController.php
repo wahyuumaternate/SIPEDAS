@@ -14,7 +14,6 @@ use App\Models\Keluarga;
 use App\Models\KepesertaanProgram;
 use App\Models\VerifikasiKemiskinan;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +24,8 @@ class KeluargaController extends Controller
     {
         $query = Keluarga::query()
             ->with(['kecamatan', 'desaKelurahan', 'petugas'])
-            ->withCount('anggotaKeluarga');
+            ->withCount('anggotaKeluarga')
+            ->where('status_data', 'valid');
 
         if ($search = $request->string('q')->trim()->value()) {
             $query->where(function ($q) use ($search) {
@@ -41,10 +41,6 @@ class KeluargaController extends Controller
 
         if ($desaKelurahanId = $request->integer('desa_kelurahan_id')) {
             $query->where('desa_kelurahan_id', $desaKelurahanId);
-        }
-
-        if ($status = $request->string('status_data')->trim()->value()) {
-            $query->where('status_data', $status);
         }
 
         if ($petugasId = $request->integer('petugas_id')) {
@@ -64,7 +60,7 @@ class KeluargaController extends Controller
         return view('kemiskinan.index', [
             'keluargas' => $keluargas,
             'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
-            'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'status_data', 'petugas_id', 'dari', 'sampai']),
+            'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'petugas_id', 'dari', 'sampai']),
         ]);
     }
 
@@ -93,8 +89,8 @@ class KeluargaController extends Controller
                 'desa_kelurahan_id' => $data['desa_kelurahan_id'],
                 'petugas_id' => $request->user()->id,
                 'tanggal_input' => now(),
-                'status_data' => 'draft',
-                'tanggal_pendataan' => $data['action'] === 'kirim' ? now() : null,
+                'status_data' => 'dalam_verifikasi',
+                'tanggal_pendataan' => now(),
             ]);
 
             $this->syncAnggota($keluarga, $data['anggota'] ?? []);
@@ -105,20 +101,13 @@ class KeluargaController extends Controller
             $this->syncProgram($keluarga, $data['program'] ?? []);
             $this->syncDokumen($keluarga, $request, $data['dokumen'] ?? []);
 
-            if ($data['action'] === 'kirim') {
-                $this->ubahStatus($keluarga, 'dikirim', $request->user()->id, null);
-            }
+            $this->ubahStatus($keluarga, 'dalam_verifikasi', $request->user()->id, null);
 
             return $keluarga;
         });
 
-        $pesan = $data['action'] === 'kirim'
-            ? 'Pendataan berhasil disimpan dan dikirim untuk verifikasi.'
-            : 'Pendataan berhasil disimpan sebagai draft.';
-
         return redirect()->route('kemiskinan.show', $keluarga)
-            ->with('status', $pesan)
-            ->with('duplikat_warning', $this->cekPeringatanDuplikat($keluarga));
+            ->with('status', 'Pendataan berhasil disimpan dan berstatus Dalam Verifikasi.');
     }
 
     public function show(Keluarga $keluarga): View
@@ -137,7 +126,6 @@ class KeluargaController extends Controller
 
         return view('kemiskinan.show', [
             'keluarga' => $keluarga,
-            'duplikatLain' => $this->cariDuplikat($keluarga),
         ]);
     }
 
@@ -175,15 +163,14 @@ class KeluargaController extends Controller
             $this->syncProgram($keluarga, $data['program'] ?? []);
             $this->syncDokumen($keluarga, $request, $data['dokumen'] ?? []);
 
-            // Data yang sudah dikirim/perlu perbaikan dan diedit ulang, dikirim kembali otomatis (PRD Bagian 25).
-            if ($data['action'] === 'kirim' && in_array($keluarga->status_data, ['draft', 'perlu_perbaikan'], true)) {
-                $this->ubahStatus($keluarga, 'dikirim', $request->user()->id, 'Dikirim kembali setelah perbaikan.');
+            // Data yang diedit ulang setelah perlu perbaikan otomatis kembali ke antrean verifikasi.
+            if ($keluarga->status_data === 'perlu_perbaikan') {
+                $this->ubahStatus($keluarga, 'dalam_verifikasi', $request->user()->id, 'Dikirim kembali setelah perbaikan.');
             }
         });
 
         return redirect()->route('kemiskinan.show', $keluarga)
-            ->with('status', 'Perubahan data keluarga berhasil disimpan.')
-            ->with('duplikat_warning', $this->cekPeringatanDuplikat($keluarga));
+            ->with('status', 'Perubahan data keluarga berhasil disimpan.');
     }
 
     public function destroy(Keluarga $keluarga): RedirectResponse
@@ -195,18 +182,6 @@ class KeluargaController extends Controller
         AuditLog::catat('keluarga', 'delete', $keluarga, $dataLama, null, "Menghapus data keluarga \"{$dataLama['nama_kepala_keluarga']}\" ({$dataLama['kode_pendataan']}).");
 
         return redirect()->route('kemiskinan.index')->with('status', 'Data keluarga berhasil dihapus.');
-    }
-
-    public function kirim(Request $request, Keluarga $keluarga): RedirectResponse
-    {
-        if (! in_array($keluarga->status_data, ['draft', 'perlu_perbaikan'], true)) {
-            return back()->with('error', 'Hanya data berstatus draft atau perlu perbaikan yang dapat dikirim untuk verifikasi.');
-        }
-
-        $keluarga->update(['tanggal_pendataan' => $keluarga->tanggal_pendataan ?? now()]);
-        $this->ubahStatus($keluarga, 'dikirim', $request->user()->id, null);
-
-        return back()->with('status', 'Data berhasil dikirim untuk verifikasi.');
     }
 
     /**
@@ -427,26 +402,5 @@ class KeluargaController extends Controller
             'catatan' => $catatan,
             'tanggal_verifikasi' => now(),
         ]);
-    }
-
-    private function cariDuplikat(Keluarga $keluarga): Collection
-    {
-        return Keluarga::where('id', '!=', $keluarga->id)
-            ->where(function ($q) use ($keluarga) {
-                $q->where('nik_kepala_keluarga', $keluarga->nik_kepala_keluarga)
-                    ->orWhere('nomor_kk', $keluarga->nomor_kk);
-            })
-            ->get(['id', 'kode_pendataan', 'nama_kepala_keluarga', 'nik_kepala_keluarga', 'nomor_kk']);
-    }
-
-    private function cekPeringatanDuplikat(Keluarga $keluarga): ?string
-    {
-        $jumlah = $this->cariDuplikat($keluarga)->count();
-
-        if ($jumlah === 0) {
-            return null;
-        }
-
-        return "Ditemukan {$jumlah} data lain dengan NIK atau Nomor KK yang sama. Mohon periksa kemungkinan duplikasi.";
     }
 }

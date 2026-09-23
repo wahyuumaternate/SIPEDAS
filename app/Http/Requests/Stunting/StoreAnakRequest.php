@@ -18,10 +18,8 @@ class StoreAnakRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => ['required', 'in:draft,kirim'],
-
             // Identitas anak (PRD Bagian 17.1) - wajib selalu, sesuai kolom NOT NULL di database.
-            'nik_anak' => ['required', 'digits:16'],
+            'nik_anak' => ['required', 'digits:16', Rule::unique('anaks', 'nik_anak')->ignore($this->route('anak'))->whereNull('deleted_at')],
             'nomor_kk' => ['required', 'digits:16'],
             'nama_anak' => ['required', 'string', 'max:255'],
             'jenis_kelamin' => ['required', 'in:laki-laki,perempuan'],
@@ -61,9 +59,9 @@ class StoreAnakRequest extends FormRequest
             'riwayat_kehamilan.lila' => ['nullable', 'numeric', 'min:0'],
             'riwayat_kehamilan.komplikasi_kehamilan' => ['nullable', 'string'],
 
-            // Riwayat kelahiran (PRD Bagian 20) - wajib diisi hanya saat data dikirim untuk verifikasi.
-            'riwayat_kelahiran.tanggal_lahir' => ['nullable', 'required_if:action,kirim', 'date', 'before_or_equal:today'],
-            'riwayat_kelahiran.tempat_lahir' => ['nullable', 'required_if:action,kirim', 'string', 'max:255'],
+            // Riwayat kelahiran (PRD Bagian 20) - wajib diisi.
+            'riwayat_kelahiran.tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
+            'riwayat_kelahiran.tempat_lahir' => ['required', 'string', 'max:255'],
             'riwayat_kelahiran.penolong_persalinan' => ['nullable', 'in:dokter,bidan,perawat,dukun,lainnya'],
             'riwayat_kelahiran.cara_persalinan' => ['nullable', 'in:normal,caesar,lainnya'],
             'riwayat_kelahiran.berat_badan_lahir' => ['nullable', 'numeric', 'min:0'],
@@ -124,6 +122,16 @@ class StoreAnakRequest extends FormRequest
             'dokumen.*.file' => ['required_with:dokumen', 'file', 'image', 'max:5120'],
             'dokumen.*.jenis_dokumentasi' => ['required_with:dokumen', 'in:foto_anak,foto_pengukuran,foto_dokumen_pendukung,lainnya'],
             'dokumen.*.keterangan' => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'nik_anak.unique' => 'NIK anak ini sudah terdaftar. Data anak tidak boleh duplikat.',
         ];
     }
 

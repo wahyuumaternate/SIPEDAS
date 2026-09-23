@@ -37,7 +37,7 @@
                 <select class="form-select form-select-sm" id="desa_kelurahan_id" name="desa_kelurahan_id">
                     <option value="">Semua Desa/Kelurahan</option>
                     @foreach ($desaKelurahans as $desaKelurahan)
-                        <option value="{{ $desaKelurahan->id }}" @selected(($filters['desa_kelurahan_id'] ?? null) == $desaKelurahan->id)>{{ $desaKelurahan->nama }}</option>
+                        <option value="{{ $desaKelurahan->id }}" data-kecamatan="{{ $desaKelurahan->kecamatan_id }}" @selected(($filters['desa_kelurahan_id'] ?? null) == $desaKelurahan->id)>{{ $desaKelurahan->nama }}</option>
                     @endforeach
                 </select>
             </div>
@@ -64,12 +64,12 @@
                 @if ($bisaExport)
                     <div class="dropdown ms-auto">
                         <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="bi bi-download"></i> Export ({{ $totalData }} data)
+                            <i class="bi bi-download"></i> Export sesuai filter
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ route('laporan.export', array_filter(['modul' => $modul, 'format' => 'csv', ...$filters])) }}">CSV</a></li>
-                            <li><a class="dropdown-item" href="{{ route('laporan.export', array_filter(['modul' => $modul, 'format' => 'xlsx', ...$filters])) }}">Excel (.xlsx)</a></li>
-                            <li><a class="dropdown-item" href="{{ route('laporan.export', array_filter(['modul' => $modul, 'format' => 'pdf', ...$filters])) }}">PDF</a></li>
+                            <li><button type="submit" class="dropdown-item" formaction="{{ route('laporan.export') }}" name="format" value="csv">CSV</button></li>
+                            <li><button type="submit" class="dropdown-item" formaction="{{ route('laporan.export') }}" name="format" value="xlsx">Excel (.xlsx)</button></li>
+                            <li><button type="submit" class="dropdown-item" formaction="{{ route('laporan.export') }}" name="format" value="pdf">PDF</button></li>
                         </ul>
                     </div>
                 @endif
@@ -239,5 +239,30 @@
             </div>
         @endif
     </div>
+
+@push('scripts')
+    <script>
+        (function () {
+            const kecamatan = document.getElementById('kecamatan_id');
+            const desa = document.getElementById('desa_kelurahan_id');
+
+            function filterDesa() {
+                Array.from(desa.options).forEach(function (opt) {
+                    if (!opt.value) return;
+                    const cocok = !kecamatan.value || opt.dataset.kecamatan === kecamatan.value;
+                    opt.hidden = !cocok;
+                    opt.disabled = !cocok;
+                });
+
+                if (desa.selectedOptions[0] && desa.selectedOptions[0].disabled) {
+                    desa.value = '';
+                }
+            }
+
+            kecamatan.addEventListener('change', filterDesa);
+            filterDesa();
+        })();
+    </script>
+@endpush
 
 @endsection

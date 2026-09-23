@@ -10,22 +10,16 @@
 
 @php
     $statusBadgeMap = [
-        'draft' => 'secondary',
-        'dikirim' => 'info',
         'dalam_verifikasi' => 'warning',
         'perlu_perbaikan' => 'warning',
         'valid' => 'success',
         'tidak_valid' => 'danger',
-        'duplikat' => 'purple',
     ];
     $statusLabelMap = [
-        'draft' => 'Draft',
-        'dikirim' => 'Dikirim',
         'dalam_verifikasi' => 'Dalam Verifikasi',
         'perlu_perbaikan' => 'Perlu Perbaikan',
         'valid' => 'Valid',
         'tidak_valid' => 'Tidak Valid',
-        'duplikat' => 'Duplikat',
     ];
 @endphp
 
@@ -57,15 +51,6 @@
                         <option value="{{ $kecamatan->id }}" @selected(($filters['kecamatan_id'] ?? null) == $kecamatan->id)>
                             {{ $kecamatan->nama }}
                         </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label small" for="status_data">Status</label>
-                <select class="form-select form-select-sm" id="status_data" name="status_data">
-                    <option value="">Semua Status</option>
-                    @foreach ($statusLabelMap as $value => $label)
-                        <option value="{{ $value }}" @selected(($filters['status_data'] ?? null) === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>

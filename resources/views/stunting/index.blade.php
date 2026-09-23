@@ -10,22 +10,16 @@
 
 @php
     $statusBadgeMap = [
-        'draft' => 'secondary',
-        'dikirim' => 'info',
         'dalam_verifikasi' => 'warning',
         'perlu_perbaikan' => 'warning',
         'valid' => 'success',
         'tidak_valid' => 'danger',
-        'duplikat' => 'purple',
     ];
     $statusLabelMap = [
-        'draft' => 'Draft',
-        'dikirim' => 'Dikirim',
         'dalam_verifikasi' => 'Dalam Verifikasi',
         'perlu_perbaikan' => 'Perlu Perbaikan',
         'valid' => 'Valid',
         'tidak_valid' => 'Tidak Valid',
-        'duplikat' => 'Duplikat',
     ];
 @endphp
 

@@ -8,7 +8,6 @@ use App\Models\User;
 function payloadPendataanAnak(Kecamatan $kecamatan, DesaKelurahan $desa, array $overrides = []): array
 {
     return array_merge([
-        'action' => 'draft',
         'nik_anak' => '1234567890123456',
         'nomor_kk' => '1234567890123457',
         'nama_anak' => 'Fatimah Az-Zahra',
@@ -41,7 +40,7 @@ it('menolak akses untuk pengguna yang belum login', function () {
     $this->get(route('stunting.index'))->assertRedirect(route('login'));
 });
 
-it('menyimpan pendataan anak baru sebagai draft beserta data turunannya', function () {
+it('menyimpan pendataan anak baru dengan status dalam verifikasi beserta data turunannya', function () {
     $user = User::factory()->create();
     $kecamatan = Kecamatan::factory()->create();
     $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
@@ -53,52 +52,68 @@ it('menyimpan pendataan anak baru sebagai draft beserta data turunannya', functi
 
     $response->assertRedirect(route('stunting.show', $anak));
     expect($anak)->not->toBeNull();
-    expect($anak->status_data)->toBe('draft');
+    expect($anak->status_data)->toBe('dalam_verifikasi');
     expect($anak->petugas_id)->toBe($user->id);
     expect($anak->kode_pendataan)->not->toBeEmpty();
     expect($anak->usia_bulan)->toBe(18);
     expect($anak->riwayatKelahiran->tempat_lahir)->toBe('RSUD Ternate');
 });
 
-it('menyimpan draft hanya dengan identitas anak tanpa riwayat kelahiran', function () {
+it('menolak NIK anak yang sudah terdaftar', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+    Anak::factory()->create(['nik_anak' => '1234567890123456']);
+
+    $this->actingAs($user)
+        ->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, ['nik_anak' => '1234567890123456']))
+        ->assertSessionHasErrors(['nik_anak']);
+
+    expect(Anak::count())->toBe(1);
+});
+
+it('mengizinkan NIK anak yang sama saat mengubah data anak itu sendiri', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+    $anak = Anak::factory()->create(['nik_anak' => '1234567890123456']);
+
+    $this->actingAs($user)
+        ->put(route('stunting.update', $anak), payloadPendataanAnak($kecamatan, $desa, ['nik_anak' => '1234567890123456']))
+        ->assertSessionDoesntHaveErrors();
+});
+
+it('mengembalikan data perlu perbaikan ke dalam verifikasi setelah diubah', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+    $anak = Anak::factory()->create(['status_data' => 'perlu_perbaikan']);
+
+    $this->actingAs($user)->put(route('stunting.update', $anak), payloadPendataanAnak($kecamatan, $desa));
+
+    expect($anak->fresh()->status_data)->toBe('dalam_verifikasi');
+});
+
+it('mencatat riwayat verifikasi awal saat pendataan disimpan', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa));
+
+    $anak = Anak::first();
+
+    expect($anak->status_data)->toBe('dalam_verifikasi');
+    expect($anak->riwayatVerifikasi)->toHaveCount(1);
+    expect($anak->riwayatVerifikasi->first()->status)->toBe('dalam_verifikasi');
+});
+
+it('menolak penyimpanan tanpa riwayat kelahiran', function () {
     $user = User::factory()->create();
     $kecamatan = Kecamatan::factory()->create();
     $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
 
     $payload = payloadPendataanAnak($kecamatan, $desa);
-    unset($payload['riwayat_kelahiran']);
-
-    $this->actingAs($user)
-        ->post(route('stunting.store'), $payload)
-        ->assertSessionDoesntHaveErrors();
-
-    $anak = Anak::first();
-
-    expect($anak)->not->toBeNull();
-    expect($anak->status_data)->toBe('draft');
-    expect($anak->riwayatKelahiran)->toBeNull();
-});
-
-it('mengirim pendataan langsung untuk verifikasi dan mencatat riwayat', function () {
-    $user = User::factory()->create();
-    $kecamatan = Kecamatan::factory()->create();
-    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
-
-    $this->actingAs($user)->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, ['action' => 'kirim']));
-
-    $anak = Anak::first();
-
-    expect($anak->status_data)->toBe('dikirim');
-    expect($anak->riwayatVerifikasi)->toHaveCount(1);
-    expect($anak->riwayatVerifikasi->first()->status)->toBe('dikirim');
-});
-
-it('menolak pengiriman verifikasi tanpa riwayat kelahiran', function () {
-    $user = User::factory()->create();
-    $kecamatan = Kecamatan::factory()->create();
-    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
-
-    $payload = payloadPendataanAnak($kecamatan, $desa, ['action' => 'kirim']);
     unset($payload['riwayat_kelahiran']);
 
     $this->actingAs($user)

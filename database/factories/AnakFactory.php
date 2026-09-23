@@ -35,16 +35,18 @@ class AnakFactory extends Factory
             'desa_kelurahan_id' => DesaKelurahan::factory(),
             'petugas_id' => User::factory(),
             'tanggal_input' => now(),
-            'status_data' => 'draft',
-            'tanggal_pendataan' => null,
+            'status_data' => 'dalam_verifikasi',
+            'tanggal_pendataan' => now(),
         ];
     }
 
-    public function dikirim(): static
+    public function dalamVerifikasi(): static
     {
-        return $this->state(fn () => [
-            'status_data' => 'dikirim',
-            'tanggal_pendataan' => now(),
-        ]);
+        return $this->state(fn () => ['status_data' => 'dalam_verifikasi']);
+    }
+
+    public function valid(): static
+    {
+        return $this->state(fn () => ['status_data' => 'valid']);
     }
 }

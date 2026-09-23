@@ -46,13 +46,13 @@ it('mencatat penghapusan data keluarga ke audit log', function () {
 
 it('mencatat perubahan status verifikasi kemiskinan ke audit log', function () {
     $verifikator = userAuditLog([Permission::KemiskinanView->value, Permission::KemiskinanVerify->value, Permission::AuditLogView->value]);
-    $keluarga = Keluarga::factory()->create(['status_data' => 'dikirim']);
+    $keluarga = Keluarga::factory()->create(['status_data' => 'dalam_verifikasi']);
 
     $this->actingAs($verifikator)
         ->post(route('kemiskinan.verifikasi.store', $keluarga), ['status' => 'valid']);
 
     $log = AuditLog::where('modul', 'verifikasi_kemiskinan')->firstOrFail();
-    expect($log->data_lama['status_data'])->toBe('dikirim');
+    expect($log->data_lama['status_data'])->toBe('dalam_verifikasi');
     expect($log->data_baru['status_data'])->toBe('valid');
 });
 

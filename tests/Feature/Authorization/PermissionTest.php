@@ -51,7 +51,7 @@ it('menolak petugas pendata memverifikasi data keluarga', function () {
         Permission::KemiskinanCreate->value,
         Permission::KemiskinanEdit->value,
     ]);
-    $keluarga = Keluarga::factory()->create(['status_data' => 'dikirim']);
+    $keluarga = Keluarga::factory()->create(['status_data' => 'dalam_verifikasi']);
 
     $this->actingAs($petugas)
         ->post(route('kemiskinan.verifikasi.store', $keluarga), ['status' => 'valid'])
@@ -63,7 +63,7 @@ it('mengizinkan verifikator memverifikasi tapi menolaknya membuat data baru', fu
         Permission::KemiskinanView->value,
         Permission::KemiskinanVerify->value,
     ]);
-    $keluarga = Keluarga::factory()->create(['status_data' => 'dikirim']);
+    $keluarga = Keluarga::factory()->create(['status_data' => 'dalam_verifikasi']);
 
     $this->actingAs($verifikator)
         ->post(route('kemiskinan.verifikasi.store', $keluarga), ['status' => 'valid'])

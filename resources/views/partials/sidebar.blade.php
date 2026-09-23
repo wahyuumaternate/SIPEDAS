@@ -49,10 +49,6 @@
                             <span class="nav-text">Pendataan Baru</span>
                         </a>
                     @endif
-                    <a class="nav-link nav-sublink @if (request()->is('kemiskinan/keluarga/*')) active @endif" href="{{ route('kemiskinan.index') }}"
-                        @if (request()->is('kemiskinan/keluarga/*')) aria-current="page" @endif>
-                        <span class="nav-text">Detail Keluarga</span>
-                    </a>
                     <a class="nav-link nav-sublink @if (request()->is('kemiskinan/verifikasi*')) active @endif" href="{{ route('kemiskinan.verifikasi.index') }}"
                         @if (request()->is('kemiskinan/verifikasi*')) aria-current="page" @endif>
                         <span class="nav-text">Verifikasi</span>
@@ -82,10 +78,6 @@
                             <span class="nav-text">Pendataan Baru</span>
                         </a>
                     @endif
-                    <a class="nav-link nav-sublink @if (request()->is('stunting/anak/*')) active @endif" href="{{ route('stunting.index') }}"
-                        @if (request()->is('stunting/anak/*')) aria-current="page" @endif>
-                        <span class="nav-text">Detail Anak</span>
-                    </a>
                     <a class="nav-link nav-sublink @if (request()->is('stunting/verifikasi*')) active @endif" href="{{ route('stunting.verifikasi.index') }}"
                         @if (request()->is('stunting/verifikasi*')) aria-current="page" @endif>
                         <span class="nav-text">Verifikasi</span>

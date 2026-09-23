@@ -17,7 +17,7 @@ class VerifikasiStuntingFactory extends Factory
         return [
             'anak_id' => Anak::factory(),
             'verifikator_id' => User::factory(),
-            'status' => 'dikirim',
+            'status' => 'dalam_verifikasi',
             'catatan' => fake()->optional()->sentence(),
             'tanggal_verifikasi' => now(),
         ];

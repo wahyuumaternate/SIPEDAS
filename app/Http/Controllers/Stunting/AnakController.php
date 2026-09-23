@@ -13,7 +13,6 @@ use App\Models\Pengukuran;
 use App\Models\VerifikasiStunting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +23,8 @@ class AnakController extends Controller
     {
         $query = Anak::query()
             ->with(['kecamatan', 'desaKelurahan', 'petugas'])
-            ->withCount('pengukurans');
+            ->withCount('pengukurans')
+            ->where('status_data', 'valid');
 
         if ($search = $request->string('q')->trim()->value()) {
             $query->where(function ($q) use ($search) {
@@ -46,10 +46,6 @@ class AnakController extends Controller
             $query->where('jenis_kelamin', $jenisKelamin);
         }
 
-        if ($status = $request->string('status_data')->trim()->value()) {
-            $query->where('status_data', $status);
-        }
-
         if ($dari = $request->date('dari')) {
             $query->whereDate('tanggal_input', '>=', $dari);
         }
@@ -63,7 +59,7 @@ class AnakController extends Controller
         return view('stunting.index', [
             'anaks' => $anaks,
             'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
-            'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'jenis_kelamin', 'status_data', 'dari', 'sampai']),
+            'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'jenis_kelamin', 'dari', 'sampai']),
         ]);
     }
 
@@ -94,8 +90,8 @@ class AnakController extends Controller
                 'desa_kelurahan_id' => $data['desa_kelurahan_id'],
                 'petugas_id' => $request->user()->id,
                 'tanggal_input' => now(),
-                'status_data' => 'draft',
-                'tanggal_pendataan' => $data['action'] === 'kirim' ? now() : null,
+                'status_data' => 'dalam_verifikasi',
+                'tanggal_pendataan' => now(),
             ]);
 
             $this->syncOrangTua($anak, $data['orang_tua'] ?? []);
@@ -107,20 +103,13 @@ class AnakController extends Controller
             $this->syncSanitasi($anak, $data['sanitasi'] ?? []);
             $this->syncDokumen($anak, $request, $data['dokumen'] ?? []);
 
-            if ($data['action'] === 'kirim') {
-                $this->ubahStatus($anak, 'dikirim', $request->user()->id, null);
-            }
+            $this->ubahStatus($anak, 'dalam_verifikasi', $request->user()->id, null);
 
             return $anak;
         });
 
-        $pesan = $data['action'] === 'kirim'
-            ? 'Pendataan berhasil disimpan dan dikirim untuk verifikasi.'
-            : 'Pendataan berhasil disimpan sebagai draft.';
-
         return redirect()->route('stunting.show', $anak)
-            ->with('status', $pesan)
-            ->with('duplikat_warning', $this->cekPeringatanDuplikat($anak));
+            ->with('status', 'Pendataan berhasil disimpan dan berstatus Dalam Verifikasi.');
     }
 
     public function show(Anak $anak): View
@@ -141,7 +130,6 @@ class AnakController extends Controller
 
         return view('stunting.show', [
             'anak' => $anak,
-            'duplikatLain' => $this->cariDuplikat($anak),
         ]);
     }
 
@@ -181,15 +169,14 @@ class AnakController extends Controller
             $this->syncSanitasi($anak, $data['sanitasi'] ?? []);
             $this->syncDokumen($anak, $request, $data['dokumen'] ?? []);
 
-            // Data yang sudah dikirim/perlu perbaikan dan diedit ulang, dikirim kembali otomatis (PRD Bagian 34).
-            if ($data['action'] === 'kirim' && in_array($anak->status_data, ['draft', 'perlu_perbaikan'], true)) {
-                $this->ubahStatus($anak, 'dikirim', $request->user()->id, 'Dikirim kembali setelah perbaikan.');
+            // Data yang diedit ulang setelah perlu perbaikan otomatis kembali ke antrean verifikasi.
+            if ($anak->status_data === 'perlu_perbaikan') {
+                $this->ubahStatus($anak, 'dalam_verifikasi', $request->user()->id, 'Dikirim kembali setelah perbaikan.');
             }
         });
 
         return redirect()->route('stunting.show', $anak)
-            ->with('status', 'Perubahan data anak berhasil disimpan.')
-            ->with('duplikat_warning', $this->cekPeringatanDuplikat($anak));
+            ->with('status', 'Perubahan data anak berhasil disimpan.');
     }
 
     public function destroy(Anak $anak): RedirectResponse
@@ -201,18 +188,6 @@ class AnakController extends Controller
         AuditLog::catat('anak', 'delete', $anak, $dataLama, null, "Menghapus data anak \"{$dataLama['nama_anak']}\" ({$dataLama['kode_pendataan']}).");
 
         return redirect()->route('stunting.index')->with('status', 'Data anak berhasil dihapus.');
-    }
-
-    public function kirim(Request $request, Anak $anak): RedirectResponse
-    {
-        if (! in_array($anak->status_data, ['draft', 'perlu_perbaikan'], true)) {
-            return back()->with('error', 'Hanya data berstatus draft atau perlu perbaikan yang dapat dikirim untuk verifikasi.');
-        }
-
-        $anak->update(['tanggal_pendataan' => $anak->tanggal_pendataan ?? now()]);
-        $this->ubahStatus($anak, 'dikirim', $request->user()->id, null);
-
-        return back()->with('status', 'Data berhasil dikirim untuk verifikasi.');
     }
 
     /**
@@ -442,26 +417,5 @@ class AnakController extends Controller
             'catatan' => $catatan,
             'tanggal_verifikasi' => now(),
         ]);
-    }
-
-    private function cariDuplikat(Anak $anak): Collection
-    {
-        return Anak::where('id', '!=', $anak->id)
-            ->where(function ($q) use ($anak) {
-                $q->where('nik_anak', $anak->nik_anak)
-                    ->orWhere('nomor_kk', $anak->nomor_kk);
-            })
-            ->get(['id', 'kode_pendataan', 'nama_anak', 'nik_anak', 'nomor_kk']);
-    }
-
-    private function cekPeringatanDuplikat(Anak $anak): ?string
-    {
-        $jumlah = $this->cariDuplikat($anak)->count();
-
-        if ($jumlah === 0) {
-            return null;
-        }
-
-        return "Ditemukan {$jumlah} data lain dengan NIK atau Nomor KK yang sama. Mohon periksa kemungkinan duplikasi.";
     }
 }

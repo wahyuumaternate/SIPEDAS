@@ -61,7 +61,6 @@ Route::middleware(['auth', 'verified'])->prefix('kemiskinan')->name('kemiskinan.
     Route::middleware('permission:kemiskinan.edit')->group(function () {
         Route::get('/keluarga/{keluarga}/edit', [KeluargaController::class, 'edit'])->name('edit');
         Route::put('/keluarga/{keluarga}', [KeluargaController::class, 'update'])->name('update');
-        Route::post('/keluarga/{keluarga}/kirim', [KeluargaController::class, 'kirim'])->name('kirim');
         Route::post('/keluarga/{keluarga}/dokumen', [DokumenKeluargaController::class, 'store'])->name('dokumen.store');
         Route::delete('/keluarga/{keluarga}/dokumen/{dokumen}', [DokumenKeluargaController::class, 'destroy'])->name('dokumen.destroy');
     });
@@ -88,7 +87,6 @@ Route::middleware(['auth', 'verified'])->prefix('stunting')->name('stunting.')->
     Route::middleware('permission:stunting.edit')->group(function () {
         Route::get('/anak/{anak}/edit', [AnakController::class, 'edit'])->name('edit');
         Route::put('/anak/{anak}', [AnakController::class, 'update'])->name('update');
-        Route::post('/anak/{anak}/kirim', [AnakController::class, 'kirim'])->name('kirim');
         Route::post('/anak/{anak}/dokumen', [DokumenAnakController::class, 'store'])->name('dokumen.store');
         Route::delete('/anak/{anak}/dokumen/{dokumen}', [DokumenAnakController::class, 'destroy'])->name('dokumen.destroy');
         Route::post('/anak/{anak}/pengukuran', [PengukuranController::class, 'store'])->name('pengukuran.store');

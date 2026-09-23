@@ -9,7 +9,6 @@ use App\Permission;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class VerifikasiValidasiController extends Controller
 {
@@ -18,7 +17,7 @@ class VerifikasiValidasiController extends Controller
      *
      * @var array<int, string>
      */
-    private const STATUS_ANTRIAN = ['dikirim', 'dalam_verifikasi'];
+    private const STATUS_ANTRIAN = ['dalam_verifikasi'];
 
     public function index(Request $request): View
     {
@@ -30,8 +29,6 @@ class VerifikasiValidasiController extends Controller
 
         $antrianKemiskinan = null;
         $antrianStunting = null;
-        $duplikatKeluarga = collect();
-        $duplikatAnak = collect();
 
         if ($lihatKemiskinan) {
             $queryKeluarga = Keluarga::query()
@@ -43,7 +40,6 @@ class VerifikasiValidasiController extends Controller
             $antrianKemiskinan = $queryKeluarga->oldest('tanggal_pendataan')
                 ->paginate(10, ['*'], 'halaman_kemiskinan')->withQueryString();
 
-            $duplikatKeluarga = $this->identitasDuplikat(Keluarga::class, 'nik_kepala_keluarga', 'nomor_kk');
         }
 
         if ($lihatStunting) {
@@ -56,7 +52,6 @@ class VerifikasiValidasiController extends Controller
             $antrianStunting = $queryAnak->oldest('tanggal_pendataan')
                 ->paginate(10, ['*'], 'halaman_stunting')->withQueryString();
 
-            $duplikatAnak = $this->identitasDuplikat(Anak::class, 'nik_anak', 'nomor_kk');
         }
 
         return view('verifikasi-validasi.index', [
@@ -64,12 +59,8 @@ class VerifikasiValidasiController extends Controller
             'lihatStunting' => $lihatStunting,
             'antrianKemiskinan' => $antrianKemiskinan,
             'antrianStunting' => $antrianStunting,
-            'duplikatKeluarga' => $duplikatKeluarga,
-            'duplikatAnak' => $duplikatAnak,
             'ringkasan' => [
-                'kemiskinan_dikirim' => $lihatKemiskinan ? Keluarga::where('status_data', 'dikirim')->count() : 0,
                 'kemiskinan_dalam_verifikasi' => $lihatKemiskinan ? Keluarga::where('status_data', 'dalam_verifikasi')->count() : 0,
-                'stunting_dikirim' => $lihatStunting ? Anak::where('status_data', 'dikirim')->count() : 0,
                 'stunting_dalam_verifikasi' => $lihatStunting ? Anak::where('status_data', 'dalam_verifikasi')->count() : 0,
             ],
             'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
@@ -89,30 +80,5 @@ class VerifikasiValidasiController extends Controller
         if ($kecamatanId = $filters['kecamatan_id'] ?? null) {
             $query->where('kecamatan_id', $kecamatanId);
         }
-    }
-
-    /**
-     * Cari nilai NIK/nomor KK yang muncul lebih dari sekali (validasi otomatis PRD Bagian 33.3),
-     * supaya baris antrian yang identitasnya berpotensi duplikat bisa ditandai tanpa query per-baris.
-     *
-     * @return Collection<int, string>
-     */
-    private function identitasDuplikat(string $model, string $kolomNik, string $kolomKk): Collection
-    {
-        $nikDuplikat = $model::query()
-            ->select($kolomNik)
-            ->whereNotNull($kolomNik)
-            ->groupBy($kolomNik)
-            ->havingRaw('count(*) > 1')
-            ->pluck($kolomNik);
-
-        $kkDuplikat = $model::query()
-            ->select($kolomKk)
-            ->whereNotNull($kolomKk)
-            ->groupBy($kolomKk)
-            ->havingRaw('count(*) > 1')
-            ->pluck($kolomKk);
-
-        return $nikDuplikat->merge($kkDuplikat)->unique()->values();
     }
 }

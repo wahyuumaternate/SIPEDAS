@@ -27,7 +27,7 @@ it('menampilkan rekap kemiskinan per kecamatan dan status', function () {
     $user = userLaporan([Permission::KemiskinanView->value]);
     $kecamatan = Kecamatan::factory()->create(['nama' => 'Ternate Tengah']);
     Keluarga::factory()->create(['kecamatan_id' => $kecamatan->id, 'status_data' => 'valid']);
-    Keluarga::factory()->dikirim()->create(['kecamatan_id' => $kecamatan->id]);
+    Keluarga::factory()->dalamVerifikasi()->create(['kecamatan_id' => $kecamatan->id]);
 
     $response = $this->actingAs($user)->get(route('laporan.index', ['modul' => 'kemiskinan']));
 
@@ -104,4 +104,24 @@ it('mengizinkan export pdf berisi rekap laporan', function () {
 
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
+});
+
+it('membatasi isi export csv sesuai filter kecamatan dan desa yang dikirim', function () {
+    $user = userLaporan([Permission::KemiskinanView->value, Permission::Export->value]);
+    $sesuai = Keluarga::factory()->create(['nama_kepala_keluarga' => 'Keluarga Sesuai']);
+    Keluarga::factory()->create(['nama_kepala_keluarga' => 'Keluarga Lain']);
+
+    $response = $this->actingAs($user)->get(route('laporan.export', [
+        'modul' => 'kemiskinan',
+        'format' => 'csv',
+        'kecamatan_id' => $sesuai->kecamatan_id,
+        'desa_kelurahan_id' => $sesuai->desa_kelurahan_id,
+        'status_data' => '',
+        'dari' => '',
+        'sampai' => '',
+    ]));
+
+    $isi = $response->streamedContent();
+
+    expect($isi)->toContain('Keluarga Sesuai')->not->toContain('Keluarga Lain');
 });

@@ -18,26 +18,20 @@ class DashboardController extends Controller
      * @var array<string, string>
      */
     private const STATUS_LABEL = [
-        'draft' => 'Draft',
-        'dikirim' => 'Dikirim',
         'dalam_verifikasi' => 'Dalam Verifikasi',
         'perlu_perbaikan' => 'Perlu Perbaikan',
         'valid' => 'Valid',
         'tidak_valid' => 'Tidak Valid',
-        'duplikat' => 'Duplikat',
     ];
 
     /**
      * @var array<string, string>
      */
     private const STATUS_COLOR = [
-        'draft' => '#94a3b8',
-        'dikirim' => '#38bdf8',
         'dalam_verifikasi' => '#f59e0b',
         'perlu_perbaikan' => '#f97316',
         'valid' => '#22c55e',
         'tidak_valid' => '#ef4444',
-        'duplikat' => '#a855f7',
     ];
 
     public function __invoke(Request $request): View
@@ -75,13 +69,10 @@ class DashboardController extends Controller
         $kemiskinanStats = [
             'total_keluarga' => $statusCounts->sum(),
             'total_anggota' => (int) (clone $base())->sum('jumlah_anggota_keluarga'),
-            'draft' => $statusCounts['draft'],
-            'belum_diverifikasi' => $statusCounts['dikirim'],
             'sedang_diverifikasi' => $statusCounts['dalam_verifikasi'],
             'valid' => $statusCounts['valid'],
             'perlu_perbaikan' => $statusCounts['perlu_perbaikan'],
             'tidak_valid' => $statusCounts['tidak_valid'],
-            'duplikat' => $statusCounts['duplikat'],
         ];
 
         $perKecamatan = (clone $base())
@@ -149,13 +140,10 @@ class DashboardController extends Controller
             'total_anak' => $statusCounts->sum(),
             'sudah_diukur' => (clone $base())->has('pengukurans')->count(),
             'belum_diukur' => (clone $base())->doesntHave('pengukurans')->count(),
-            'draft' => $statusCounts['draft'],
-            'belum_diverifikasi' => $statusCounts['dikirim'],
             'sedang_diverifikasi' => $statusCounts['dalam_verifikasi'],
             'valid' => $statusCounts['valid'],
             'perlu_perbaikan' => $statusCounts['perlu_perbaikan'],
             'tidak_valid' => $statusCounts['tidak_valid'],
-            'duplikat' => $statusCounts['duplikat'],
         ];
 
         $perKecamatan = (clone $base())

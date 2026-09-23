@@ -20,8 +20,7 @@ class VerifikasiStuntingController extends Controller
      * @var array<string, array<int, string>>
      */
     private const TRANSISI_DIIZINKAN = [
-        'dikirim' => ['dalam_verifikasi', 'valid', 'perlu_perbaikan', 'tidak_valid', 'duplikat'],
-        'dalam_verifikasi' => ['valid', 'perlu_perbaikan', 'tidak_valid', 'duplikat'],
+        'dalam_verifikasi' => ['valid', 'perlu_perbaikan', 'tidak_valid'],
     ];
 
     public function index(Request $request): View

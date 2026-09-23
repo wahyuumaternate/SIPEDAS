@@ -218,10 +218,10 @@
                             <span class="metric-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
                         </div>
                         <div class="metric-value">
-                            {{ number_format($kemiskinanStats['belum_diverifikasi'] + $kemiskinanStats['sedang_diverifikasi']) }}
+                            {{ number_format($kemiskinanStats['sedang_diverifikasi']) }}
                         </div>
                         <div class="metric-meta">
-                            <span>{{ number_format($kemiskinanStats['belum_diverifikasi']) }} belum diverifikasi</span>
+                            <span>menunggu keputusan verifikator</span>
                         </div>
                     </article>
                 </div>
@@ -235,7 +235,6 @@
                         </div>
                         <div class="metric-value">{{ number_format($kemiskinanStats['perlu_perbaikan']) }}</div>
                         <div class="metric-meta">
-                            <span class="text-danger">{{ number_format($kemiskinanStats['duplikat']) }} duplikat</span>
                             <span>perlu ditinjau</span>
                         </div>
                     </article>
@@ -257,8 +256,8 @@
                         <div class="stat-strip-label">Data Tidak Valid</div>
                     </div>
                     <div class="stat-strip-item">
-                        <div class="stat-strip-value">{{ number_format($kemiskinanStats['duplikat']) }}</div>
-                        <div class="stat-strip-label">Data Duplikat</div>
+                        <div class="stat-strip-value">{{ number_format($kemiskinanStats['valid']) }}</div>
+                        <div class=\"stat-strip-label\">Data Valid</div>
                     </div>
                 </div>
             </section>
@@ -359,13 +358,10 @@
                         <tbody>
                             @php
                                 $statusBadgeMap = [
-                                    'draft' => 'secondary',
-                                    'dikirim' => 'info',
-                                    'dalam verifikasi' => 'warning',
+                                    'dalam verifikasi' => 'info',
                                     'perlu perbaikan' => 'warning',
                                     'valid' => 'success',
                                     'tidak valid' => 'danger',
-                                    'duplikat' => 'purple',
                                 ];
                             @endphp
 
@@ -441,10 +437,10 @@
                             <span class="metric-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
                         </div>
                         <div class="metric-value">
-                            {{ number_format($stuntingStats['belum_diverifikasi'] + $stuntingStats['sedang_diverifikasi']) }}
+                            {{ number_format($stuntingStats['sedang_diverifikasi']) }}
                         </div>
                         <div class="metric-meta">
-                            <span>{{ number_format($stuntingStats['belum_diverifikasi']) }} belum diverifikasi</span>
+                            <span>menunggu keputusan verifikator</span>
                         </div>
                     </article>
                 </div>
@@ -458,7 +454,6 @@
                         </div>
                         <div class="metric-value">{{ number_format($stuntingStats['perlu_perbaikan']) }}</div>
                         <div class="metric-meta">
-                            <span class="text-danger">{{ number_format($stuntingStats['duplikat']) }} duplikat</span>
                             <span>perlu ditinjau</span>
                         </div>
                     </article>
@@ -480,8 +475,8 @@
                         <div class="stat-strip-label">Data Tidak Valid</div>
                     </div>
                     <div class="stat-strip-item">
-                        <div class="stat-strip-value">{{ number_format($stuntingStats['duplikat']) }}</div>
-                        <div class="stat-strip-label">Data Duplikat</div>
+                        <div class="stat-strip-value">{{ number_format($stuntingStats['valid']) }}</div>
+                        <div class=\"stat-strip-label\">Data Valid</div>
                     </div>
                     @foreach ($rekapJenisKelamin as $jk)
                         <div class="stat-strip-item">

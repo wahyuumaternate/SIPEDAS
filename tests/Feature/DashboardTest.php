@@ -50,7 +50,7 @@ it('menampilkan pesan tidak ada akses jika user tidak punya hak lihat sama sekal
 it('menghitung statistik kemiskinan sesuai data asli di database', function () {
     $user = userDashboard([Permission::KemiskinanView->value, Permission::StuntingView->value]);
     Keluarga::factory()->create(['status_data' => 'valid', 'jumlah_anggota_keluarga' => 3]);
-    Keluarga::factory()->dikirim()->create(['jumlah_anggota_keluarga' => 4]);
+    Keluarga::factory()->dalamVerifikasi()->create(['jumlah_anggota_keluarga' => 4]);
 
     $response = $this->actingAs($user)->get(route('dashboard'));
 
@@ -58,7 +58,7 @@ it('menghitung statistik kemiskinan sesuai data asli di database', function () {
     expect($stats['total_keluarga'])->toBe(2);
     expect($stats['total_anggota'])->toBe(7);
     expect($stats['valid'])->toBe(1);
-    expect($stats['belum_diverifikasi'])->toBe(1);
+    expect($stats['sedang_diverifikasi'])->toBe(1);
 });
 
 it('menerapkan filter kecamatan pada statistik dashboard', function () {

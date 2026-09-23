@@ -19,10 +19,8 @@ class StoreKeluargaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => ['required', 'in:draft,kirim'],
-
             // Identitas keluarga (PRD Bagian 9)
-            'nomor_kk' => ['required', 'digits:16'],
+            'nomor_kk' => ['required', 'digits:16', Rule::unique('keluargas', 'nomor_kk')->ignore($this->route('keluarga'))->whereNull('deleted_at')],
             'nik_kepala_keluarga' => ['required', 'digits:16'],
             'nama_kepala_keluarga' => ['required', 'string', 'max:255'],
             'nomor_hp' => ['nullable', 'string', 'max:20'],
@@ -34,7 +32,7 @@ class StoreKeluargaRequest extends FormRequest
             'desa_kelurahan_id' => ['required', 'exists:desa_kelurahans,id'],
 
             // Anggota keluarga (PRD Bagian 10). Baris hanya wajib lengkap jika nama diisi;
-            // minimal satu anggota lengkap baru diwajibkan saat data dikirim (lihat withValidator()).
+            // minimal satu anggota lengkap diwajibkan (lihat withValidator()).
             'anggota' => ['nullable', 'array'],
             'anggota.*.nik' => ['nullable', 'digits:16'],
             'anggota.*.nama_lengkap' => ['nullable', 'string', 'max:255'],
@@ -67,10 +65,9 @@ class StoreKeluargaRequest extends FormRequest
             'kondisi_ekonomi.pengeluaran_transportasi' => ['nullable', 'numeric', 'min:0'],
             'kondisi_ekonomi.pengeluaran_lainnya' => ['nullable', 'numeric', 'min:0'],
 
-            // Kondisi rumah (PRD Bagian 12) - wajib diisi hanya saat data dikirim untuk verifikasi,
-            // draft boleh disimpan tanpa mengisi bagian ini.
-            'kondisi_rumah.status_kepemilikan' => ['nullable', 'required_if:action,kirim', 'in:milik_sendiri,sewa,menumpang,rumah_dinas,lainnya'],
-            'kondisi_rumah.kondisi_bangunan' => ['nullable', 'required_if:action,kirim', 'in:permanen,semi_permanen,tidak_layak_huni'],
+            // Kondisi rumah (PRD Bagian 12) - wajib diisi.
+            'kondisi_rumah.status_kepemilikan' => ['required', 'in:milik_sendiri,sewa,menumpang,rumah_dinas,lainnya'],
+            'kondisi_rumah.kondisi_bangunan' => ['required', 'in:permanen,semi_permanen,tidak_layak_huni'],
             'kondisi_rumah.jenis_atap' => ['nullable', Rule::in($this->kodeReferensi('jenis_atap'))],
             'kondisi_rumah.jenis_dinding' => ['nullable', Rule::in($this->kodeReferensi('jenis_dinding'))],
             'kondisi_rumah.jenis_lantai' => ['nullable', Rule::in($this->kodeReferensi('jenis_lantai'))],
@@ -125,6 +122,16 @@ class StoreKeluargaRequest extends FormRequest
     /**
      * @return array<string, string>
      */
+    public function messages(): array
+    {
+        return [
+            'nomor_kk.unique' => 'Nomor KK ini sudah terdaftar. Data keluarga tidak boleh duplikat.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public function attributes(): array
     {
         return [
@@ -139,16 +146,11 @@ class StoreKeluargaRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            // Draft boleh disimpan tanpa anggota; baru diwajibkan saat data dikirim untuk verifikasi.
-            if ($this->input('action') !== 'kirim') {
-                return;
-            }
-
             $anggota = collect($this->input('anggota', []))
                 ->filter(fn ($row) => filled($row['nama_lengkap'] ?? null));
 
             if ($anggota->isEmpty()) {
-                $validator->errors()->add('anggota', 'Minimal satu anggota keluarga harus diisi sebelum data dikirim untuk verifikasi.');
+                $validator->errors()->add('anggota', 'Minimal satu anggota keluarga harus diisi sebelum data disimpan.');
             }
         });
     }

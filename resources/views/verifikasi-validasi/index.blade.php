@@ -4,11 +4,9 @@
 
 @php
     $statusBadgeMap = [
-        'dikirim' => 'info',
-        'dalam_verifikasi' => 'warning',
+        'dalam_verifikasi' => 'info',
     ];
     $statusLabelMap = [
-        'dikirim' => 'Dikirim',
         'dalam_verifikasi' => 'Dalam Verifikasi',
     ];
 @endphp
@@ -19,7 +17,7 @@
         'icon' => 'bi-patch-check',
         'eyebrow' => 'Verifikasi & Validasi',
         'title' => 'Antrian Verifikasi & Validasi',
-        'description' => 'Ringkasan gabungan data Kemiskinan Ekstrem dan Stunting yang menunggu atau sedang diverifikasi, beserta indikasi duplikasi dari validasi otomatis.',
+        'description' => 'Ringkasan gabungan data Kemiskinan Ekstrem dan Stunting yang menunggu atau sedang diverifikasi.',
     ])
 
     @if (session('status'))
@@ -33,24 +31,12 @@
         @if ($lihatKemiskinan)
             <div class="col-6 col-lg-3">
                 <div class="panel p-3">
-                    <p class="text-muted small mb-1">Kemiskinan · Dikirim</p>
-                    <p class="h4 mb-0">{{ $ringkasan['kemiskinan_dikirim'] }}</p>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="panel p-3">
                     <p class="text-muted small mb-1">Kemiskinan · Dalam Verifikasi</p>
                     <p class="h4 mb-0">{{ $ringkasan['kemiskinan_dalam_verifikasi'] }}</p>
                 </div>
             </div>
         @endif
         @if ($lihatStunting)
-            <div class="col-6 col-lg-3">
-                <div class="panel p-3">
-                    <p class="text-muted small mb-1">Stunting · Dikirim</p>
-                    <p class="h4 mb-0">{{ $ringkasan['stunting_dikirim'] }}</p>
-                </div>
-            </div>
             <div class="col-6 col-lg-3">
                 <div class="panel p-3">
                     <p class="text-muted small mb-1">Stunting · Dalam Verifikasi</p>
@@ -112,9 +98,6 @@
                                     <p class="fw-semibold mb-0">{{ $keluarga->nama_kepala_keluarga }}</p>
                                     <p class="text-muted small mb-0">
                                         {{ $keluarga->kode_pendataan }}
-                                        @if ($duplikatKeluarga->contains($keluarga->nik_kepala_keluarga) || $duplikatKeluarga->contains($keluarga->nomor_kk))
-                                            <span class="badge text-bg-danger ms-1"><i class="bi bi-exclamation-triangle"></i> Berpotensi Duplikat</span>
-                                        @endif
                                     </p>
                                 </td>
                                 <td>{{ $keluarga->kecamatan?->nama }}, {{ $keluarga->desaKelurahan?->nama }}</td>
@@ -160,9 +143,6 @@
                                     <p class="fw-semibold mb-0">{{ $anak->nama_anak }}</p>
                                     <p class="text-muted small mb-0">
                                         {{ $anak->kode_pendataan }}
-                                        @if ($duplikatAnak->contains($anak->nik_anak) || $duplikatAnak->contains($anak->nomor_kk))
-                                            <span class="badge text-bg-danger ms-1"><i class="bi bi-exclamation-triangle"></i> Berpotensi Duplikat</span>
-                                        @endif
                                     </p>
                                 </td>
                                 <td>{{ $anak->kecamatan?->nama }}, {{ $anak->desaKelurahan?->nama }}</td>

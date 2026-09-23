@@ -5,7 +5,7 @@ use App\Models\User;
 
 it('menampilkan antrian verifikasi hanya untuk data yang belum final', function () {
     $verifikator = User::factory()->create();
-    Keluarga::factory()->create(['status_data' => 'dikirim']);
+    Keluarga::factory()->create(['status_data' => 'dalam_verifikasi']);
     Keluarga::factory()->create(['status_data' => 'valid']);
 
     $response = $this->actingAs($verifikator)->get(route('kemiskinan.verifikasi.index'));
@@ -14,9 +14,9 @@ it('menampilkan antrian verifikasi hanya untuk data yang belum final', function 
     expect($response->viewData('antrian')->total())->toBe(1);
 });
 
-it('mengubah status dikirim menjadi valid dan mencatat riwayat verifikasi', function () {
+it('mengubah status dalam verifikasi menjadi valid dan mencatat riwayat verifikasi', function () {
     $verifikator = User::factory()->create();
-    $keluarga = Keluarga::factory()->create(['status_data' => 'dikirim']);
+    $keluarga = Keluarga::factory()->create(['status_data' => 'dalam_verifikasi']);
 
     $this->actingAs($verifikator)
         ->post(route('kemiskinan.verifikasi.store', $keluarga), ['status' => 'valid'])
@@ -46,31 +46,6 @@ it('menolak transisi status yang tidak diizinkan', function () {
 
     $this->actingAs($verifikator)
         ->post(route('kemiskinan.verifikasi.store', $keluarga), ['status' => 'valid'])
-        ->assertSessionHas('error');
-
-    expect($keluarga->fresh()->status_data)->toBe('valid');
-});
-
-it('petugas dapat mengirim ulang data berstatus perlu perbaikan', function () {
-    $petugas = User::factory()->create();
-    $keluarga = Keluarga::factory()->create(['status_data' => 'perlu_perbaikan', 'petugas_id' => $petugas->id]);
-
-    $this->actingAs($petugas)
-        ->post(route('kemiskinan.kirim', $keluarga))
-        ->assertRedirect();
-
-    $keluarga->refresh();
-
-    expect($keluarga->status_data)->toBe('dikirim');
-    expect($keluarga->riwayatVerifikasi()->where('status', 'dikirim')->count())->toBe(1);
-});
-
-it('menolak kirim ulang untuk data berstatus valid', function () {
-    $petugas = User::factory()->create();
-    $keluarga = Keluarga::factory()->create(['status_data' => 'valid', 'petugas_id' => $petugas->id]);
-
-    $this->actingAs($petugas)
-        ->post(route('kemiskinan.kirim', $keluarga))
         ->assertSessionHas('error');
 
     expect($keluarga->fresh()->status_data)->toBe('valid');

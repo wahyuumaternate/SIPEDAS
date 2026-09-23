@@ -4,12 +4,10 @@
 
 @php
     $statusBadgeMap = [
-        'dikirim' => 'info',
         'dalam_verifikasi' => 'warning',
         'perlu_perbaikan' => 'warning',
     ];
     $statusLabelMap = [
-        'dikirim' => 'Dikirim',
         'dalam_verifikasi' => 'Dalam Verifikasi',
         'perlu_perbaikan' => 'Perlu Perbaikan',
     ];

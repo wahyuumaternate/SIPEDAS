@@ -425,14 +425,10 @@
     </div>
 
     <div class="d-flex justify-content-end align-items-center gap-2 mt-3">
-        <span class="text-muted small d-none" id="kirim-hint">Lengkapi seluruh data wajib (*) di semua bagian untuk mengirim data.</span>
         <a href="{{ $isEdit ? route('kemiskinan.show', $keluarga) : route('kemiskinan.index') }}"
             class="btn btn-outline-secondary">Batal</a>
-        <button type="submit" name="action" value="draft" class="btn btn-outline-primary" formnovalidate>
-            <i class="bi bi-save" aria-hidden="true"></i> Simpan Draft
-        </button>
-        <button type="submit" name="action" value="kirim" class="btn btn-primary d-none" id="btn-submit-kirim">
-            <i class="bi bi-send" aria-hidden="true"></i> Simpan &amp; Kirim untuk Verifikasi
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save" aria-hidden="true"></i> Simpan Data
         </button>
     </div>
 </form>
@@ -475,31 +471,7 @@
             tabButtons.forEach((btn) => btn.addEventListener('shown.bs.tab', updatePrevNextState));
             updatePrevNextState();
 
-            // ===== Tombol "Simpan & Kirim untuk Verifikasi" hanya muncul jika data wajib sudah lengkap =====
             const form = document.getElementById('form-kemiskinan');
-            const btnKirim = document.getElementById('btn-submit-kirim');
-            const kirimHint = document.getElementById('kirim-hint');
-
-            function isDataWajibLengkap() {
-                return Array.from(form.querySelectorAll('[required], [data-required-kirim]')).every(function (el) {
-                    if (el.type === 'checkbox') return true;
-                    if (el.type === 'radio') {
-                        return form.querySelectorAll('input[type="radio"][name="' + el.name + '"]:checked').length > 0;
-                    }
-                    return el.value !== null && el.value.trim() !== '';
-                });
-            }
-
-            function updateKirimVisibility() {
-                const lengkap = isDataWajibLengkap();
-                btnKirim.classList.toggle('d-none', !lengkap);
-                kirimHint.classList.toggle('d-none', lengkap);
-            }
-
-            form.addEventListener('input', updateKirimVisibility);
-            form.addEventListener('change', updateKirimVisibility);
-            new MutationObserver(updateKirimVisibility).observe(form, { childList: true, subtree: true });
-            updateKirimVisibility();
 
             const kecamatanData = @json($kecamatans->keyBy('id')->map->desaKelurahans);
             const kecamatanSelect = document.getElementById('kecamatan_id');

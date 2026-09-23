@@ -8,7 +8,7 @@
         'icon' => 'bi-house-heart',
         'eyebrow' => 'Kemiskinan Ekstrem',
         'title' => 'Pendataan Baru',
-        'description' => 'Lengkapi seluruh bagian formulir, lalu simpan sebagai draft atau kirim langsung untuk verifikasi.',
+        'description' => 'Lengkapi seluruh bagian formulir, lalu simpan. Data baru otomatis berstatus "Dalam Verifikasi".',
     ])
 
     @if ($errors->any())
