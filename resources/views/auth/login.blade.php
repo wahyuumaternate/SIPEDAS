@@ -37,7 +37,7 @@
         <section class="auth-card">
             {{-- <a class="auth-brand" href="{{ url('/') }}"><img src="{{ asset('logo_kota.png') }}" alt=""
                     class="img-fluid" width="50"><span><strong>SIPENTAS</strong></span></a> --}}
-            <div class="auth-visual"><img src="{{ asset('LogoKotaRempah.png') }}" alt="SIPENTAS dashboard interface">
+            {{-- <div class="auth-visual"><img src="{{ asset('LogoKotaRempah.png') }}" alt="SIPENTAS dashboard interface"> --}}
             </div>
 
             @if (session('status'))
