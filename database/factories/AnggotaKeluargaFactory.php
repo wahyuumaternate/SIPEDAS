@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\AnggotaKeluarga;
 use App\Models\Keluarga;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,7 +23,7 @@ class AnggotaKeluargaFactory extends Factory
             'jenis_kelamin' => fake()->randomElement(['laki-laki', 'perempuan']),
             'tempat_lahir' => fake()->city(),
             'tanggal_lahir' => $tanggalLahir,
-            'usia' => now()->diffInYears($tanggalLahir),
+            'usia' => (int) Carbon::parse($tanggalLahir)->diffInYears(now()),
             'hubungan_keluarga' => fake()->randomElement(['Kepala Keluarga', 'Istri', 'Anak', 'Orang Tua', 'Lainnya']),
             'status_perkawinan' => null,
             'pendidikan_terakhir' => null,

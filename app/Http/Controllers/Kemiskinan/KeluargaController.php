@@ -13,6 +13,7 @@ use App\Models\Kecamatan;
 use App\Models\Keluarga;
 use App\Models\KepesertaanProgram;
 use App\Models\VerifikasiKemiskinan;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -232,7 +233,7 @@ class KeluargaController extends Controller
                 'jenis_kelamin' => $row['jenis_kelamin'],
                 'tempat_lahir' => $row['tempat_lahir'] ?? null,
                 'tanggal_lahir' => $row['tanggal_lahir'],
-                'usia' => now()->diffInYears($row['tanggal_lahir']),
+                'usia' => (int) Carbon::parse($row['tanggal_lahir'])->diffInYears(now()),
                 'hubungan_keluarga' => $row['hubungan_keluarga'],
                 'status_perkawinan' => $row['status_perkawinan'] ?? null,
                 'pendidikan_terakhir' => $row['pendidikan_terakhir'] ?? null,
