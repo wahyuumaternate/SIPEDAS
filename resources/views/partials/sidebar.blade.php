@@ -1,10 +1,10 @@
 <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
     <div class="sidebar-header">
-        <a class="brand-mark" href="{{ url('/') }}" aria-label="SIPENTAS dashboard">
+        <a class="brand-mark" href="{{ url('/') }}" aria-label="BINTANG TERNATE dashboard">
             <img src="{{ asset('logo_kota.png') }}" width="40" alt="">
             <span class="brand-copy">
-                <span class="brand-title">SIPENTAS</span>
-                <span class="brand-subtitle" title="Sistem Informasi Pendataan Kemiskinan Ekstrem dan Stunting">Sistem Informasi Pendataan Kemiskinan Ekstrem dan Stunting</span>
+                <span class="brand-title">BINTANG TERNATE</span>
+                <span class="brand-subtitle" title="Basis Informasi Terpadu Data Kemiskinan dan Stunting Ternate">Basis Informasi Terpadu Data Kemiskinan dan Stunting Ternate</span>
             </span>
         </a>
     </div>

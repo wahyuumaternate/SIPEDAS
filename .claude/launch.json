@@ -2,7 +2,7 @@
     "version": "0.0.1",
     "configurations": [
         {
-            "name": "sipedas",
+            "name": "bintang-ternate",
             "runtimeExecutable": "php",
             "runtimeArgs": ["artisan", "serve", "--port=8010"],
             "port": 8010

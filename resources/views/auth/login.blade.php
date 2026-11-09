@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description"
-        content="SIPENTAS - Sistem Informasi Pendataan Kemiskinan Ekstrem dan Stunting Bappelitbangda">
-    <title>Login | SIPENTAS</title>
+        content="BINTANG TERNATE - Basis Informasi Terpadu Data Kemiskinan dan Stunting Ternate">
+    <title>Login | BINTANG TERNATE</title>
 
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
@@ -36,8 +36,8 @@
     <main class="auth-page">
         <section class="auth-card">
             {{-- <a class="auth-brand" href="{{ url('/') }}"><img src="{{ asset('logo_kota.png') }}" alt=""
-                    class="img-fluid" width="50"><span><strong>SIPENTAS</strong></span></a> --}}
-            {{-- <div class="auth-visual"><img src="{{ asset('LogoKotaRempah.png') }}" alt="SIPENTAS dashboard interface"> --}}
+                    class="img-fluid" width="50"><span><strong>BINTANG TERNATE</strong></span></a> --}}
+            {{-- <div class="auth-visual"><img src="{{ asset('LogoKotaRempah.png') }}" alt="BINTANG TERNATE dashboard interface"> --}}
             </div>
 
             @if (session('status'))
@@ -51,8 +51,8 @@
 
                 <div class="mb-4">
                     <p class="eyebrow mb-1">Bappelitbangda</p>
-                    <h1 class="h3 mb-1">Masuk ke SIPENTAS</h1>
-                    <p class="text-muted mb-0">Sistem Informasi Pendataan Kemiskinan Ekstrem dan Stunting.</p>
+                    <h1 class="h3 mb-1">Masuk ke BINTANG TERNATE</h1>
+                    <p class="text-muted mb-0">Basis Informasi Terpadu Data Kemiskinan dan Stunting Ternate.</p>
                 </div>
 
                 <div class="mb-3">

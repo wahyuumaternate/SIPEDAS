@@ -31,7 +31,7 @@
                 </span>
 
                 <span>
-                    <strong>SIPENTAS</strong>
+                    <strong>BINTANG TERNATE</strong>
                     <small>ERROR</small>
                 </span>
             </a>
