@@ -58,7 +58,7 @@
                 <div class="mb-3">
                     <label class="form-label" for="loginEmail">Alamat Email</label>
                     <input class="form-control @error('email') is-invalid @enderror" id="loginEmail" name="email"
-                        type="email" value="{{ old('email') }}" required autofocus autocomplete="username">
+                        type="email" value="{{ old('email', app()->isLocal() ? 'admin@example.com' : '') }}" required autofocus autocomplete="username">
                     @error('email')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @else
@@ -72,7 +72,7 @@
                     </div>
                     <div class="input-group has-validation">
                         <input class="form-control @error('password') is-invalid @enderror" id="loginPassword"
-                            name="password" type="password" minlength="6" required autocomplete="current-password">
+                            name="password" type="password" minlength="6" @if (app()->isLocal()) value="password" @endif required autocomplete="current-password">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword"
                             aria-label="Tampilkan kata sandi" tabindex="-1">
                             <i class="bi bi-eye" id="togglePasswordIcon" aria-hidden="true"></i>
