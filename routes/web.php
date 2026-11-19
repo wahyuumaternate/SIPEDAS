@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DraftFormulirController;
 use App\Http\Controllers\Kemiskinan\DokumenKeluargaController;
 use App\Http\Controllers\Kemiskinan\KeluargaController;
 use App\Http\Controllers\Kemiskinan\VerifikasiKemiskinanController;
@@ -13,10 +14,13 @@ use App\Http\Controllers\Master\RoleController;
 use App\Http\Controllers\Master\WilayahController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Stunting\AnakController;
+use App\Http\Controllers\Stunting\CariKeluargaController;
 use App\Http\Controllers\Stunting\DokumenAnakController;
 use App\Http\Controllers\Stunting\PengukuranController;
+use App\Http\Controllers\Stunting\SasaranStuntingController;
 use App\Http\Controllers\Stunting\VerifikasiStuntingController;
 use App\Http\Controllers\VerifikasiValidasiController;
+use App\Models\DraftFormulir;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +37,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth', 'verified', 'throttle:120,1'])->prefix('draft-formulir')->name('draft-formulir.')
+    ->where(['kunci' => DraftFormulir::POLA_KUNCI])->group(function () {
+        Route::get('/{kunci}', [DraftFormulirController::class, 'show'])->name('show');
+        Route::put('/{kunci}', [DraftFormulirController::class, 'update'])->name('update');
+        Route::delete('/{kunci}', [DraftFormulirController::class, 'destroy'])->name('destroy');
+    });
+
 Route::get('/verifikasi-validasi', [VerifikasiValidasiController::class, 'index'])
     ->middleware(['auth', 'verified', 'permission:kemiskinan.verify,stunting.verify'])
     ->name('verifikasi-validasi.index');
@@ -41,7 +52,7 @@ Route::middleware(['auth', 'verified'])->prefix('laporan')->name('laporan.')->gr
     Route::get('/', [LaporanController::class, 'index'])
         ->middleware('permission:kemiskinan.view,stunting.view')
         ->name('index');
-    Route::get('/export', [LaporanController::class, 'export'])
+    Route::match(['get', 'post'], '/export', [LaporanController::class, 'export'])
         ->middleware('permission:export')
         ->name('export');
 });
@@ -77,6 +88,7 @@ Route::middleware(['auth', 'verified'])->prefix('stunting')->name('stunting.')->
         Route::get('/data', [AnakController::class, 'index'])->name('index');
         Route::get('/verifikasi', [VerifikasiStuntingController::class, 'index'])->name('verifikasi.index');
         Route::get('/anak/{anak}', [AnakController::class, 'show'])->name('show');
+        Route::get('/sasaran', [SasaranStuntingController::class, 'index'])->name('sasaran.index');
     });
 
     Route::middleware('permission:stunting.create')->group(function () {
@@ -87,11 +99,15 @@ Route::middleware(['auth', 'verified'])->prefix('stunting')->name('stunting.')->
     Route::middleware('permission:stunting.edit')->group(function () {
         Route::get('/anak/{anak}/edit', [AnakController::class, 'edit'])->name('edit');
         Route::put('/anak/{anak}', [AnakController::class, 'update'])->name('update');
+        Route::put('/sasaran', [SasaranStuntingController::class, 'update'])->name('sasaran.update');
         Route::post('/anak/{anak}/dokumen', [DokumenAnakController::class, 'store'])->name('dokumen.store');
         Route::delete('/anak/{anak}/dokumen/{dokumen}', [DokumenAnakController::class, 'destroy'])->name('dokumen.destroy');
         Route::post('/anak/{anak}/pengukuran', [PengukuranController::class, 'store'])->name('pengukuran.store');
         Route::delete('/anak/{anak}/pengukuran/{pengukuran}', [PengukuranController::class, 'destroy'])->name('pengukuran.destroy');
     });
+
+    Route::get('/cari-keluarga', CariKeluargaController::class)
+        ->name('cari-keluarga')->middleware('permission:stunting.create,stunting.edit');
 
     Route::delete('/anak/{anak}', [AnakController::class, 'destroy'])
         ->name('destroy')->middleware('permission:stunting.delete');

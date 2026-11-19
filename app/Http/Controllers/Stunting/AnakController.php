@@ -8,6 +8,7 @@ use App\Http\Requests\Stunting\UpdateAnakRequest;
 use App\Models\Anak;
 use App\Models\AuditLog;
 use App\Models\DokumenAnak;
+use App\Models\DraftFormulir;
 use App\Models\Kecamatan;
 use App\Models\Pengukuran;
 use App\Models\VerifikasiStunting;
@@ -58,6 +59,9 @@ class AnakController extends Controller
 
         return view('stunting.index', [
             'anaks' => $anaks,
+            'draftTertunda' => $request->user()->hasPermission('stunting.create')
+                ? DraftFormulir::query()->milik($request->user(), 'stunting.create')->first()
+                : null,
             'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
             'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'jenis_kelamin', 'dari', 'sampai']),
         ]);
@@ -76,14 +80,16 @@ class AnakController extends Controller
             $anak = Anak::create([
                 'kode_pendataan' => $this->generateKodePendataan(),
                 'nik_anak' => $data['nik_anak'],
+                'memiliki_akta_kelahiran' => (bool) ($data['memiliki_akta_kelahiran'] ?? false),
                 'nomor_kk' => $data['nomor_kk'],
                 'nama_anak' => $data['nama_anak'],
                 'jenis_kelamin' => $data['jenis_kelamin'],
                 'tempat_lahir' => $data['tempat_lahir'],
                 'tanggal_lahir' => $data['tanggal_lahir'],
                 'usia_bulan' => (int) Carbon::parse($data['tanggal_lahir'])->diffInMonths(now()),
-                'nama_ayah' => $data['nama_ayah'],
-                'nama_ibu' => $data['nama_ibu'],
+                // Nama orang tua hanya diinput di langkah "Data Orang Tua"; kolom anak menyalinnya untuk daftar & laporan.
+                'nama_ayah' => $data['orang_tua']['nama_ayah_lengkap'],
+                'nama_ibu' => $data['orang_tua']['nama_ibu_lengkap'],
                 'nomor_hp_orang_tua' => $data['nomor_hp_orang_tua'] ?? null,
                 'alamat' => $data['alamat'],
                 'kecamatan_id' => $data['kecamatan_id'],
@@ -95,11 +101,11 @@ class AnakController extends Controller
             ]);
 
             $this->syncOrangTua($anak, $data['orang_tua'] ?? []);
-            $this->syncRiwayatKehamilan($anak, $data['riwayat_kehamilan'] ?? []);
-            $this->syncRiwayatKelahiran($anak, $data['riwayat_kelahiran'] ?? []);
+            $this->syncRiwayatKehamilan($anak, $data['riwayat_kehamilan'] ?? [], $data['orang_tua']['tanggal_lahir_ibu'] ?? null, $data['tanggal_lahir']);
+            $this->syncRiwayatKelahiran($anak, $data['riwayat_kelahiran'] ?? [], $data['tanggal_lahir']);
             $this->syncPengukuranAwal($anak, $request, $data['pengukuran'] ?? []);
             $this->syncRiwayatKesehatan($anak, $data['riwayat_kesehatan'] ?? []);
-            $this->syncAsiMpasi($anak, $data['asi_mpasi'] ?? []);
+            $this->syncAsiMpasi($anak, $data['asi_mpasi'] ?? [], (bool) ($data['riwayat_kelahiran']['imd'] ?? false));
             $this->syncSanitasi($anak, $data['sanitasi'] ?? []);
             $this->syncDokumen($anak, $request, $data['dokumen'] ?? []);
 
@@ -107,6 +113,8 @@ class AnakController extends Controller
 
             return $anak;
         });
+
+        DraftFormulir::selesai($request->user(), 'stunting.create');
 
         return redirect()->route('stunting.show', $anak)
             ->with('status', 'Pendataan berhasil disimpan dan berstatus Dalam Verifikasi.');
@@ -147,14 +155,16 @@ class AnakController extends Controller
         DB::transaction(function () use ($data, $request, $anak) {
             $anak->update([
                 'nik_anak' => $data['nik_anak'],
+                'memiliki_akta_kelahiran' => (bool) ($data['memiliki_akta_kelahiran'] ?? false),
                 'nomor_kk' => $data['nomor_kk'],
                 'nama_anak' => $data['nama_anak'],
                 'jenis_kelamin' => $data['jenis_kelamin'],
                 'tempat_lahir' => $data['tempat_lahir'],
                 'tanggal_lahir' => $data['tanggal_lahir'],
                 'usia_bulan' => (int) Carbon::parse($data['tanggal_lahir'])->diffInMonths(now()),
-                'nama_ayah' => $data['nama_ayah'],
-                'nama_ibu' => $data['nama_ibu'],
+                // Nama orang tua hanya diinput di langkah "Data Orang Tua"; kolom anak menyalinnya untuk daftar & laporan.
+                'nama_ayah' => $data['orang_tua']['nama_ayah_lengkap'],
+                'nama_ibu' => $data['orang_tua']['nama_ibu_lengkap'],
                 'nomor_hp_orang_tua' => $data['nomor_hp_orang_tua'] ?? null,
                 'alamat' => $data['alamat'],
                 'kecamatan_id' => $data['kecamatan_id'],
@@ -162,10 +172,10 @@ class AnakController extends Controller
             ]);
 
             $this->syncOrangTua($anak, $data['orang_tua'] ?? []);
-            $this->syncRiwayatKehamilan($anak, $data['riwayat_kehamilan'] ?? []);
-            $this->syncRiwayatKelahiran($anak, $data['riwayat_kelahiran'] ?? []);
+            $this->syncRiwayatKehamilan($anak, $data['riwayat_kehamilan'] ?? [], $data['orang_tua']['tanggal_lahir_ibu'] ?? null, $data['tanggal_lahir']);
+            $this->syncRiwayatKelahiran($anak, $data['riwayat_kelahiran'] ?? [], $data['tanggal_lahir']);
             $this->syncRiwayatKesehatan($anak, $data['riwayat_kesehatan'] ?? []);
-            $this->syncAsiMpasi($anak, $data['asi_mpasi'] ?? []);
+            $this->syncAsiMpasi($anak, $data['asi_mpasi'] ?? [], (bool) ($data['riwayat_kelahiran']['imd'] ?? false));
             $this->syncSanitasi($anak, $data['sanitasi'] ?? []);
             $this->syncDokumen($anak, $request, $data['dokumen'] ?? []);
 
@@ -174,6 +184,8 @@ class AnakController extends Controller
                 $this->ubahStatus($anak, 'dalam_verifikasi', $request->user()->id, 'Dikirim kembali setelah perbaikan.');
             }
         });
+
+        DraftFormulir::selesai($request->user(), 'stunting.edit.'.$anak->id);
 
         return redirect()->route('stunting.show', $anak)
             ->with('status', 'Perubahan data anak berhasil disimpan.');
@@ -241,40 +253,64 @@ class AnakController extends Controller
     /**
      * @param  array<string, mixed>  $row
      */
-    private function syncRiwayatKehamilan(Anak $anak, array $row): void
+    private function syncRiwayatKehamilan(Anak $anak, array $row, ?string $tanggalLahirIbu, string $tanggalLahirAnak): void
     {
         if (blank(array_filter($row))) {
             return;
         }
 
-        $anak->riwayatKehamilan()->updateOrCreate(['anak_id' => $anak->id], [
-            'usia_ibu_saat_hamil' => $row['usia_ibu_saat_hamil'] ?? null,
+        $jumlahTablet = $row['jumlah_tablet_tambah_darah'] ?? null;
+        $lila = $row['lila'] ?? null;
+        $usiaIbu = $row['usia_ibu_saat_hamil'] ?? null;
+
+        // Usia ibu saat hamil dihitung dari tanggal lahir ibu & anak bila tidak diisi.
+        if (blank($usiaIbu) && filled($tanggalLahirIbu)) {
+            $usiaIbu = (int) Carbon::parse($tanggalLahirIbu)->diffInYears(Carbon::parse($tanggalLahirAnak), true);
+        }
+
+        $atribut = [
+            'usia_ibu_saat_hamil' => $usiaIbu,
             'kehamilan_ke' => $row['kehamilan_ke'] ?? null,
             'jumlah_kehamilan' => $row['jumlah_kehamilan'] ?? null,
             'jumlah_pemeriksaan_kehamilan' => $row['jumlah_pemeriksaan_kehamilan'] ?? null,
             'tempat_pemeriksaan' => $row['tempat_pemeriksaan'] ?? null,
             'kondisi_kehamilan' => $row['kondisi_kehamilan'] ?? null,
             'risiko_kehamilan' => (bool) ($row['risiko_kehamilan'] ?? false),
-            'konsumsi_tablet_tambah_darah' => $row['konsumsi_tablet_tambah_darah'] ?? null,
-            'status_kek' => (bool) ($row['status_kek'] ?? false),
-            'lila' => $row['lila'] ?? null,
+            'jumlah_tablet_tambah_darah' => $jumlahTablet,
+            // LILA ibu < 23,5 cm termasuk Kurang Energi Kronis (KEK).
+            'status_kek' => (bool) ($row['status_kek'] ?? false) || (filled($lila) && (float) $lila < 23.5),
+            'pmt_kek' => (bool) ($row['pmt_kek'] ?? false),
+            'makanan_bergizi_seimbang' => (bool) ($row['makanan_bergizi_seimbang'] ?? false),
+            'kb_pascapersalinan' => (bool) ($row['kb_pascapersalinan'] ?? false),
+            'lila' => $lila,
             'komplikasi_kehamilan' => $row['komplikasi_kehamilan'] ?? null,
-        ]);
+        ];
+
+        // Kategori konsumsi TTD diturunkan dari jumlah tablet; data lama tanpa jumlah tetap memakai kategori tersimpan.
+        if (filled($jumlahTablet)) {
+            $atribut['konsumsi_tablet_tambah_darah'] = match (true) {
+                (int) $jumlahTablet === 0 => 'tidak_pernah',
+                (int) $jumlahTablet >= 180 => 'rutin',
+                default => 'kadang',
+            };
+        }
+
+        $anak->riwayatKehamilan()->updateOrCreate(['anak_id' => $anak->id], $atribut);
     }
 
     /**
      * @param  array<string, mixed>  $row
      */
-    private function syncRiwayatKelahiran(Anak $anak, array $row): void
+    private function syncRiwayatKelahiran(Anak $anak, array $row, string $tanggalLahirAnak): void
     {
-        // tanggal_lahir & tempat_lahir adalah kolom NOT NULL; draft yang belum mengisi
-        // bagian ini tidak membuat baris riwayat_kelahiran sama sekali (PRD Bagian 20).
-        if (blank($row['tanggal_lahir'] ?? null) || blank($row['tempat_lahir'] ?? null)) {
+        // tempat_lahir (tempat persalinan) adalah kolom NOT NULL; tanpa isian ini baris tidak dibuat.
+        if (blank($row['tempat_lahir'] ?? null)) {
             return;
         }
 
         $anak->riwayatKelahiran()->updateOrCreate(['anak_id' => $anak->id], [
-            'tanggal_lahir' => $row['tanggal_lahir'],
+            // Tanggal lahir hanya diinput sekali di identitas anak.
+            'tanggal_lahir' => $tanggalLahirAnak,
             'tempat_lahir' => $row['tempat_lahir'],
             'penolong_persalinan' => $row['penolong_persalinan'] ?? null,
             'cara_persalinan' => $row['cara_persalinan'] ?? null,
@@ -307,6 +343,7 @@ class AnakController extends Controller
             'tempat_pengukuran' => $row['tempat_pengukuran'] ?? null,
             'indikator_antropometri' => 'BB/U, TB/U, BB/TB',
             'hasil_kategori' => $row['hasil_kategori'] ?? null,
+            'status_gizi' => $row['status_gizi'] ?? null,
         ]);
     }
 
@@ -331,21 +368,29 @@ class AnakController extends Controller
             'jenis_penyakit_bawaan' => $row['jenis_penyakit_bawaan'] ?? null,
             'riwayat_rawat_inap' => (bool) ($row['riwayat_rawat_inap'] ?? false),
             'akses_pelayanan_kesehatan' => (bool) ($row['akses_pelayanan_kesehatan'] ?? false),
+            'tata_laksana_gizi_buruk' => (bool) ($row['tata_laksana_gizi_buruk'] ?? false),
+            'tambahan_asupan_gizi' => (bool) ($row['tambahan_asupan_gizi'] ?? false),
+            'oralit_zinc' => (bool) ($row['oralit_zinc'] ?? false),
+            'pneumonia' => (bool) ($row['pneumonia'] ?? false),
+            'obat_cacing' => (bool) ($row['obat_cacing'] ?? false),
+            'memiliki_jkn' => (bool) ($row['memiliki_jkn'] ?? false),
         ]);
     }
 
     /**
      * @param  array<string, mixed>  $row
      */
-    private function syncAsiMpasi(Anak $anak, array $row): void
+    private function syncAsiMpasi(Anak $anak, array $row, bool $imd): void
     {
         if (blank(array_filter($row))) {
             return;
         }
 
         $anak->asiMpasi()->updateOrCreate(['anak_id' => $anak->id], [
-            'imd' => (bool) ($row['imd'] ?? false),
+            // IMD hanya diinput di riwayat kelahiran; disalin agar data ASI tetap konsisten.
+            'imd' => $imd,
             'asi_eksklusif' => (bool) ($row['asi_eksklusif'] ?? false),
+            'masih_asi' => (bool) ($row['masih_asi'] ?? false),
             'lama_pemberian_asi_bulan' => $row['lama_pemberian_asi_bulan'] ?? null,
             'kendala_pemberian_asi' => $row['kendala_pemberian_asi'] ?? null,
             'usia_mulai_mpasi_bulan' => $row['usia_mulai_mpasi_bulan'] ?? null,
@@ -367,11 +412,14 @@ class AnakController extends Controller
             return;
         }
 
+        $jenisJamban = $row['jenis_jamban'] ?? null;
+
         $anak->sanitasi()->updateOrCreate(['anak_id' => $anak->id], [
             'sumber_air_minum' => $row['sumber_air_minum'] ?? null,
             'sumber_air_memasak' => $row['sumber_air_memasak'] ?? null,
-            'kepemilikan_jamban' => (bool) ($row['kepemilikan_jamban'] ?? false),
-            'jenis_jamban' => $row['jenis_jamban'] ?? null,
+            // Kepemilikan jamban diturunkan dari jenis jamban ("Tidak Ada" = tidak punya).
+            'kepemilikan_jamban' => filled($jenisJamban) && $jenisJamban !== 'tidak_ada',
+            'jenis_jamban' => $jenisJamban,
             'septic_tank' => (bool) ($row['septic_tank'] ?? false),
             'saluran_pembuangan' => $row['saluran_pembuangan'] ?? null,
             'pengelolaan_sampah' => $row['pengelolaan_sampah'] ?? null,

@@ -147,6 +147,8 @@
                     <dt>NIK Kepala Keluarga</dt><dd>{{ $keluarga->nik_kepala_keluarga }}</dd>
                     <dt>Nomor HP</dt><dd>{{ $keluarga->nomor_hp ?: '-' }}</dd>
                     <dt>Status Perkawinan</dt><dd>{{ $keluarga->status_perkawinan_label ?: '-' }}</dd>
+                    <dt>Desil DTSEN</dt><dd>{{ $keluarga->desil ? 'Desil '.$keluarga->desil : 'Belum Pemeringkatan' }}</dd>
+                    <dt>Status DTSEN</dt><dd>{{ ucfirst($keluarga->status_dtsen ?? 'aktif') }}</dd>
                     <dt>Alamat</dt><dd>{{ $keluarga->alamat }} (RT {{ $keluarga->rt }}/RW {{ $keluarga->rw }})</dd>
                     <dt>Wilayah</dt><dd>{{ $keluarga->desaKelurahan?->nama }}, {{ $keluarga->kecamatan?->nama }}</dd>
                 </dl>
@@ -227,7 +229,7 @@
                             <td>{{ ucfirst($a->jenis_kelamin) }}</td>
                             <td>{{ optional($a->tanggal_lahir)->format('d M Y') }}</td>
                             <td>{{ $a->usia_terkini }} th</td>
-                            <td>{{ $a->hubungan_keluarga }}</td>
+                            <td>{{ $a->hubungan_keluarga_label }}</td>
                             <td>{{ $a->pendidikan_terakhir_label ?: '-' }}</td>
                             <td>{{ $a->status_pekerjaan_label ?: '-' }}</td>
                             <td>

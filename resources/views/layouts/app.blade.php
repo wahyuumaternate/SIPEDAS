@@ -151,6 +151,13 @@
     <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
+    @if (session('draft_selesai'))
+        <script>
+            // Data berhasil disimpan: hapus salinan draft di peramban.
+            try { localStorage.removeItem(@json('draft:'.auth()->id().':'.session('draft_selesai'))); } catch (e) {}
+        </script>
+    @endif
+
     @stack('scripts')
 </body>
 

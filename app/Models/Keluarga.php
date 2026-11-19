@@ -18,6 +18,7 @@ class Keluarga extends Model
         'kode_pendataan', 'nomor_kk', 'nik_kepala_keluarga', 'nama_kepala_keluarga',
         'nomor_hp', 'jumlah_anggota_keluarga', 'status_perkawinan',
         'alamat', 'rt', 'rw', 'kecamatan_id', 'desa_kelurahan_id',
+        'desil', 'status_dtsen',
         'petugas_id', 'tanggal_input', 'status_data', 'tanggal_pendataan',
     ];
 
@@ -25,6 +26,7 @@ class Keluarga extends Model
         'tanggal_input' => 'datetime',
         'tanggal_pendataan' => 'datetime',
         'jumlah_anggota_keluarga' => 'integer',
+        'desil' => 'integer',
     ];
 
     // Relasi wilayah & petugas

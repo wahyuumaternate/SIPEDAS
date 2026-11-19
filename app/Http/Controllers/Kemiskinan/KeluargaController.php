@@ -9,6 +9,7 @@ use App\Models\AnggotaKeluarga;
 use App\Models\AsetKeluarga;
 use App\Models\AuditLog;
 use App\Models\DokumenKeluarga;
+use App\Models\DraftFormulir;
 use App\Models\Kecamatan;
 use App\Models\Keluarga;
 use App\Models\KepesertaanProgram;
@@ -17,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class KeluargaController extends Controller
@@ -60,6 +62,9 @@ class KeluargaController extends Controller
 
         return view('kemiskinan.index', [
             'keluargas' => $keluargas,
+            'draftTertunda' => $request->user()->hasPermission('kemiskinan.create')
+                ? DraftFormulir::query()->milik($request->user(), 'kemiskinan.create')->first()
+                : null,
             'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
             'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'petugas_id', 'dari', 'sampai']),
         ]);
@@ -73,21 +78,26 @@ class KeluargaController extends Controller
     public function store(StoreKeluargaRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $anggota = $this->anggotaTerisi($data);
+        $kepala = $anggota->firstWhere('hubungan_keluarga', 'kepala_keluarga');
 
-        $keluarga = DB::transaction(function () use ($data, $request) {
+        $keluarga = DB::transaction(function () use ($data, $request, $anggota, $kepala) {
             $keluarga = Keluarga::create([
                 'kode_pendataan' => $this->generateKodePendataan(),
                 'nomor_kk' => $data['nomor_kk'],
-                'nik_kepala_keluarga' => $data['nik_kepala_keluarga'],
-                'nama_kepala_keluarga' => $data['nama_kepala_keluarga'],
+                // Identitas kepala keluarga diambil dari anggota berhubungan "Kepala Keluarga" (diinput sekali).
+                'nik_kepala_keluarga' => $kepala['nik'],
+                'nama_kepala_keluarga' => $kepala['nama_lengkap'],
                 'nomor_hp' => $data['nomor_hp'] ?? null,
-                'jumlah_anggota_keluarga' => count(array_filter($data['anggota'] ?? [], fn ($row) => filled($row['nama_lengkap'] ?? null))),
-                'status_perkawinan' => $data['status_perkawinan'] ?? null,
+                'jumlah_anggota_keluarga' => $anggota->count(),
+                'status_perkawinan' => $kepala['status_perkawinan'] ?? null,
                 'alamat' => $data['alamat'],
                 'rt' => $data['rt'],
                 'rw' => $data['rw'],
                 'kecamatan_id' => $data['kecamatan_id'],
                 'desa_kelurahan_id' => $data['desa_kelurahan_id'],
+                'desil' => $data['desil'] ?? null,
+                'status_dtsen' => $data['status_dtsen'] ?? 'aktif',
                 'petugas_id' => $request->user()->id,
                 'tanggal_input' => now(),
                 'status_data' => 'dalam_verifikasi',
@@ -95,10 +105,10 @@ class KeluargaController extends Controller
             ]);
 
             $this->syncAnggota($keluarga, $data['anggota'] ?? []);
-            $this->syncKondisiEkonomi($keluarga, $data['kondisi_ekonomi'] ?? []);
+            $this->syncKondisiEkonomi($keluarga, $data['kondisi_ekonomi'] ?? [], $anggota, $kepala);
             $this->syncKondisiRumah($keluarga, $data['kondisi_rumah'] ?? []);
             $this->syncAset($keluarga, $data['aset'] ?? []);
-            $this->syncKondisiSosial($keluarga, $data['kondisi_sosial'] ?? []);
+            $this->syncKondisiSosial($keluarga, $data['kondisi_sosial'] ?? [], $anggota);
             $this->syncProgram($keluarga, $data['program'] ?? []);
             $this->syncDokumen($keluarga, $request, $data['dokumen'] ?? []);
 
@@ -106,6 +116,8 @@ class KeluargaController extends Controller
 
             return $keluarga;
         });
+
+        DraftFormulir::selesai($request->user(), 'kemiskinan.create');
 
         return redirect()->route('kemiskinan.show', $keluarga)
             ->with('status', 'Pendataan berhasil disimpan dan berstatus Dalam Verifikasi.');
@@ -140,27 +152,32 @@ class KeluargaController extends Controller
     public function update(UpdateKeluargaRequest $request, Keluarga $keluarga): RedirectResponse
     {
         $data = $request->validated();
+        $anggota = $this->anggotaTerisi($data);
+        $kepala = $anggota->firstWhere('hubungan_keluarga', 'kepala_keluarga');
 
-        DB::transaction(function () use ($data, $request, $keluarga) {
+        DB::transaction(function () use ($data, $request, $keluarga, $anggota, $kepala) {
             $keluarga->update([
                 'nomor_kk' => $data['nomor_kk'],
-                'nik_kepala_keluarga' => $data['nik_kepala_keluarga'],
-                'nama_kepala_keluarga' => $data['nama_kepala_keluarga'],
+                // Identitas kepala keluarga diambil dari anggota berhubungan "Kepala Keluarga" (diinput sekali).
+                'nik_kepala_keluarga' => $kepala['nik'],
+                'nama_kepala_keluarga' => $kepala['nama_lengkap'],
                 'nomor_hp' => $data['nomor_hp'] ?? null,
-                'jumlah_anggota_keluarga' => count(array_filter($data['anggota'] ?? [], fn ($row) => filled($row['nama_lengkap'] ?? null))),
-                'status_perkawinan' => $data['status_perkawinan'] ?? null,
+                'jumlah_anggota_keluarga' => $anggota->count(),
+                'status_perkawinan' => $kepala['status_perkawinan'] ?? null,
                 'alamat' => $data['alamat'],
                 'rt' => $data['rt'],
                 'rw' => $data['rw'],
                 'kecamatan_id' => $data['kecamatan_id'],
                 'desa_kelurahan_id' => $data['desa_kelurahan_id'],
+                'desil' => $data['desil'] ?? null,
+                'status_dtsen' => $data['status_dtsen'] ?? 'aktif',
             ]);
 
             $this->syncAnggota($keluarga, $data['anggota'] ?? []);
-            $this->syncKondisiEkonomi($keluarga, $data['kondisi_ekonomi'] ?? []);
+            $this->syncKondisiEkonomi($keluarga, $data['kondisi_ekonomi'] ?? [], $anggota, $kepala);
             $this->syncKondisiRumah($keluarga, $data['kondisi_rumah'] ?? []);
             $this->syncAset($keluarga, $data['aset'] ?? []);
-            $this->syncKondisiSosial($keluarga, $data['kondisi_sosial'] ?? []);
+            $this->syncKondisiSosial($keluarga, $data['kondisi_sosial'] ?? [], $anggota);
             $this->syncProgram($keluarga, $data['program'] ?? []);
             $this->syncDokumen($keluarga, $request, $data['dokumen'] ?? []);
 
@@ -169,6 +186,8 @@ class KeluargaController extends Controller
                 $this->ubahStatus($keluarga, 'dalam_verifikasi', $request->user()->id, 'Dikirim kembali setelah perbaikan.');
             }
         });
+
+        DraftFormulir::selesai($request->user(), 'kemiskinan.edit.'.$keluarga->id);
 
         return redirect()->route('kemiskinan.show', $keluarga)
             ->with('status', 'Perubahan data keluarga berhasil disimpan.');
@@ -186,6 +205,19 @@ class KeluargaController extends Controller
     }
 
     /**
+     * Baris anggota keluarga yang benar-benar diisi (punya nama).
+     *
+     * @param  array<string, mixed>  $data
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function anggotaTerisi(array $data): Collection
+    {
+        return collect($data['anggota'] ?? [])
+            ->filter(fn (array $row) => filled($row['nama_lengkap'] ?? null))
+            ->values();
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function formReferenceData(): array
@@ -193,6 +225,7 @@ class KeluargaController extends Controller
         return [
             'kecamatans' => Kecamatan::where('is_active', true)->with(['desaKelurahans' => fn ($q) => $q->where('is_active', true)->orderBy('nama')])->orderBy('nama')->get(),
             'refStatusPerkawinan' => config('referensi.status_perkawinan'),
+            'refHubunganKeluarga' => config('referensi.hubungan_keluarga'),
             'refPendidikanTerakhir' => config('referensi.pendidikan_terakhir'),
             'refStatusPekerjaan' => config('referensi.status_pekerjaan'),
             'refJenisAtap' => config('referensi.jenis_atap'),
@@ -249,14 +282,17 @@ class KeluargaController extends Controller
     /**
      * @param  array<string, mixed>  $row
      */
-    private function syncKondisiEkonomi(Keluarga $keluarga, array $row): void
+    private function syncKondisiEkonomi(Keluarga $keluarga, array $row, Collection $anggota, array $kepala): void
     {
+        $bekerja = $anggota->filter(fn (array $a) => filled($a['status_pekerjaan'] ?? null) && $a['status_pekerjaan'] !== 'tidak_bekerja')->count();
+
         $keluarga->kondisiEkonomi()->updateOrCreate(['keluarga_id' => $keluarga->id], [
-            'status_pekerjaan_kepala_keluarga' => $row['status_pekerjaan_kepala_keluarga'] ?? null,
+            // Status pekerjaan & jumlah anggota (tidak) bekerja diturunkan dari data anggota keluarga.
+            'status_pekerjaan_kepala_keluarga' => $kepala['status_pekerjaan'] ?? null,
             'pekerjaan_utama' => $row['pekerjaan_utama'] ?? null,
             'pekerjaan_tambahan' => $row['pekerjaan_tambahan'] ?? null,
-            'jumlah_anggota_bekerja' => $row['jumlah_anggota_bekerja'] ?? 0,
-            'jumlah_anggota_tidak_bekerja' => $row['jumlah_anggota_tidak_bekerja'] ?? 0,
+            'jumlah_anggota_bekerja' => $bekerja,
+            'jumlah_anggota_tidak_bekerja' => $anggota->count() - $bekerja,
             'pendapatan_kepala_keluarga' => $row['pendapatan_kepala_keluarga'] ?? 0,
             'pendapatan_pasangan' => $row['pendapatan_pasangan'] ?? 0,
             'pendapatan_anggota_lainnya' => $row['pendapatan_anggota_lainnya'] ?? 0,
@@ -326,15 +362,18 @@ class KeluargaController extends Controller
     /**
      * @param  array<string, mixed>  $row
      */
-    private function syncKondisiSosial(Keluarga $keluarga, array $row): void
+    private function syncKondisiSosial(Keluarga $keluarga, array $row, Collection $anggota): void
     {
+        $usia = $anggota->map(fn (array $a) => Carbon::parse($a['tanggal_lahir'])->age);
+
         $keluarga->kondisiSosial()->updateOrCreate(['keluarga_id' => $keluarga->id], [
-            'jumlah_anak_usia_sekolah' => $row['jumlah_anak_usia_sekolah'] ?? 0,
+            // Jumlah anak usia sekolah (7–18 th), lansia (≥ 60 th), disabilitas & sakit kronis diturunkan dari data anggota.
+            'jumlah_anak_usia_sekolah' => $usia->filter(fn (int $u) => $u >= 7 && $u <= 18)->count(),
             'jumlah_anak_bersekolah' => $row['jumlah_anak_bersekolah'] ?? 0,
             'jumlah_anak_putus_sekolah' => $row['jumlah_anak_putus_sekolah'] ?? 0,
-            'jumlah_lansia' => $row['jumlah_lansia'] ?? 0,
-            'jumlah_penyandang_disabilitas' => $row['jumlah_penyandang_disabilitas'] ?? 0,
-            'jumlah_anggota_sakit' => $row['jumlah_anggota_sakit'] ?? 0,
+            'jumlah_lansia' => $usia->filter(fn (int $u) => $u >= 60)->count(),
+            'jumlah_penyandang_disabilitas' => $anggota->filter(fn (array $a) => (bool) ($a['disabilitas'] ?? false))->count(),
+            'jumlah_anggota_sakit' => $anggota->filter(fn (array $a) => (bool) ($a['penyakit_kronis'] ?? false))->count(),
             'akses_fasilitas_kesehatan' => (bool) ($row['akses_fasilitas_kesehatan'] ?? false),
             'jarak_fasilitas_kesehatan_km' => $row['jarak_fasilitas_kesehatan_km'] ?? null,
             'akses_pendidikan' => (bool) ($row['akses_pendidikan'] ?? false),

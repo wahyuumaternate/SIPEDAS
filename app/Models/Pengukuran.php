@@ -13,7 +13,7 @@ class Pengukuran extends Model
     protected $fillable = [
         'anak_id', 'tanggal_pengukuran', 'berat_badan', 'panjang_tinggi_badan',
         'lingkar_kepala', 'lingkar_lengan_atas', 'petugas_pengukur_id', 'tempat_pengukuran',
-        'usia_saat_pengukuran_bulan', 'indikator_antropometri', 'hasil_kategori',
+        'usia_saat_pengukuran_bulan', 'indikator_antropometri', 'hasil_kategori', 'status_gizi',
     ];
 
     protected $casts = [

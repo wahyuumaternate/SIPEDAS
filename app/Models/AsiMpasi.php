@@ -13,7 +13,7 @@ class AsiMpasi extends Model
     protected $table = 'asi_mpasis';
 
     protected $fillable = [
-        'anak_id', 'imd', 'asi_eksklusif', 'lama_pemberian_asi_bulan', 'kendala_pemberian_asi',
+        'anak_id', 'imd', 'asi_eksklusif', 'masih_asi', 'lama_pemberian_asi_bulan', 'kendala_pemberian_asi',
         'usia_mulai_mpasi_bulan', 'frekuensi_makan', 'jenis_makanan', 'sumber_protein',
         'konsumsi_sayur', 'konsumsi_buah', 'keragaman_makanan',
     ];
@@ -21,6 +21,7 @@ class AsiMpasi extends Model
     protected $casts = [
         'imd' => 'boolean',
         'asi_eksklusif' => 'boolean',
+        'masih_asi' => 'boolean',
         'konsumsi_sayur' => 'boolean',
         'konsumsi_buah' => 'boolean',
     ];

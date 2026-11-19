@@ -23,6 +23,7 @@ class PengukuranController extends Controller
             'tempat_pengukuran' => $request->validated('tempat_pengukuran'),
             'indikator_antropometri' => 'BB/U, TB/U, BB/TB',
             'hasil_kategori' => $request->validated('hasil_kategori'),
+            'status_gizi' => $request->validated('status_gizi'),
         ]);
 
         return back()->with('status', 'Data pengukuran berhasil ditambahkan.');

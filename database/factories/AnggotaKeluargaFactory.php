@@ -24,7 +24,7 @@ class AnggotaKeluargaFactory extends Factory
             'tempat_lahir' => fake()->city(),
             'tanggal_lahir' => $tanggalLahir,
             'usia' => (int) Carbon::parse($tanggalLahir)->diffInYears(now()),
-            'hubungan_keluarga' => fake()->randomElement(['Kepala Keluarga', 'Istri', 'Anak', 'Orang Tua', 'Lainnya']),
+            'hubungan_keluarga' => fake()->randomElement(['kepala_keluarga', 'istri', 'anak', 'orang_tua', 'lainnya']),
             'status_perkawinan' => null,
             'pendidikan_terakhir' => null,
             'status_pekerjaan' => null,

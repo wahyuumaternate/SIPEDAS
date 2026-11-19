@@ -24,6 +24,7 @@ class StorePengukuranRequest extends FormRequest
             'lingkar_lengan_atas' => ['nullable', 'numeric', 'min:0'],
             'tempat_pengukuran' => ['nullable', 'string', 'max:255'],
             'hasil_kategori' => ['nullable', 'in:normal,stunting_ringan,stunting_sedang,stunting_berat'],
+            'status_gizi' => ['nullable', 'in:gizi_buruk,gizi_kurang,gizi_baik,gizi_lebih'],
         ];
     }
 }

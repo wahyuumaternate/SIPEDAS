@@ -112,6 +112,7 @@
                 <div class="sec-title"><i class="bi bi-card-text"></i> Identitas</div>
             <dl class="kv">
                                 <dt>NIK Anak</dt><dd>{{ $anak->nik_anak }}</dd>
+                                <dt>Akta Kelahiran</dt><dd>{{ $anak->memiliki_akta_kelahiran ? 'Ada' : 'Belum Ada' }}</dd>
                                 <dt>Nomor KK</dt><dd>{{ $anak->nomor_kk }}</dd>
                                 <dt>Jenis Kelamin</dt><dd>{{ ucfirst($anak->jenis_kelamin) }}</dd>
                                 <dt>Tempat, Tanggal Lahir</dt><dd>{{ $anak->tempat_lahir }}, {{ optional($anak->tanggal_lahir)->format('d M Y') }}</dd>
@@ -164,8 +165,10 @@
                     <dt>Kehamilan Ke- / Jumlah Kehamilan</dt><dd>{{ $hml->kehamilan_ke }} / {{ $hml->jumlah_kehamilan }}</dd>
                     <dt>Jumlah Pemeriksaan</dt><dd>{{ $hml->jumlah_pemeriksaan_kehamilan }}x di {{ $hml->tempat_pemeriksaan }}</dd>
                     <dt>Kondisi Kehamilan</dt><dd>{{ $hml->kondisi_kehamilan }} {{ $hml->risiko_kehamilan ? '(Berisiko)' : '' }}</dd>
-                    <dt>Konsumsi Tablet Tambah Darah</dt><dd>{{ str($hml->konsumsi_tablet_tambah_darah ?? '-')->replace('_', ' ')->title() }}</dd>
-                    <dt>Status KEK / LILA</dt><dd>{{ $hml->status_kek ? 'Ya' : 'Tidak' }} / {{ $hml->lila }} cm</dd>
+                    <dt>Konsumsi Tablet Tambah Darah</dt><dd>{{ str($hml->konsumsi_tablet_tambah_darah ?? '-')->replace('_', ' ')->title() }}{{ $hml->jumlah_tablet_tambah_darah !== null ? ' ('.$hml->jumlah_tablet_tambah_darah.' tablet)' : '' }}</dd>
+                    <dt>Status KEK / LILA</dt><dd>{{ $hml->status_kek ? 'Ya' : 'Tidak' }} / {{ $hml->lila }} cm{{ $hml->status_kek ? ($hml->pmt_kek ? ' · mendapat PMT' : ' · belum mendapat PMT') : '' }}</dd>
+                    <dt>Makanan Bergizi Seimbang</dt><dd>{{ $hml->makanan_bergizi_seimbang ? 'Ya' : 'Tidak' }}</dd>
+                    <dt>KB Pascapersalinan</dt><dd>{{ $hml->kb_pascapersalinan ? 'Ya' : 'Tidak' }}</dd>
                     <dt>Komplikasi</dt><dd>{{ $hml->komplikasi_kehamilan ?: '-' }}</dd>
                 </dl>
             @else
@@ -179,7 +182,7 @@
             @php($lhr = $anak->riwayatKelahiran)
             @if ($lhr)
                 <dl class="kv">
-                    <dt>Tanggal, Tempat Lahir</dt><dd>{{ optional($lhr->tanggal_lahir)->format('d M Y') }}, {{ $lhr->tempat_lahir }}</dd>
+                    <dt>Tempat Persalinan</dt><dd>{{ $lhr->tempat_lahir ?: '-' }}</dd>
                     <dt>Penolong / Cara Persalinan</dt><dd>{{ str($lhr->penolong_persalinan ?? '-')->title() }} / {{ str($lhr->cara_persalinan ?? '-')->title() }}</dd>
                     <dt>Berat / Panjang Lahir</dt><dd>{{ $lhr->berat_badan_lahir }} kg / {{ $lhr->panjang_badan_lahir }} cm</dd>
                     <dt>Kondisi</dt>
@@ -212,6 +215,22 @@
                         @if ($sht->riwayat_rawat_inap) <span class="badge text-bg-warning">Pernah Rawat Inap</span> @endif
                     </dd>
                     <dt>Akses Pelayanan Kesehatan</dt><dd>{{ $sht->akses_pelayanan_kesehatan ? 'Ya' : 'Tidak' }}</dd>
+                    <dt>Layanan Diterima</dt>
+                    <dd>
+                        @php($layanan = collect([
+                            'tata_laksana_gizi_buruk' => 'Tata Laksana Gizi Buruk',
+                            'tambahan_asupan_gizi' => 'Tambahan Asupan Gizi',
+                            'oralit_zinc' => 'Oralit & Zinc',
+                            'obat_cacing' => 'Obat Cacing',
+                            'memiliki_jkn' => 'JKN',
+                        ])->filter(fn ($label, $kolom) => $sht->{$kolom}))
+                        @forelse ($layanan as $label)
+                            <span class="badge text-bg-success">{{ $label }}</span>
+                        @empty
+                            -
+                        @endforelse
+                        @if ($sht->pneumonia) <span class="badge text-bg-warning">Pneumonia</span> @endif
+                    </dd>
                 </dl>
             @else
                 <p class="text-muted mb-0">Belum ada data riwayat kesehatan.</p>
@@ -225,6 +244,7 @@
             @if ($asi)
                 <dl class="kv">
                     <dt>IMD / ASI Eksklusif</dt><dd>{{ $asi->imd ? 'Ya' : 'Tidak' }} / {{ $asi->asi_eksklusif ? 'Ya' : 'Tidak' }}</dd>
+                    <dt>Masih Mendapat ASI</dt><dd>{{ $asi->masih_asi ? 'Ya' : 'Tidak' }}</dd>
                     <dt>Lama Pemberian ASI</dt><dd>{{ $asi->lama_pemberian_asi_bulan }} bulan</dd>
                     <dt>Kendala Pemberian ASI</dt><dd>{{ $asi->kendala_pemberian_asi ?: '-' }}</dd>
                     <dt>Usia Mulai MPASI</dt><dd>{{ $asi->usia_mulai_mpasi_bulan }} bulan</dd>
@@ -262,7 +282,7 @@
         <div class="sec-title"><i class="bi bi-rulers"></i> Pengukuran <span class="badge text-bg-secondary">{{ $anak->pengukurans->count() }}</span></div>
             <div class="table-responsive mb-3">
                 <table class="table table-sm table-hover align-middle mb-0 show-table">
-                    <thead><tr><th>Tanggal</th><th>Usia</th><th>BB (kg)</th><th>TB/PB (cm)</th><th>LK (cm)</th><th>LILA (cm)</th><th>Kategori</th><th>Petugas</th><th></th></tr></thead>
+                    <thead><tr><th>Tanggal</th><th>Usia</th><th>BB (kg)</th><th>TB/PB (cm)</th><th>LK (cm)</th><th>LILA (cm)</th><th>Kategori</th><th>Status Gizi</th><th>Petugas</th><th></th></tr></thead>
                     <tbody>
                         @forelse ($anak->pengukurans as $p)
                             <tr>
@@ -273,6 +293,7 @@
                                 <td>{{ $p->lingkar_kepala }}</td>
                                 <td>{{ $p->lingkar_lengan_atas }}</td>
                                 <td>{{ $p->hasil_kategori ? str($p->hasil_kategori)->replace('_', ' ')->title() : '-' }}</td>
+                                <td>{{ $p->status_gizi ? str($p->status_gizi)->replace('_', ' ')->title() : '-' }}</td>
                                 <td>{{ $p->petugasPengukur?->nama }}</td>
                                 <td>
                                     <form method="POST" action="{{ route('stunting.pengukuran.destroy', [$anak, $p]) }}"
@@ -284,7 +305,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center text-muted py-3">Belum ada data pengukuran.</td></tr>
+                            <tr><td colspan="10" class="text-center text-muted py-3">Belum ada data pengukuran.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -316,6 +337,16 @@
                         <option value="stunting_ringan">Stunting Ringan</option>
                         <option value="stunting_sedang">Stunting Sedang</option>
                         <option value="stunting_berat">Stunting Berat</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Status Gizi (BB/TB)</label>
+                    <select name="status_gizi" class="form-select form-select-sm">
+                        <option value="">Pilih</option>
+                        <option value="gizi_buruk">Gizi Buruk</option>
+                        <option value="gizi_kurang">Gizi Kurang</option>
+                        <option value="gizi_baik">Gizi Baik</option>
+                        <option value="gizi_lebih">Gizi Lebih</option>
                     </select>
                 </div>
                 <div class="col-md-2">

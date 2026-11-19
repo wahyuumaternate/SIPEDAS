@@ -1,6 +1,7 @@
 @php
     $keluarga = $keluarga ?? null;
     $isEdit = (bool) $keluarga;
+    $kunciDraft = $keluarga ? 'kemiskinan.edit.'.$keluarga->id : 'kemiskinan.create';
 
     $anggotaRows = old('anggota', $isEdit ? $keluarga->anggotaKeluarga->map(fn ($a) => [
         'nik' => $a->nik,
@@ -90,6 +91,10 @@
     <div class="tab-content">
         {{-- ========== 1. IDENTITAS KELUARGA (PRD Bagian 9) ========== --}}
         <div class="tab-pane fade show active panel" id="tab-identitas">
+            <div class="alert alert-info small py-2">
+                <i class="bi bi-info-circle"></i> NIK, nama, dan status perkawinan kepala keluarga diisi di langkah
+                <strong>Anggota Keluarga</strong> (anggota dengan hubungan "Kepala Keluarga").
+            </div>
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Nomor KK <span class="text-danger">*</span></label>
@@ -98,32 +103,27 @@
                     @error('nomor_kk') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">NIK Kepala Keluarga <span class="text-danger">*</span></label>
-                    <input type="text" name="nik_kepala_keluarga" maxlength="16"
-                        class="form-control @error('nik_kepala_keluarga') is-invalid @enderror"
-                        value="{{ old('nik_kepala_keluarga', $keluarga?->nik_kepala_keluarga) }}" required>
-                    @error('nik_kepala_keluarga') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nama Kepala Keluarga <span class="text-danger">*</span></label>
-                    <input type="text" name="nama_kepala_keluarga"
-                        class="form-control @error('nama_kepala_keluarga') is-invalid @enderror"
-                        value="{{ old('nama_kepala_keluarga', $keluarga?->nama_kepala_keluarga) }}" required>
-                    @error('nama_kepala_keluarga') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-4">
                     <label class="form-label">Nomor HP</label>
                     <input type="text" name="nomor_hp" class="form-control"
                         value="{{ old('nomor_hp', $keluarga?->nomor_hp) }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Status Perkawinan</label>
-                    <select name="status_perkawinan" class="form-select">
-                        <option value="">Pilih</option>
-                        @foreach ($refStatusPerkawinan as $kode => $label)
-                            <option value="{{ $kode }}" @selected(old('status_perkawinan', $keluarga?->status_perkawinan) === $kode)>{{ $label }}</option>
+                    <label class="form-label">Desil DTSEN</label>
+                    <select name="desil" class="form-select @error('desil') is-invalid @enderror">
+                        <option value="">Belum Pemeringkatan</option>
+                        @foreach (range(1, 10) as $desil)
+                            <option value="{{ $desil }}" @selected((string) old('desil', $keluarga?->desil) === (string) $desil)>Desil {{ $desil }}</option>
                         @endforeach
                     </select>
+                    @error('desil') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status DTSEN</label>
+                    <select name="status_dtsen" class="form-select @error('status_dtsen') is-invalid @enderror">
+                        <option value="aktif" @selected(old('status_dtsen', $keluarga?->status_dtsen ?? 'aktif') === 'aktif')>Aktif</option>
+                        <option value="nonaktif" @selected(old('status_dtsen', $keluarga?->status_dtsen) === 'nonaktif')>Nonaktif</option>
+                    </select>
+                    @error('status_dtsen') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-12">
                     <label class="form-label">Alamat <span class="text-danger">*</span></label>
@@ -165,7 +165,15 @@
         {{-- ========== 2. ANGGOTA KELUARGA (PRD Bagian 10) ========== --}}
         <div class="tab-pane fade panel" id="tab-anggota">
             <p class="text-muted small">Minimal satu anggota keluarga harus diisi. Usia dihitung otomatis dari tanggal lahir.</p>
-            @error('anggota') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+            @if ($errors->has('anggota') || $errors->has('anggota.*'))
+                <div class="alert alert-danger py-2" data-error-tab>
+                    <ul class="mb-0 ps-3">
+                        @foreach (array_unique([...$errors->get('anggota'), ...collect($errors->get('anggota.*'))->flatten()->all()]) as $pesan)
+                            <li>{{ $pesan }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <div id="anggota-container"></div>
             <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-anggota">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Tambah Anggota
@@ -177,15 +185,6 @@
             <h2 class="h6">Pekerjaan</h2>
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
-                    <label class="form-label">Status Pekerjaan Kepala Keluarga</label>
-                    <select name="kondisi_ekonomi[status_pekerjaan_kepala_keluarga]" class="form-select">
-                        <option value="">Pilih</option>
-                        @foreach ($refStatusPekerjaan as $kode => $label)
-                            <option value="{{ $kode }}" @selected(($ekonomi['status_pekerjaan_kepala_keluarga'] ?? null) === $kode)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
                     <label class="form-label">Pekerjaan Utama</label>
                     <input type="text" name="kondisi_ekonomi[pekerjaan_utama]" class="form-control"
                         value="{{ $ekonomi['pekerjaan_utama'] ?? '' }}">
@@ -195,15 +194,8 @@
                     <input type="text" name="kondisi_ekonomi[pekerjaan_tambahan]" class="form-control"
                         value="{{ $ekonomi['pekerjaan_tambahan'] ?? '' }}">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Jml. Anggota Bekerja</label>
-                    <input type="number" min="0" name="kondisi_ekonomi[jumlah_anggota_bekerja]" class="form-control"
-                        value="{{ $ekonomi['jumlah_anggota_bekerja'] ?? 0 }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Jml. Anggota Tidak Bekerja</label>
-                    <input type="number" min="0" name="kondisi_ekonomi[jumlah_anggota_tidak_bekerja]" class="form-control"
-                        value="{{ $ekonomi['jumlah_anggota_tidak_bekerja'] ?? 0 }}">
+                <div class="col-12">
+                    <div class="form-text">Status pekerjaan kepala keluarga dan jumlah anggota (tidak) bekerja dihitung otomatis dari Status Pekerjaan tiap anggota keluarga.</div>
                 </div>
             </div>
 
@@ -335,13 +327,12 @@
         {{-- ========== 6. KONDISI SOSIAL & LAYANAN DASAR (PRD Bagian 14) ========== --}}
         <div class="tab-pane fade panel" id="tab-sosial">
             <div class="row g-3">
+                <div class="col-12">
+                    <div class="form-text">Jumlah anak usia sekolah (7–18 th), lansia (≥ 60 th), penyandang disabilitas, dan anggota berpenyakit kronis dihitung otomatis dari data anggota keluarga.</div>
+                </div>
                 @foreach ([
-                    'jumlah_anak_usia_sekolah' => 'Jumlah Anak Usia Sekolah',
                     'jumlah_anak_bersekolah' => 'Jumlah Anak Bersekolah',
                     'jumlah_anak_putus_sekolah' => 'Jumlah Anak Putus Sekolah',
-                    'jumlah_lansia' => 'Jumlah Lansia',
-                    'jumlah_penyandang_disabilitas' => 'Jumlah Penyandang Disabilitas',
-                    'jumlah_anggota_sakit' => 'Jumlah Anggota Sakit',
                 ] as $field => $label)
                     <div class="col-md-4">
                         <label class="form-label">{{ $label }}</label>
@@ -424,7 +415,8 @@
         </button>
     </div>
 
-    <div class="d-flex justify-content-end align-items-center gap-2 mt-3">
+    <div class="d-flex justify-content-end align-items-center gap-2 mt-3 flex-wrap">
+        <span id="status-draft" class="small text-muted me-auto" aria-live="polite"></span>
         <a href="{{ $isEdit ? route('kemiskinan.show', $keluarga) : route('kemiskinan.index') }}"
             class="btn btn-outline-secondary">Batal</a>
         <button type="submit" class="btn btn-primary">
@@ -444,6 +436,7 @@
 @endif
 
 @push('scripts')
+    <script src="{{ asset('assets/js/draft-formulir.js') }}"></script>
     <script>
         (function () {
             // ===== Navigasi Sebelumnya / Selanjutnya antar tab =====
@@ -473,6 +466,21 @@
 
             const form = document.getElementById('form-kemiskinan');
 
+            // Buka langkah yang berisi field tidak valid agar pesan error terlihat.
+            function bukaTabDari(el) {
+                const pane = el.closest('.tab-pane');
+                const tombol = pane && tabButtons.find((btn) => btn.dataset.bsTarget === `#${pane.id}`);
+                if (tombol && !pane.classList.contains('active')) {
+                    bootstrap.Tab.getOrCreateInstance(tombol).show();
+                }
+            }
+
+            form.addEventListener('invalid', (event) => bukaTabDari(event.target), true);
+            const errorServer = form.querySelector('.is-invalid, [data-error-tab]');
+            if (errorServer) {
+                bukaTabDari(errorServer);
+            }
+
             const kecamatanData = @json($kecamatans->keyBy('id')->map->desaKelurahans);
             const kecamatanSelect = document.getElementById('kecamatan_id');
             const desaSelect = document.getElementById('desa_kelurahan_id');
@@ -495,6 +503,7 @@
 
             const refs = {
                 statusPerkawinan: @json($refStatusPerkawinan),
+                hubunganKeluarga: @json($refHubunganKeluarga),
                 pendidikan: @json($refPendidikanTerakhir),
                 pekerjaan: @json($refStatusPekerjaan),
                 jenisAset: @json($refJenisAset),
@@ -529,7 +538,7 @@
                                 <option value="perempuan" ${data.jenis_kelamin === 'perempuan' ? 'selected' : ''}>Perempuan</option>
                             </select></div>
                         <div class="col-md-3"><label class="form-label small">Hubungan Keluarga *</label>
-                            <input type="text" name="anggota[${i}][hubungan_keluarga]" class="form-control form-control-sm" value="${data.hubungan_keluarga || ''}" data-required-kirim="1"></div>
+                            <select name="anggota[${i}][hubungan_keluarga]" class="form-select form-select-sm" data-required-kirim="1">${selectOptions(refs.hubunganKeluarga, data.hubungan_keluarga)}</select></div>
                         <div class="col-md-3"><label class="form-label small">Tempat Lahir</label>
                             <input type="text" name="anggota[${i}][tempat_lahir]" class="form-control form-control-sm" value="${data.tempat_lahir || ''}"></div>
                         <div class="col-md-3"><label class="form-label small">Tanggal Lahir *</label>
@@ -549,7 +558,7 @@
                 anggotaContainer.appendChild(div);
             }
 
-            (anggotaData.length ? anggotaData : [{}]).forEach(addAnggotaRow);
+            (anggotaData.length ? anggotaData : [{ hubungan_keluarga: 'kepala_keluarga' }]).forEach(addAnggotaRow);
             document.getElementById('btn-add-anggota').addEventListener('click', function () { addAnggotaRow(); });
 
             // ===== Aset Keluarga =====
@@ -653,6 +662,22 @@
 
                 document.getElementById('btn-add-dokumen').addEventListener('click', addDokumenRow);
             }
+
+            // ===== Draft otomatis =====
+            DraftFormulir.pasang(form, {
+                kunci: @json($kunciDraft),
+                url: @json(route('draft-formulir.update', $kunciDraft)),
+                userId: @json(auth()->id()),
+                status: document.getElementById('status-draft'),
+                abaikan: /^dokumen\[/,
+                adaInputLama: @json($errors->any() || session()->hasOldInput()),
+                diperbaruiPada: @json($keluarga?->updated_at?->toIso8601String()),
+                repeaters: {
+                    anggota: { container: anggotaContainer, add: addAnggotaRow },
+                    aset: { container: asetContainer, add: addAsetRow },
+                    program: { container: programContainer, add: addProgramRow }
+                },
+            });
         })();
     </script>
 @endpush

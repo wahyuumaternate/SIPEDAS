@@ -17,6 +17,21 @@ return [
         'cerai_mati' => 'Cerai Mati',
     ],
 
+    // Hubungan dalam keluarga mengikuti isian Kartu Keluarga (Dukcapil).
+    'hubungan_keluarga' => [
+        'kepala_keluarga' => 'Kepala Keluarga',
+        'suami' => 'Suami',
+        'istri' => 'Istri',
+        'anak' => 'Anak',
+        'menantu' => 'Menantu',
+        'cucu' => 'Cucu',
+        'orang_tua' => 'Orang Tua',
+        'mertua' => 'Mertua',
+        'famili_lain' => 'Famili Lain',
+        'pembantu' => 'Pembantu',
+        'lainnya' => 'Lainnya',
+    ],
+
     'pendidikan_terakhir' => [
         'tidak_sekolah' => 'Tidak/Belum Sekolah',
         'tidak_tamat_sd' => 'Tidak Tamat SD',

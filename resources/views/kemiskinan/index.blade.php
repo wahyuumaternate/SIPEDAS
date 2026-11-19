@@ -36,6 +36,15 @@
         <div class="alert alert-success">{{ session('status') }}</div>
     @endif
 
+    @if ($draftTertunda)
+        <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2">
+            <i class="bi bi-clock-history" aria-hidden="true"></i>
+            <span class="me-auto">Anda memiliki draft pendataan yang belum disimpan
+                (terakhir {{ $draftTertunda->disimpan_pada->translatedFormat('d M Y H:i') }}).</span>
+            <a href="{{ route('kemiskinan.create') }}" class="btn btn-warning btn-sm">Lanjutkan Pengisian</a>
+        </div>
+    @endif
+
     <section class="panel mb-3">
         <form method="GET" action="{{ route('kemiskinan.index') }}" class="row g-2 align-items-end">
             <div class="col-12 col-md-3">

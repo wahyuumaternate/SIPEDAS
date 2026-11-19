@@ -1,8 +1,14 @@
 @php
     $anak = $anak ?? null;
     $isEdit = (bool) $anak;
+    $kunciDraft = $anak ? 'stunting.edit.'.$anak->id : 'stunting.create';
 
     $orangTua = old('orang_tua', $isEdit ? ($anak->orangTua?->toArray() ?? []) : []);
+    if ($isEdit && ! old('orang_tua')) {
+        // Data lama yang belum punya baris orang_tua tetap menampilkan nama dari identitas anak.
+        $orangTua['nama_ayah_lengkap'] = ($orangTua['nama_ayah_lengkap'] ?? null) ?: $anak->nama_ayah;
+        $orangTua['nama_ibu_lengkap'] = ($orangTua['nama_ibu_lengkap'] ?? null) ?: $anak->nama_ibu;
+    }
     $riwayatKehamilan = old('riwayat_kehamilan', $isEdit ? ($anak->riwayatKehamilan?->toArray() ?? []) : []);
     $riwayatKelahiran = old('riwayat_kelahiran', $isEdit ? ($anak->riwayatKelahiran?->toArray() ?? []) : []);
     $riwayatKesehatan = old('riwayat_kesehatan', $isEdit ? ($anak->riwayatKesehatan?->toArray() ?? []) : []);
@@ -11,6 +17,11 @@
 @endphp
 
 <style>
+    .terisi-otomatis {
+        background-color: rgba(25, 135, 84, 0.08);
+        border-color: rgba(25, 135, 84, 0.5);
+    }
+
     .form-tabs .nav-link {
         border: 0;
         border-bottom: 2px solid transparent;
@@ -63,12 +74,27 @@
                     <input type="text" name="nik_anak" maxlength="16" class="form-control @error('nik_anak') is-invalid @enderror"
                         value="{{ old('nik_anak', $anak?->nik_anak) }}" required>
                     @error('nik_anak') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="form-check mt-2">
+                        <input type="hidden" name="memiliki_akta_kelahiran" value="0">
+                        <input type="checkbox" class="form-check-input" name="memiliki_akta_kelahiran" value="1"
+                            id="memiliki_akta_kelahiran" @checked(old('memiliki_akta_kelahiran', $anak?->memiliki_akta_kelahiran))>
+                        <label class="form-check-label small" for="memiliki_akta_kelahiran">Memiliki Akta Kelahiran</label>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Nomor KK <span class="text-danger">*</span></label>
-                    <input type="text" name="nomor_kk" maxlength="16" class="form-control @error('nomor_kk') is-invalid @enderror"
-                        value="{{ old('nomor_kk', $anak?->nomor_kk) }}" required>
+                    <input type="text" name="nomor_kk" id="nomor_kk" maxlength="16" inputmode="numeric"
+                        class="form-control @error('nomor_kk') is-invalid @enderror"
+                        value="{{ old('nomor_kk', $anak?->nomor_kk) }}" required
+                        data-url-cari="{{ route('stunting.cari-keluarga') }}" data-kecuali-anak="{{ $anak?->id }}">
                     @error('nomor_kk') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div id="infoKeluargaKk" class="form-text" aria-live="polite">
+                        Jika Nomor KK sudah terdata di modul kemiskinan, data orang tua terisi otomatis.
+                    </div>
+                    <div id="pilihAnakKk" class="mt-2 d-none">
+                        <label class="form-label small mb-1" for="pilihAnakKkSelect">Pilih anak dari Kartu Keluarga</label>
+                        <select id="pilihAnakKkSelect" class="form-select form-select-sm"></select>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Nama Anak <span class="text-danger">*</span></label>
@@ -96,23 +122,6 @@
                     <input type="date" name="tanggal_lahir" class="form-control @error('tanggal_lahir') is-invalid @enderror"
                         value="{{ old('tanggal_lahir', optional($anak?->tanggal_lahir)->format('Y-m-d')) }}" required>
                     @error('tanggal_lahir') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nama Ayah <span class="text-danger">*</span></label>
-                    <input type="text" name="nama_ayah" class="form-control @error('nama_ayah') is-invalid @enderror"
-                        value="{{ old('nama_ayah', $anak?->nama_ayah) }}" required>
-                    @error('nama_ayah') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nama Ibu <span class="text-danger">*</span></label>
-                    <input type="text" name="nama_ibu" class="form-control @error('nama_ibu') is-invalid @enderror"
-                        value="{{ old('nama_ibu', $anak?->nama_ibu) }}" required>
-                    @error('nama_ibu') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nomor HP Orang Tua</label>
-                    <input type="text" name="nomor_hp_orang_tua" class="form-control"
-                        value="{{ old('nomor_hp_orang_tua', $anak?->nomor_hp_orang_tua) }}">
                 </div>
                 <div class="col-12">
                     <label class="form-label">Alamat <span class="text-danger">*</span></label>
@@ -143,6 +152,15 @@
 
         {{-- ========== 2. DATA ORANG TUA (PRD Bagian 18) ========== --}}
         <div class="tab-pane fade panel" id="tab-ortu">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label small">Nomor HP Orang Tua</label>
+                    <input type="text" name="nomor_hp_orang_tua" class="form-control @error('nomor_hp_orang_tua') is-invalid @enderror"
+                        value="{{ old('nomor_hp_orang_tua', $anak?->nomor_hp_orang_tua) }}">
+                    @error('nomor_hp_orang_tua') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+            </div>
+
             <h2 class="h6">Ayah</h2>
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
@@ -151,9 +169,11 @@
                         value="{{ $orangTua['nik_ayah'] ?? '' }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small">Nama Ayah Lengkap</label>
-                    <input type="text" name="orang_tua[nama_ayah_lengkap]" class="form-control"
-                        value="{{ $orangTua['nama_ayah_lengkap'] ?? '' }}">
+                    <label class="form-label small">Nama Ayah <span class="text-danger">*</span></label>
+                    <input type="text" name="orang_tua[nama_ayah_lengkap]"
+                        class="form-control @error('orang_tua.nama_ayah_lengkap') is-invalid @enderror"
+                        value="{{ $orangTua['nama_ayah_lengkap'] ?? '' }}" required>
+                    @error('orang_tua.nama_ayah_lengkap') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Tanggal Lahir Ayah</label>
@@ -189,9 +209,11 @@
                         value="{{ $orangTua['nik_ibu'] ?? '' }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small">Nama Ibu Lengkap</label>
-                    <input type="text" name="orang_tua[nama_ibu_lengkap]" class="form-control"
-                        value="{{ $orangTua['nama_ibu_lengkap'] ?? '' }}">
+                    <label class="form-label small">Nama Ibu <span class="text-danger">*</span></label>
+                    <input type="text" name="orang_tua[nama_ibu_lengkap]"
+                        class="form-control @error('orang_tua.nama_ibu_lengkap') is-invalid @enderror"
+                        value="{{ $orangTua['nama_ibu_lengkap'] ?? '' }}" required>
+                    @error('orang_tua.nama_ibu_lengkap') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Tanggal Lahir Ibu</label>
@@ -227,6 +249,7 @@
                     <label class="form-label small">Usia Ibu Saat Hamil</label>
                     <input type="number" min="0" name="riwayat_kehamilan[usia_ibu_saat_hamil]" class="form-control"
                         value="{{ $riwayatKehamilan['usia_ibu_saat_hamil'] ?? '' }}">
+                    <div class="form-text">Kosongkan bila tanggal lahir ibu sudah diisi; dihitung otomatis.</div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Kehamilan Ke-</label>
@@ -254,13 +277,10 @@
                         value="{{ $riwayatKehamilan['kondisi_kehamilan'] ?? '' }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small">Konsumsi Tablet Tambah Darah</label>
-                    <select name="riwayat_kehamilan[konsumsi_tablet_tambah_darah]" class="form-select">
-                        <option value="">Pilih</option>
-                        <option value="tidak_pernah" @selected(($riwayatKehamilan['konsumsi_tablet_tambah_darah'] ?? null) === 'tidak_pernah')>Tidak Pernah</option>
-                        <option value="kadang" @selected(($riwayatKehamilan['konsumsi_tablet_tambah_darah'] ?? null) === 'kadang')>Kadang</option>
-                        <option value="rutin" @selected(($riwayatKehamilan['konsumsi_tablet_tambah_darah'] ?? null) === 'rutin')>Rutin</option>
-                    </select>
+                    <label class="form-label small">Jumlah Tablet Tambah Darah/MMS Dikonsumsi</label>
+                    <input type="number" min="0" max="1000" name="riwayat_kehamilan[jumlah_tablet_tambah_darah]" class="form-control"
+                        value="{{ $riwayatKehamilan['jumlah_tablet_tambah_darah'] ?? '' }}">
+                    <div class="form-text">Standar minimal 180 tablet. Isi 0 bila tidak pernah mengonsumsi.</div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">LILA (cm)</label>
@@ -275,7 +295,22 @@
                 <div class="col-md-3 form-check pt-4 mt-2">
                     <input type="checkbox" class="form-check-input" name="riwayat_kehamilan[status_kek]" value="1"
                         id="status_kek" @checked($riwayatKehamilan['status_kek'] ?? false)>
-                    <label class="form-check-label" for="status_kek">Status KEK</label>
+                    <label class="form-check-label" for="status_kek">Status KEK <span class="text-muted small">(otomatis bila LILA &lt; 23,5 cm)</span></label>
+                </div>
+                <div class="col-md-4 form-check pt-2">
+                    <input type="checkbox" class="form-check-input" name="riwayat_kehamilan[pmt_kek]" value="1"
+                        id="pmt_kek" @checked($riwayatKehamilan['pmt_kek'] ?? false)>
+                    <label class="form-check-label" for="pmt_kek">Ibu KEK Mendapat PMT</label>
+                </div>
+                <div class="col-md-4 form-check pt-2">
+                    <input type="checkbox" class="form-check-input" name="riwayat_kehamilan[makanan_bergizi_seimbang]" value="1"
+                        id="makanan_bergizi_seimbang" @checked($riwayatKehamilan['makanan_bergizi_seimbang'] ?? false)>
+                    <label class="form-check-label" for="makanan_bergizi_seimbang">Mengonsumsi Makanan Bergizi Seimbang</label>
+                </div>
+                <div class="col-md-4 form-check pt-2">
+                    <input type="checkbox" class="form-check-input" name="riwayat_kehamilan[kb_pascapersalinan]" value="1"
+                        id="kb_pascapersalinan" @checked($riwayatKehamilan['kb_pascapersalinan'] ?? false)>
+                    <label class="form-check-label" for="kb_pascapersalinan">Ber-KB Pascapersalinan (≤ 42 hari)</label>
                 </div>
                 <div class="col-12">
                     <label class="form-label small">Komplikasi Kehamilan</label>
@@ -288,14 +323,21 @@
         <div class="tab-pane fade panel" id="tab-lahir">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Tanggal Lahir <span class="text-danger">*</span></label>
-                    <input type="date" name="riwayat_kelahiran[tanggal_lahir]" class="form-control"
-                        data-required-kirim="1" value="{{ $riwayatKelahiran['tanggal_lahir'] ?? '' }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Tempat Lahir <span class="text-danger">*</span></label>
-                    <input type="text" name="riwayat_kelahiran[tempat_lahir]" class="form-control"
-                        data-required-kirim="1" value="{{ $riwayatKelahiran['tempat_lahir'] ?? '' }}">
+                    @php($tempatPersalinan = $riwayatKelahiran['tempat_lahir'] ?? '')
+                    @php($pilihanPersalinan = ['Rumah Sakit', 'Puskesmas', 'Klinik/Praktik Bidan', 'Rumah', 'Lainnya'])
+                    <label class="form-label">Tempat Persalinan <span class="text-danger">*</span></label>
+                    <select name="riwayat_kelahiran[tempat_lahir]"
+                        class="form-select @error('riwayat_kelahiran.tempat_lahir') is-invalid @enderror" required>
+                        <option value="">Pilih</option>
+                        @foreach ($pilihanPersalinan as $pilihan)
+                            <option value="{{ $pilihan }}" @selected($tempatPersalinan === $pilihan)>{{ $pilihan }}</option>
+                        @endforeach
+                        @if ($tempatPersalinan !== '' && ! in_array($tempatPersalinan, $pilihanPersalinan, true))
+                            <option value="{{ $tempatPersalinan }}" selected>{{ $tempatPersalinan }}</option>
+                        @endif
+                    </select>
+                    @error('riwayat_kelahiran.tempat_lahir') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="form-text">Fasilitas tempat ibu melahirkan. Tanggal &amp; kota lahir diisi di langkah Identitas Anak.</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Penolong Persalinan</label>
@@ -338,7 +380,7 @@
                 <div class="col-md-3 form-check pt-4 mt-2">
                     <input type="checkbox" class="form-check-input" name="riwayat_kelahiran[imd]" value="1"
                         id="imd_lahir" @checked($riwayatKelahiran['imd'] ?? false)>
-                    <label class="form-check-label" for="imd_lahir">IMD</label>
+                    <label class="form-check-label" for="imd_lahir">IMD (Inisiasi Menyusu Dini)</label>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Kondisi Bayi Saat Lahir</label>
@@ -384,6 +426,16 @@
                         <option value="stunting_ringan">Stunting Ringan</option>
                         <option value="stunting_sedang">Stunting Sedang</option>
                         <option value="stunting_berat">Stunting Berat</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">Status Gizi (BB/TB)</label>
+                    <select name="pengukuran[status_gizi]" class="form-select">
+                        <option value="">Pilih</option>
+                        <option value="gizi_buruk">Gizi Buruk</option>
+                        <option value="gizi_kurang">Gizi Kurang</option>
+                        <option value="gizi_baik">Gizi Baik</option>
+                        <option value="gizi_lebih">Gizi Lebih</option>
                     </select>
                 </div>
             </div>
@@ -453,6 +505,24 @@
                         value="{{ $riwayatKesehatan['jenis_penyakit_bawaan'] ?? '' }}">
                 </div>
             </div>
+
+            <h2 class="h6 mt-4">Layanan yang Diterima</h2>
+            <div class="row g-3">
+                @foreach ([
+                    'tata_laksana_gizi_buruk' => 'Mendapat Tata Laksana Gizi Buruk',
+                    'tambahan_asupan_gizi' => 'Gizi Kurang Mendapat Tambahan Asupan Gizi (PMT)',
+                    'oralit_zinc' => 'Diare Mendapat Oralit & Zinc',
+                    'pneumonia' => 'Terdiagnosis Pneumonia',
+                    'obat_cacing' => 'Mendapat Obat Cacing (POPM)',
+                    'memiliki_jkn' => 'Memiliki JKN/BPJS Kesehatan',
+                ] as $kolom => $label)
+                    <div class="col-md-4 form-check pt-2">
+                        <input type="checkbox" class="form-check-input" name="riwayat_kesehatan[{{ $kolom }}]" value="1"
+                            id="{{ $kolom }}" @checked($riwayatKesehatan[$kolom] ?? false)>
+                        <label class="form-check-label" for="{{ $kolom }}">{{ $label }}</label>
+                    </div>
+                @endforeach
+            </div>
         </div>
 
         {{-- ========== 7. ASI & MPASI (PRD Bagian 23) ========== --}}
@@ -460,14 +530,14 @@
             <h2 class="h6">ASI</h2>
             <div class="row g-3 mb-3">
                 <div class="col-md-3 form-check pt-2">
-                    <input type="checkbox" class="form-check-input" name="asi_mpasi[imd]" value="1" id="imd_asi"
-                        @checked($asiMpasi['imd'] ?? false)>
-                    <label class="form-check-label" for="imd_asi">IMD</label>
-                </div>
-                <div class="col-md-3 form-check pt-2">
                     <input type="checkbox" class="form-check-input" name="asi_mpasi[asi_eksklusif]" value="1"
                         id="asi_eksklusif" @checked($asiMpasi['asi_eksklusif'] ?? false)>
                     <label class="form-check-label" for="asi_eksklusif">ASI Eksklusif</label>
+                </div>
+                <div class="col-md-3 form-check pt-2">
+                    <input type="checkbox" class="form-check-input" name="asi_mpasi[masih_asi]" value="1"
+                        id="masih_asi" @checked($asiMpasi['masih_asi'] ?? false)>
+                    <label class="form-check-label" for="masih_asi">Masih Mendapat ASI</label>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Lama Pemberian ASI (bulan)</label>
@@ -552,11 +622,6 @@
                     </select>
                 </div>
                 <div class="col-md-3 form-check pt-4 mt-2">
-                    <input type="checkbox" class="form-check-input" name="sanitasi[kepemilikan_jamban]" value="1"
-                        id="kepemilikan_jamban" @checked($sanitasi['kepemilikan_jamban'] ?? false)>
-                    <label class="form-check-label" for="kepemilikan_jamban">Memiliki Jamban</label>
-                </div>
-                <div class="col-md-3 form-check pt-4 mt-2">
                     <input type="checkbox" class="form-check-input" name="sanitasi[septic_tank]" value="1"
                         id="septic_tank_sanitasi" @checked($sanitasi['septic_tank'] ?? false)>
                     <label class="form-check-label" for="septic_tank_sanitasi">Memiliki Septic Tank</label>
@@ -629,7 +694,8 @@
         </button>
     </div>
 
-    <div class="d-flex justify-content-end align-items-center gap-2 mt-3">
+    <div class="d-flex justify-content-end align-items-center gap-2 mt-3 flex-wrap">
+        <span id="status-draft" class="small text-muted me-auto" aria-live="polite"></span>
         <a href="{{ $isEdit ? route('stunting.show', $anak) : route('stunting.index') }}"
             class="btn btn-outline-secondary">Batal</a>
         <button type="submit" class="btn btn-primary">
@@ -649,6 +715,7 @@
 @endif
 
 @push('scripts')
+    <script src="{{ asset('assets/js/draft-formulir.js') }}"></script>
     <script>
         (function () {
             // ===== Navigasi Sebelumnya / Selanjutnya antar tab =====
@@ -698,6 +765,157 @@
             kecamatanSelect.addEventListener('change', renderDesaOptions);
             if (kecamatanSelect.value) renderDesaOptions();
 
+            // ===== LILA ibu < 23,5 cm = KEK =====
+            const inputLila = document.querySelector('[name="riwayat_kehamilan[lila]"]');
+            const cekKek = document.getElementById('status_kek');
+            if (inputLila && cekKek) {
+                inputLila.addEventListener('input', function () {
+                    const lila = parseFloat(inputLila.value);
+                    if (!Number.isNaN(lila) && lila > 0 && lila < 23.5) {
+                        cekKek.checked = true;
+                    }
+                });
+            }
+
+            // ===== Field wajib di tab lain: buka tab tersebut agar pesan error terlihat =====
+            const formStunting = document.getElementById('form-stunting');
+
+            function bukaTabDari(el) {
+                const pane = el.closest('.tab-pane');
+                const tombol = pane && tabButtons.find((btn) => btn.dataset.bsTarget === `#${pane.id}`);
+                if (tombol && !pane.classList.contains('active')) {
+                    bootstrap.Tab.getOrCreateInstance(tombol).show();
+                }
+            }
+
+            formStunting.addEventListener('invalid', function (event) {
+                bukaTabDari(event.target);
+            }, true);
+
+            const errorServer = formStunting.querySelector('.is-invalid');
+            if (errorServer) {
+                bukaTabDari(errorServer);
+            }
+
+            // ===== Isi otomatis dari data keluarga (modul kemiskinan) berdasarkan Nomor KK =====
+            (function () {
+                const form = document.getElementById('form-stunting');
+                const inputKk = document.getElementById('nomor_kk');
+                const info = document.getElementById('infoKeluargaKk');
+                const wadahPilihAnak = document.getElementById('pilihAnakKk');
+                const pilihAnak = document.getElementById('pilihAnakKkSelect');
+                let kkTerakhir = null;
+                let jeda = null;
+                let daftarAnak = [];
+
+                /** Isi field hanya bila masih kosong, agar isian petugas tidak tertimpa. */
+                function isiJikaKosong(nama, nilai) {
+                    const el = form.querySelector(`[name="${nama}"]`);
+                    if (!el || nilai === null || nilai === undefined || nilai === '' || el.value) {
+                        return false;
+                    }
+                    el.value = nilai;
+                    el.classList.add('terisi-otomatis');
+                    return true;
+                }
+
+                function isiWilayah(kecamatanId, desaId) {
+                    if (!kecamatanId || kecamatanSelect.value) {
+                        return;
+                    }
+                    kecamatanSelect.value = String(kecamatanId);
+                    renderDesaOptions();
+                    desaSelect.value = String(desaId || '');
+                    kecamatanSelect.classList.add('terisi-otomatis');
+                    desaSelect.classList.add('terisi-otomatis');
+                }
+
+                function isiOrangTua(peran, data) {
+                    if (!data) {
+                        return;
+                    }
+                    isiJikaKosong(`orang_tua[nik_${peran}]`, data.nik);
+                    isiJikaKosong(`orang_tua[nama_${peran}_lengkap]`, data.nama);
+                    isiJikaKosong(`orang_tua[tanggal_lahir_${peran}]`, data.tanggal_lahir);
+                    isiJikaKosong(`orang_tua[pendidikan_${peran}]`, data.pendidikan);
+                    isiJikaKosong(`orang_tua[pekerjaan_${peran}]`, data.pekerjaan);
+                }
+
+                function tampilkanPilihanAnak(anak) {
+                    daftarAnak = anak || [];
+                    pilihAnak.innerHTML = '<option value="">— Pilih anak (opsional) —</option>' + daftarAnak.map((a, i) =>
+                        `<option value="${i}">${a.nama.replace(/</g, '&lt;')} (${a.tanggal_lahir})</option>`
+                    ).join('');
+                    wadahPilihAnak.classList.toggle('d-none', daftarAnak.length === 0);
+                }
+
+                pilihAnak.addEventListener('change', function () {
+                    const a = daftarAnak[pilihAnak.value];
+                    if (!a) {
+                        return;
+                    }
+                    isiJikaKosong('nik_anak', a.nik);
+                    isiJikaKosong('nama_anak', a.nama);
+                    isiJikaKosong('tempat_lahir', a.tempat_lahir);
+                    isiJikaKosong('tanggal_lahir', a.tanggal_lahir);
+                    const jk = form.querySelector('[name="jenis_kelamin"]');
+                    if (jk && a.jenis_kelamin) {
+                        jk.value = a.jenis_kelamin;
+                    }
+                });
+
+                async function cariKeluarga() {
+                    const kk = inputKk.value.trim();
+                    if (!/^\d{16}$/.test(kk) || kk === kkTerakhir) {
+                        return;
+                    }
+                    kkTerakhir = kk;
+                    info.className = 'form-text';
+                    info.textContent = 'Mencari data keluarga…';
+
+                    try {
+                        const url = new URL(inputKk.dataset.urlCari, window.location.origin);
+                        url.searchParams.set('nomor_kk', kk);
+                        if (inputKk.dataset.kecualiAnak) {
+                            url.searchParams.set('kecuali_anak_id', inputKk.dataset.kecualiAnak);
+                        }
+                        const respons = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+                        const hasil = await respons.json();
+
+                        if (!hasil.ditemukan) {
+                            info.textContent = 'Nomor KK belum terdata di modul kemiskinan; silakan isi data secara manual.';
+                            tampilkanPilihanAnak([]);
+                            return;
+                        }
+
+                        isiOrangTua('ayah', hasil.ayah);
+                        isiOrangTua('ibu', hasil.ibu);
+                        isiJikaKosong('nomor_hp_orang_tua', hasil.keluarga.nomor_hp);
+                        isiJikaKosong('alamat', hasil.keluarga.alamat);
+                        isiWilayah(hasil.keluarga.kecamatan_id, hasil.keluarga.desa_kelurahan_id);
+                        tampilkanPilihanAnak(hasil.anak);
+
+                        const kurang = [!hasil.ayah && 'ayah', !hasil.ibu && 'ibu'].filter(Boolean);
+                        info.className = kurang.length ? 'form-text text-warning-emphasis' : 'form-text text-success';
+                        info.textContent = `Data keluarga ditemukan (KK a.n. ${hasil.keluarga.nama_kepala_keluarga}, ${hasil.keluarga.wilayah}). `
+                            + 'Field kosong telah diisi otomatis — periksa kembali sebelum menyimpan.'
+                            + (kurang.length ? ` Data ${kurang.join(' dan ')} tidak ada di Kartu Keluarga (anggota dengan hubungan Kepala Keluarga/Suami/Istri), silakan isi manual.` : '')
+                            + (hasil.jumlah_balita_terdata && !hasil.anak.length ? ' Semua balita di KK ini sudah terdata di modul stunting.' : '')
+                            + (hasil.jumlah_balita_terdata && hasil.anak.length ? ` ${hasil.jumlah_balita_terdata} balita lain di KK ini sudah terdata dan tidak ditampilkan.` : '');
+                    } catch (e) {
+                        kkTerakhir = null;
+                        info.className = 'form-text text-danger';
+                        info.textContent = 'Gagal mencari data keluarga. Coba lagi.';
+                    }
+                }
+
+                inputKk.addEventListener('input', function () {
+                    clearTimeout(jeda);
+                    jeda = setTimeout(cariKeluarga, 400);
+                });
+                inputKk.addEventListener('blur', cariKeluarga);
+            })();
+
             // ===== Dokumentasi (hanya untuk data baru) =====
             const dokumenContainer = document.getElementById('dokumen-container');
             if (dokumenContainer) {
@@ -728,6 +946,18 @@
 
                 document.getElementById('btn-add-dokumen').addEventListener('click', addDokumenRow);
             }
+
+            // ===== Draft otomatis =====
+            DraftFormulir.pasang(formStunting, {
+                kunci: @json($kunciDraft),
+                url: @json(route('draft-formulir.update', $kunciDraft)),
+                userId: @json(auth()->id()),
+                status: document.getElementById('status-draft'),
+                abaikan: /^dokumen\[/,
+                adaInputLama: @json($errors->any() || session()->hasOldInput()),
+                diperbaruiPada: @json($anak?->updated_at?->toIso8601String()),
+                repeaters: {},
+            });
         })();
     </script>
 @endpush

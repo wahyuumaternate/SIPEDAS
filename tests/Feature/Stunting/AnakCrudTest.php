@@ -14,9 +14,11 @@ function payloadPendataanAnak(Kecamatan $kecamatan, DesaKelurahan $desa, array $
         'jenis_kelamin' => 'perempuan',
         'tempat_lahir' => 'Ternate',
         'tanggal_lahir' => now()->subMonths(18)->format('Y-m-d'),
-        'nama_ayah' => 'Abdul Rasyid',
-        'nama_ibu' => 'Siti Aminah',
         'nomor_hp_orang_tua' => '081234567890',
+        'orang_tua' => [
+            'nama_ayah_lengkap' => 'Abdul Rasyid',
+            'nama_ibu_lengkap' => 'Siti Aminah',
+        ],
         'alamat' => 'Jl. Merdeka No. 1',
         'kecamatan_id' => $kecamatan->id,
         'desa_kelurahan_id' => $desa->id,
@@ -118,7 +120,7 @@ it('menolak penyimpanan tanpa riwayat kelahiran', function () {
 
     $this->actingAs($user)
         ->post(route('stunting.store'), $payload)
-        ->assertSessionHasErrors(['riwayat_kelahiran.tanggal_lahir', 'riwayat_kelahiran.tempat_lahir']);
+        ->assertSessionHasErrors('riwayat_kelahiran.tempat_lahir');
 
     expect(Anak::count())->toBe(0);
 });
@@ -168,4 +170,88 @@ it('menghapus data anak (soft delete)', function () {
 
     expect(Anak::find($anak->id))->toBeNull();
     expect(Anak::withTrashed()->find($anak->id))->not->toBeNull();
+});
+
+it('menyimpan field layanan untuk indikator laporan analisis situasi', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, [
+        'memiliki_akta_kelahiran' => '1',
+        'riwayat_kehamilan' => ['jumlah_tablet_tambah_darah' => '180', 'status_kek' => '1', 'pmt_kek' => '1', 'kb_pascapersalinan' => '1'],
+        'pengukuran' => ['tanggal_pengukuran' => now()->format('Y-m-d'), 'berat_badan' => '8.5', 'panjang_tinggi_badan' => '70', 'status_gizi' => 'gizi_kurang'],
+        'riwayat_kesehatan' => ['tambahan_asupan_gizi' => '1', 'obat_cacing' => '1', 'memiliki_jkn' => '1'],
+        'asi_mpasi' => ['masih_asi' => '1'],
+    ]))->assertSessionHasNoErrors();
+
+    $anak = Anak::with(['riwayatKehamilan', 'pengukurans', 'riwayatKesehatan', 'asiMpasi'])->sole();
+
+    expect($anak->memiliki_akta_kelahiran)->toBeTrue()
+        ->and($anak->riwayatKehamilan->jumlah_tablet_tambah_darah)->toBe(180)
+        ->and($anak->riwayatKehamilan->pmt_kek)->toBeTrue()
+        ->and($anak->riwayatKehamilan->kb_pascapersalinan)->toBeTrue()
+        ->and($anak->pengukurans->first()->status_gizi)->toBe('gizi_kurang')
+        ->and($anak->riwayatKesehatan->tambahan_asupan_gizi)->toBeTrue()
+        ->and($anak->riwayatKesehatan->obat_cacing)->toBeTrue()
+        ->and($anak->riwayatKesehatan->memiliki_jkn)->toBeTrue()
+        ->and($anak->asiMpasi->masih_asi)->toBeTrue();
+});
+
+it('mengambil nama ayah dan ibu anak dari langkah data orang tua', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)
+        ->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa))
+        ->assertSessionHasNoErrors();
+
+    $anak = Anak::with('orangTua')->sole();
+
+    expect($anak->nama_ayah)->toBe('Abdul Rasyid')
+        ->and($anak->nama_ibu)->toBe('Siti Aminah')
+        ->and($anak->orangTua->nama_ibu_lengkap)->toBe('Siti Aminah');
+});
+
+it('mewajibkan nama ayah dan ibu pada data orang tua', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)
+        ->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, ['orang_tua' => ['nik_ayah' => '1234567890123458']]))
+        ->assertSessionHasErrors(['orang_tua.nama_ayah_lengkap', 'orang_tua.nama_ibu_lengkap']);
+
+    expect(Anak::count())->toBe(0);
+});
+
+it('menurunkan nilai dari input tunggal sehingga tidak perlu diisi dua kali', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+    $tanggalLahir = now()->subMonths(18)->format('Y-m-d');
+
+    $this->actingAs($user)->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, [
+        'tanggal_lahir' => $tanggalLahir,
+        'orang_tua' => [
+            'nama_ayah_lengkap' => 'Abdul Rasyid',
+            'nama_ibu_lengkap' => 'Siti Aminah',
+            'tanggal_lahir_ibu' => now()->subMonths(18)->subYears(25)->format('Y-m-d'),
+        ],
+        'riwayat_kelahiran' => ['tempat_lahir' => 'Puskesmas', 'imd' => '1'],
+        'riwayat_kehamilan' => ['jumlah_tablet_tambah_darah' => '90', 'lila' => '22.0'],
+        'asi_mpasi' => ['asi_eksklusif' => '1'],
+        'sanitasi' => ['jenis_jamban' => 'tidak_ada'],
+    ]))->assertSessionHasNoErrors();
+
+    $anak = Anak::with(['riwayatKelahiran', 'riwayatKehamilan', 'asiMpasi', 'sanitasi'])->sole();
+
+    expect($anak->riwayatKelahiran->tanggal_lahir->format('Y-m-d'))->toBe($tanggalLahir)
+        ->and($anak->riwayatKelahiran->tempat_lahir)->toBe('Puskesmas')
+        ->and($anak->asiMpasi->imd)->toBeTrue()
+        ->and($anak->riwayatKehamilan->konsumsi_tablet_tambah_darah)->toBe('kadang')
+        ->and($anak->riwayatKehamilan->status_kek)->toBeTrue()
+        ->and($anak->riwayatKehamilan->usia_ibu_saat_hamil)->toBe(25)
+        ->and($anak->sanitasi->kepemilikan_jamban)->toBeFalse();
 });

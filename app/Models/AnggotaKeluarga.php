@@ -36,6 +36,11 @@ class AnggotaKeluarga extends Model
         return $this->tanggal_lahir ? Carbon::parse($this->tanggal_lahir)->age : null;
     }
 
+    public function getHubunganKeluargaLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('hubungan_keluarga', $this->hubungan_keluarga);
+    }
+
     public function getStatusPerkawinanLabelAttribute(): ?string
     {
         return $this->labelReferensi('status_perkawinan', $this->status_perkawinan);

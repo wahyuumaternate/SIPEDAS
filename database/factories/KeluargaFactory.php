@@ -28,6 +28,8 @@ class KeluargaFactory extends Factory
             'rw' => fake()->numerify('##'),
             'kecamatan_id' => Kecamatan::factory(),
             'desa_kelurahan_id' => DesaKelurahan::factory(),
+            'desil' => fake()->optional(0.9)->numberBetween(1, 10),
+            'status_dtsen' => 'aktif',
             'petugas_id' => User::factory(),
             'tanggal_input' => now(),
             'status_data' => 'dalam_verifikasi',

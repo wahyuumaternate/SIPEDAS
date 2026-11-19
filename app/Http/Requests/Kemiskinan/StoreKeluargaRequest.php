@@ -21,15 +21,14 @@ class StoreKeluargaRequest extends FormRequest
         return [
             // Identitas keluarga (PRD Bagian 9)
             'nomor_kk' => ['required', 'digits:16', Rule::unique('keluargas', 'nomor_kk')->ignore($this->route('keluarga'))->whereNull('deleted_at')],
-            'nik_kepala_keluarga' => ['required', 'digits:16'],
-            'nama_kepala_keluarga' => ['required', 'string', 'max:255'],
             'nomor_hp' => ['nullable', 'string', 'max:20'],
-            'status_perkawinan' => ['nullable', Rule::in($this->kodeReferensi('status_perkawinan'))],
             'alamat' => ['required', 'string'],
             'rt' => ['required', 'string', 'max:5'],
             'rw' => ['required', 'string', 'max:5'],
             'kecamatan_id' => ['required', 'exists:kecamatans,id'],
             'desa_kelurahan_id' => ['required', 'exists:desa_kelurahans,id'],
+            'desil' => ['nullable', 'integer', 'between:1,10'],
+            'status_dtsen' => ['nullable', 'in:aktif,nonaktif'],
 
             // Anggota keluarga (PRD Bagian 10). Baris hanya wajib lengkap jika nama diisi;
             // minimal satu anggota lengkap diwajibkan (lihat withValidator()).
@@ -39,7 +38,7 @@ class StoreKeluargaRequest extends FormRequest
             'anggota.*.jenis_kelamin' => ['required_with:anggota.*.nama_lengkap', 'in:laki-laki,perempuan'],
             'anggota.*.tempat_lahir' => ['nullable', 'string', 'max:255'],
             'anggota.*.tanggal_lahir' => ['required_with:anggota.*.nama_lengkap', 'date', 'before_or_equal:today'],
-            'anggota.*.hubungan_keluarga' => ['required_with:anggota.*.nama_lengkap', 'string', 'max:255'],
+            'anggota.*.hubungan_keluarga' => ['required_with:anggota.*.nama_lengkap', Rule::in($this->kodeReferensi('hubungan_keluarga'))],
             'anggota.*.status_perkawinan' => ['nullable', Rule::in($this->kodeReferensi('status_perkawinan'))],
             'anggota.*.pendidikan_terakhir' => ['nullable', Rule::in($this->kodeReferensi('pendidikan_terakhir'))],
             'anggota.*.status_pekerjaan' => ['nullable', Rule::in($this->kodeReferensi('status_pekerjaan'))],
@@ -49,11 +48,8 @@ class StoreKeluargaRequest extends FormRequest
             'anggota.*.jenis_penyakit_kronis' => ['nullable', 'string', 'max:255'],
 
             // Kondisi ekonomi (PRD Bagian 11) - total dihitung otomatis oleh model
-            'kondisi_ekonomi.status_pekerjaan_kepala_keluarga' => ['nullable', Rule::in($this->kodeReferensi('status_pekerjaan'))],
             'kondisi_ekonomi.pekerjaan_utama' => ['nullable', 'string', 'max:255'],
             'kondisi_ekonomi.pekerjaan_tambahan' => ['nullable', 'string', 'max:255'],
-            'kondisi_ekonomi.jumlah_anggota_bekerja' => ['nullable', 'integer', 'min:0'],
-            'kondisi_ekonomi.jumlah_anggota_tidak_bekerja' => ['nullable', 'integer', 'min:0'],
             'kondisi_ekonomi.pendapatan_kepala_keluarga' => ['nullable', 'numeric', 'min:0'],
             'kondisi_ekonomi.pendapatan_pasangan' => ['nullable', 'numeric', 'min:0'],
             'kondisi_ekonomi.pendapatan_anggota_lainnya' => ['nullable', 'numeric', 'min:0'],
@@ -91,12 +87,8 @@ class StoreKeluargaRequest extends FormRequest
             'aset.*.keterangan' => ['nullable', 'string'],
 
             // Kondisi sosial & layanan dasar (PRD Bagian 14)
-            'kondisi_sosial.jumlah_anak_usia_sekolah' => ['nullable', 'integer', 'min:0'],
             'kondisi_sosial.jumlah_anak_bersekolah' => ['nullable', 'integer', 'min:0'],
             'kondisi_sosial.jumlah_anak_putus_sekolah' => ['nullable', 'integer', 'min:0'],
-            'kondisi_sosial.jumlah_lansia' => ['nullable', 'integer', 'min:0'],
-            'kondisi_sosial.jumlah_penyandang_disabilitas' => ['nullable', 'integer', 'min:0'],
-            'kondisi_sosial.jumlah_anggota_sakit' => ['nullable', 'integer', 'min:0'],
             'kondisi_sosial.akses_fasilitas_kesehatan' => ['nullable', 'boolean'],
             'kondisi_sosial.jarak_fasilitas_kesehatan_km' => ['nullable', 'numeric', 'min:0'],
             'kondisi_sosial.akses_pendidikan' => ['nullable', 'boolean'],
@@ -151,6 +143,23 @@ class StoreKeluargaRequest extends FormRequest
 
             if ($anggota->isEmpty()) {
                 $validator->errors()->add('anggota', 'Minimal satu anggota keluarga harus diisi sebelum data disimpan.');
+
+                return;
+            }
+
+            // Kepala keluarga hanya diinput sekali, sebagai anggota dengan hubungan "Kepala Keluarga".
+            $kepala = $anggota->filter(fn ($row) => ($row['hubungan_keluarga'] ?? null) === 'kepala_keluarga');
+
+            if ($kepala->count() !== 1) {
+                $validator->errors()->add('anggota', 'Harus ada tepat satu anggota dengan hubungan "Kepala Keluarga".');
+
+                return;
+            }
+
+            $indeks = $kepala->keys()->first();
+
+            if (! preg_match('/^\d{16}$/', (string) ($kepala->first()['nik'] ?? ''))) {
+                $validator->errors()->add("anggota.{$indeks}.nik", 'NIK kepala keluarga wajib diisi 16 digit.');
             }
         });
     }

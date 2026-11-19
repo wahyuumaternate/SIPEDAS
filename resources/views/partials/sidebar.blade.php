@@ -82,6 +82,10 @@
                         @if (request()->is('stunting/verifikasi*')) aria-current="page" @endif>
                         <span class="nav-text">Verifikasi</span>
                     </a>
+                    <a class="nav-link nav-sublink @if (request()->is('stunting/sasaran*')) active @endif" href="{{ route('stunting.sasaran.index') }}"
+                        @if (request()->is('stunting/sasaran*')) aria-current="page" @endif>
+                        <span class="nav-text">Data Sasaran</span>
+                    </a>
                 </div>
             </div>
         @endif

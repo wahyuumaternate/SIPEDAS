@@ -15,7 +15,7 @@ class Anak extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'kode_pendataan', 'nik_anak', 'nomor_kk', 'nama_anak', 'jenis_kelamin',
+        'kode_pendataan', 'nik_anak', 'memiliki_akta_kelahiran', 'nomor_kk', 'nama_anak', 'jenis_kelamin',
         'tempat_lahir', 'tanggal_lahir', 'usia_bulan',
         'nama_ayah', 'nama_ibu', 'nomor_hp_orang_tua',
         'alamat', 'kecamatan_id', 'desa_kelurahan_id',
@@ -24,6 +24,7 @@ class Anak extends Model
 
     protected $casts = [
         'tanggal_lahir' => 'date',
+        'memiliki_akta_kelahiran' => 'boolean',
         'tanggal_input' => 'datetime',
         'tanggal_pendataan' => 'datetime',
     ];
@@ -103,7 +104,7 @@ class Anak extends Model
     public function getUsiaTerkiniBulanAttribute(): ?int
     {
         return $this->tanggal_lahir
-            ? Carbon::parse($this->tanggal_lahir)->diffInMonths(now())
+            ? (int) floor(Carbon::parse($this->tanggal_lahir)->diffInMonths(now()))
             : null;
     }
 }
