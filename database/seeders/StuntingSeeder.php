@@ -100,6 +100,7 @@ class StuntingSeeder extends Seeder
                 'nomor_kk' => $data['nomor_kk'],
                 'nama_anak' => $balita['nama'],
                 'jenis_kelamin' => $balita['jk'],
+                'anak_ke' => $balita['nama'] === 'Aisyah Sangaji' ? 2 : 1,
                 'tempat_lahir' => 'Ternate',
                 'tanggal_lahir' => $tanggalLahir,
                 'usia_bulan' => $balita['bulan'],
@@ -171,6 +172,11 @@ class StuntingSeeder extends Seeder
                     'indikator_antropometri' => 'BB/U, TB/U, BB/TB',
                     'hasil_kategori' => $ukur['kategori'],
                     'status_gizi' => $ukur['gizi'],
+                    'status_bb_u' => match ($ukur['gizi']) {
+                        'gizi_buruk' => 'bb_sangat_kurang',
+                        'gizi_kurang' => 'bb_kurang',
+                        default => 'bb_normal',
+                    },
                 ]);
             }
 

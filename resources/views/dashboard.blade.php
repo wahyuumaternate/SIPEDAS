@@ -314,7 +314,7 @@
                         <div class="panel-header">
                             <div>
                                 <h2 class="h5 mb-1 section-title"><i class="bi bi-award"
-                                        aria-hidden="true"></i><span>Kepesertaan Program</span></h2>
+                                        aria-hidden="true"></i><span>Program Perlindungan Sosial</span></h2>
                                 <p class="text-muted mb-0">Jumlah keluarga penerima per program bantuan.</p>
                             </div>
                         </div>

@@ -23,6 +23,13 @@ use Illuminate\Support\Facades\DB;
 
 class KeluargaController extends Controller
 {
+    /**
+     * Status pekerjaan anggota yang tidak dihitung sebagai "bekerja".
+     *
+     * @var array<int, string>
+     */
+    private const BUKAN_BEKERJA = ['tidak_bekerja', 'pelajar', 'mengurus_rumah_tangga', 'pensiunan'];
+
     public function index(Request $request): View
     {
         $query = Keluarga::query()
@@ -228,6 +235,13 @@ class KeluargaController extends Controller
             'refHubunganKeluarga' => config('referensi.hubungan_keluarga'),
             'refPendidikanTerakhir' => config('referensi.pendidikan_terakhir'),
             'refStatusPekerjaan' => config('referensi.status_pekerjaan'),
+            'refStatusSekolah' => config('referensi.status_sekolah'),
+            'refPenyakitKronis' => config('referensi.penyakit_kronis'),
+            'refBahanBakarMasak' => config('referensi.bahan_bakar_memasak'),
+            'refJenisJamban' => config('referensi.jenis_jamban'),
+            'refJenisSepticTank' => config('referensi.jenis_septic_tank'),
+            'refDayaListrik' => config('referensi.daya_listrik'),
+            'refBantuanPendidikan' => config('referensi.bantuan_pendidikan'),
             'refJenisAtap' => config('referensi.jenis_atap'),
             'refJenisDinding' => config('referensi.jenis_dinding'),
             'refJenisLantai' => config('referensi.jenis_lantai'),
@@ -270,10 +284,14 @@ class KeluargaController extends Controller
                 'hubungan_keluarga' => $row['hubungan_keluarga'],
                 'status_perkawinan' => $row['status_perkawinan'] ?? null,
                 'pendidikan_terakhir' => $row['pendidikan_terakhir'] ?? null,
+                // Status sekolah hanya relevan untuk anggota berhubungan "Anak".
+                'status_sekolah' => $row['hubungan_keluarga'] === 'anak' ? ($row['status_sekolah'] ?? null) : null,
                 'status_pekerjaan' => $row['status_pekerjaan'] ?? null,
+                'pekerjaan_lainnya' => ($row['status_pekerjaan'] ?? null) === 'lainnya' ? ($row['pekerjaan_lainnya'] ?? null) : null,
                 'disabilitas' => (bool) ($row['disabilitas'] ?? false),
                 'jenis_disabilitas' => $row['jenis_disabilitas'] ?? null,
-                'penyakit_kronis' => (bool) ($row['penyakit_kronis'] ?? false),
+                // Penyakit kronis ditentukan dari pilihan jenis penyakit (kosong = tidak ada).
+                'penyakit_kronis' => filled($row['jenis_penyakit_kronis'] ?? null),
                 'jenis_penyakit_kronis' => $row['jenis_penyakit_kronis'] ?? null,
             ]);
         }
@@ -284,13 +302,17 @@ class KeluargaController extends Controller
      */
     private function syncKondisiEkonomi(Keluarga $keluarga, array $row, Collection $anggota, array $kepala): void
     {
-        $bekerja = $anggota->filter(fn (array $a) => filled($a['status_pekerjaan'] ?? null) && $a['status_pekerjaan'] !== 'tidak_bekerja')->count();
+        $bekerja = $anggota->filter(fn (array $a) => filled($a['status_pekerjaan'] ?? null)
+            && ! in_array($a['status_pekerjaan'], self::BUKAN_BEKERJA, true))->count();
 
         $keluarga->kondisiEkonomi()->updateOrCreate(['keluarga_id' => $keluarga->id], [
             // Status pekerjaan & jumlah anggota (tidak) bekerja diturunkan dari data anggota keluarga.
             'status_pekerjaan_kepala_keluarga' => $kepala['status_pekerjaan'] ?? null,
             'pekerjaan_utama' => $row['pekerjaan_utama'] ?? null,
+            'pekerjaan_utama_lainnya' => ($row['pekerjaan_utama'] ?? null) === 'lainnya' ? ($row['pekerjaan_utama_lainnya'] ?? null) : null,
             'pekerjaan_tambahan' => $row['pekerjaan_tambahan'] ?? null,
+            'perlindungan_ketenagakerjaan' => (bool) ($row['perlindungan_ketenagakerjaan'] ?? false),
+            'bahan_bakar_memasak' => $row['bahan_bakar_memasak'] ?? null,
             'jumlah_anggota_bekerja' => $bekerja,
             'jumlah_anggota_tidak_bekerja' => $anggota->count() - $bekerja,
             'pendapatan_kepala_keluarga' => $row['pendapatan_kepala_keluarga'] ?? 0,
@@ -302,6 +324,7 @@ class KeluargaController extends Controller
             'pengeluaran_listrik' => $row['pengeluaran_listrik'] ?? 0,
             'pengeluaran_air' => $row['pengeluaran_air'] ?? 0,
             'pengeluaran_transportasi' => $row['pengeluaran_transportasi'] ?? 0,
+            'pengeluaran_pakaian' => $row['pengeluaran_pakaian'] ?? 0,
             'pengeluaran_lainnya' => $row['pengeluaran_lainnya'] ?? 0,
         ]);
     }
@@ -324,10 +347,14 @@ class KeluargaController extends Controller
             'jenis_dinding' => $row['jenis_dinding'] ?? null,
             'jenis_lantai' => $row['jenis_lantai'] ?? null,
             'sumber_listrik' => $row['sumber_listrik'] ?? null,
+            // Kapasitas daya listrik hanya ditanyakan untuk rumah milik sendiri.
+            'daya_listrik' => $row['status_kepemilikan'] === 'milik_sendiri' ? ($row['daya_listrik'] ?? null) : null,
             'sumber_air' => $row['sumber_air'] ?? null,
-            'jamban' => (bool) ($row['jamban'] ?? false),
-            'septic_tank' => (bool) ($row['septic_tank'] ?? false),
-            'drainase' => (bool) ($row['drainase'] ?? false),
+            // Kolom ya/tidak diturunkan dari pilihan jenis agar laporan lama tetap berjalan.
+            'jenis_jamban' => $row['jenis_jamban'] ?? null,
+            'jamban' => filled($row['jenis_jamban'] ?? null) && $row['jenis_jamban'] !== 'tidak_ada',
+            'jenis_septic_tank' => $row['jenis_septic_tank'] ?? null,
+            'septic_tank' => in_array($row['jenis_septic_tank'] ?? null, ['tangki_septik', 'ipal_komunal'], true),
             'pengelolaan_sampah' => $row['pengelolaan_sampah'] ?? null,
             'luas_tanah' => $row['luas_tanah'] ?? null,
             'luas_bangunan' => $row['luas_bangunan'] ?? null,
@@ -351,6 +378,7 @@ class KeluargaController extends Controller
             AsetKeluarga::create([
                 'keluarga_id' => $keluarga->id,
                 'jenis_aset' => $row['jenis_aset'],
+                'jenis_aset_lainnya' => $row['jenis_aset'] === 'lainnya' ? ($row['jenis_aset_lainnya'] ?? null) : null,
                 'jumlah' => $row['jumlah'] ?? 1,
                 'status_kepemilikan' => $row['status_kepemilikan'] ?? 'milik_sendiri',
                 'perkiraan_nilai' => $row['perkiraan_nilai'] ?? null,
@@ -365,19 +393,26 @@ class KeluargaController extends Controller
     private function syncKondisiSosial(Keluarga $keluarga, array $row, Collection $anggota): void
     {
         $usia = $anggota->map(fn (array $a) => Carbon::parse($a['tanggal_lahir'])->age);
+        $anak = $anggota->filter(fn (array $a) => ($a['hubungan_keluarga'] ?? null) === 'anak');
+        $memilikiPbi = (bool) ($row['memiliki_pbi'] ?? false);
 
         $keluarga->kondisiSosial()->updateOrCreate(['keluarga_id' => $keluarga->id], [
             // Jumlah anak usia sekolah (7–18 th), lansia (≥ 60 th), disabilitas & sakit kronis diturunkan dari data anggota.
             'jumlah_anak_usia_sekolah' => $usia->filter(fn (int $u) => $u >= 7 && $u <= 18)->count(),
-            'jumlah_anak_bersekolah' => $row['jumlah_anak_bersekolah'] ?? 0,
-            'jumlah_anak_putus_sekolah' => $row['jumlah_anak_putus_sekolah'] ?? 0,
+            // Jumlah anak bersekolah & putus sekolah dihitung dari status sekolah anggota berhubungan "Anak".
+            'jumlah_anak_bersekolah' => $anak->where('status_sekolah', 'sedang_sekolah')->count(),
+            'jumlah_anak_putus_sekolah' => $anak->where('status_sekolah', 'putus_sekolah')->count(),
             'jumlah_lansia' => $usia->filter(fn (int $u) => $u >= 60)->count(),
             'jumlah_penyandang_disabilitas' => $anggota->filter(fn (array $a) => (bool) ($a['disabilitas'] ?? false))->count(),
-            'jumlah_anggota_sakit' => $anggota->filter(fn (array $a) => (bool) ($a['penyakit_kronis'] ?? false))->count(),
+            'jumlah_anggota_sakit' => $anggota->filter(fn (array $a) => filled($a['jenis_penyakit_kronis'] ?? null))->count(),
             'akses_fasilitas_kesehatan' => (bool) ($row['akses_fasilitas_kesehatan'] ?? false),
             'jarak_fasilitas_kesehatan_km' => $row['jarak_fasilitas_kesehatan_km'] ?? null,
-            'akses_pendidikan' => (bool) ($row['akses_pendidikan'] ?? false),
             'jarak_sekolah_km' => $row['jarak_sekolah_km'] ?? null,
+            'bantuan_pendidikan' => $row['bantuan_pendidikan'] ?? null,
+            'bantuan_pendidikan_lainnya' => ($row['bantuan_pendidikan'] ?? null) === 'lainnya' ? ($row['bantuan_pendidikan_lainnya'] ?? null) : null,
+            // Peserta PBI otomatis tercatat memiliki JKN.
+            'memiliki_jkn' => $memilikiPbi || (bool) ($row['memiliki_jkn'] ?? false),
+            'memiliki_pbi' => $memilikiPbi,
             'kepemilikan_dokumen_kependudukan' => (bool) ($row['kepemilikan_dokumen_kependudukan'] ?? false),
         ]);
     }

@@ -159,8 +159,10 @@
                 <div class="sec-title"><i class="bi bi-cash-coin"></i> Kondisi Ekonomi</div>
                 @if ($ek)
                     <dl class="kv">
-                        <dt>Pekerjaan Utama</dt><dd>{{ $ek->pekerjaan_utama ?: '-' }}</dd>
+                        <dt>Pekerjaan Utama</dt><dd>{{ $ek->pekerjaan_utama_label ?: '-' }}</dd>
                         <dt>Status Pekerjaan KK</dt><dd>{{ $ek->status_pekerjaan_kepala_keluarga_label ?: '-' }}</dd>
+                        <dt>Perlindungan Ketenagakerjaan</dt><dd>{{ $ek->perlindungan_ketenagakerjaan ? 'Ya' : 'Tidak' }}</dd>
+                        <dt>Peralatan/Bahan Bakar Memasak</dt><dd>{{ $ek->bahan_bakar_memasak_label ?: '-' }}</dd>
                         <dt>Total Pendapatan</dt><dd>Rp {{ number_format($ek->total_pendapatan, 0, ',', '.') }}</dd>
                         <dt>Total Pengeluaran</dt><dd>Rp {{ number_format($ek->total_pengeluaran, 0, ',', '.') }}</dd>
                     </dl>
@@ -177,14 +179,9 @@
                         <dt>Status Kepemilikan</dt><dd>{{ str($rmh->status_kepemilikan)->replace('_', ' ')->title() }}</dd>
                         <dt>Kondisi Bangunan</dt><dd>{{ str($rmh->kondisi_bangunan)->replace('_', ' ')->title() }}</dd>
                         <dt>Atap / Dinding / Lantai</dt><dd>{{ $rmh->jenis_atap_label }} / {{ $rmh->jenis_dinding_label }} / {{ $rmh->jenis_lantai_label }}</dd>
-                        <dt>Listrik / Air</dt><dd>{{ $rmh->sumber_listrik_label }} / {{ $rmh->sumber_air_label }}</dd>
-                        <dt>Fasilitas</dt>
-                        <dd>
-                            @if ($rmh->jamban) <span class="badge text-bg-success">Jamban</span> @endif
-                            @if ($rmh->septic_tank) <span class="badge text-bg-success">Septic Tank</span> @endif
-                            @if ($rmh->drainase) <span class="badge text-bg-success">Drainase</span> @endif
-                            @if (! $rmh->jamban && ! $rmh->septic_tank && ! $rmh->drainase) - @endif
-                        </dd>
+                        <dt>Listrik / Air</dt><dd>{{ $rmh->sumber_listrik_label }}{{ $rmh->daya_listrik ? ' ('.$rmh->daya_listrik_label.')' : '' }} / {{ $rmh->sumber_air_label }}</dd>
+                        <dt>Jamban</dt><dd>{{ $rmh->jenis_jamban_label ?: ($rmh->jamban ? 'Ada' : '-') }}</dd>
+                        <dt>Septic Tank</dt><dd>{{ $rmh->jenis_septic_tank_label ?: ($rmh->septic_tank ? 'Ada' : '-') }}</dd>
                         <dt>Luas Tanah / Bangunan</dt><dd>{{ $rmh->luas_tanah }} m² / {{ $rmh->luas_bangunan }} m²</dd>
                         <dt>Kamar / Penghuni</dt><dd>{{ $rmh->jumlah_kamar }} / {{ $rmh->jumlah_penghuni }}</dd>
                     </dl>
@@ -195,22 +192,23 @@
         </div>
         <div class="col-lg-6">
             <div class="panel h-100">
-                <div class="sec-title"><i class="bi bi-people"></i> Kondisi Sosial</div>
+                <div class="sec-title"><i class="bi bi-mortarboard"></i> Pendidikan &amp; Kesehatan</div>
                 @if ($sos)
                     <dl class="kv">
                         <dt>Anak Usia Sekolah / Bersekolah / Putus</dt>
                         <dd>{{ $sos->jumlah_anak_usia_sekolah }} / {{ $sos->jumlah_anak_bersekolah }} / {{ $sos->jumlah_anak_putus_sekolah }}</dd>
                         <dt>Lansia / Disabilitas / Sakit</dt>
                         <dd>{{ $sos->jumlah_lansia }} / {{ $sos->jumlah_penyandang_disabilitas }} / {{ $sos->jumlah_anggota_sakit }}</dd>
-                        <dt>Akses Fasilitas Kesehatan</dt>
+                        <dt>Bantuan Pendidikan</dt><dd>{{ $sos->bantuan_pendidikan_label ?: 'Tidak Ada' }}</dd>
+                        <dt>Jarak Sekolah</dt><dd>{{ $sos->jarak_sekolah_km !== null ? $sos->jarak_sekolah_km.' km' : '-' }}</dd>
+                        <dt>JKN / PBI</dt><dd>{{ $sos->memiliki_jkn ? 'Ya' : 'Tidak' }} / {{ $sos->memiliki_pbi ? 'Ya' : 'Tidak' }}</dd>
+                        <dt>Akses Layanan Kesehatan</dt>
                         <dd>{{ $sos->akses_fasilitas_kesehatan ? 'Ya' : 'Tidak' }} ({{ $sos->jarak_fasilitas_kesehatan_km }} km)</dd>
-                        <dt>Akses Pendidikan</dt>
-                        <dd>{{ $sos->akses_pendidikan ? 'Ya' : 'Tidak' }} ({{ $sos->jarak_sekolah_km }} km)</dd>
                         <dt>Dokumen Kependudukan Lengkap</dt>
                         <dd>{{ $sos->kepemilikan_dokumen_kependudukan ? 'Ya' : 'Tidak' }}</dd>
                     </dl>
                 @else
-                    <p class="text-muted mb-0">Belum ada data kondisi sosial.</p>
+                    <p class="text-muted mb-0">Belum ada data pendidikan &amp; kesehatan.</p>
                 @endif
             </div>
         </div>
@@ -220,7 +218,7 @@
         <div class="sec-title"><i class="bi bi-person-lines-fill"></i> Anggota Keluarga <span class="badge text-bg-secondary">{{ $keluarga->anggotaKeluarga->count() }}</span></div>
         <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0 show-table">
-                <thead><tr><th>Nama</th><th>NIK</th><th>JK</th><th>Tgl Lahir</th><th>Usia</th><th>Hubungan</th><th>Pendidikan</th><th>Pekerjaan</th><th>Ket.</th></tr></thead>
+                <thead><tr><th>Nama</th><th>NIK</th><th>JK</th><th>Tgl Lahir</th><th>Usia</th><th>Hubungan</th><th>Pendidikan</th><th>Status Sekolah</th><th>Pekerjaan</th><th>Ket.</th></tr></thead>
                 <tbody>
                     @forelse ($keluarga->anggotaKeluarga as $a)
                         <tr>
@@ -231,14 +229,15 @@
                             <td>{{ $a->usia_terkini }} th</td>
                             <td>{{ $a->hubungan_keluarga_label }}</td>
                             <td>{{ $a->pendidikan_terakhir_label ?: '-' }}</td>
+                            <td>{{ $a->status_sekolah_label ?: '-' }}</td>
                             <td>{{ $a->status_pekerjaan_label ?: '-' }}</td>
                             <td>
                                 @if ($a->disabilitas) <span class="badge text-bg-warning">Disabilitas</span> @endif
-                                @if ($a->penyakit_kronis) <span class="badge text-bg-danger">Penyakit Kronis</span> @endif
+                                @if ($a->penyakit_kronis) <span class="badge text-bg-danger">{{ $a->jenis_penyakit_kronis_label ?: 'Penyakit Kronis' }}</span> @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center text-muted py-3">Belum ada data anggota.</td></tr>
+                        <tr><td colspan="10" class="text-center text-muted py-3">Belum ada data anggota.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -270,7 +269,7 @@
         </div>
         <div class="col-lg-6">
             <div class="panel h-100">
-                <div class="sec-title"><i class="bi bi-gift"></i> Kepesertaan Program <span class="badge text-bg-secondary">{{ $keluarga->kepesertaanProgram->count() }}</span></div>
+                <div class="sec-title"><i class="bi bi-gift"></i> Program Perlindungan Sosial <span class="badge text-bg-secondary">{{ $keluarga->kepesertaanProgram->count() }}</span></div>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0 show-table">
                         <thead><tr><th>Program</th><th>Status</th><th>Tahun</th><th>Instansi</th></tr></thead>

@@ -22,7 +22,11 @@ function payloadPendataan(Kecamatan $kecamatan, DesaKelurahan $desa, array $over
                 'jenis_kelamin' => 'laki-laki',
                 'tanggal_lahir' => '1985-01-01',
                 'hubungan_keluarga' => 'kepala_keluarga',
+                'status_pekerjaan' => 'nelayan',
             ],
+        ],
+        'kondisi_ekonomi' => [
+            'pekerjaan_utama' => 'nelayan',
         ],
         'kondisi_rumah' => [
             'status_kepemilikan' => 'milik_sendiri',
@@ -84,6 +88,7 @@ it('menghitung total pendapatan dan pengeluaran secara otomatis', function () {
 
     $this->actingAs($user)->post(route('kemiskinan.store'), payloadPendataan($kecamatan, $desa, [
         'kondisi_ekonomi' => [
+            'pekerjaan_utama' => 'nelayan',
             'pendapatan_kepala_keluarga' => 1000000,
             'pendapatan_pasangan' => 500000,
             'pengeluaran_makanan' => 300000,
@@ -219,12 +224,12 @@ it('mengambil identitas kepala keluarga dan ringkasan sosial ekonomi dari data a
             ['nik' => '8271011203880001', 'nama_lengkap' => 'Ahmad', 'jenis_kelamin' => 'laki-laki', 'tanggal_lahir' => '1988-03-12',
                 'hubungan_keluarga' => 'kepala_keluarga', 'status_perkawinan' => 'kawin', 'status_pekerjaan' => 'nelayan'],
             ['nama_lengkap' => 'Fatma', 'jenis_kelamin' => 'perempuan', 'tanggal_lahir' => '1992-06-15',
-                'hubungan_keluarga' => 'istri', 'status_pekerjaan' => 'tidak_bekerja', 'penyakit_kronis' => '1'],
+                'hubungan_keluarga' => 'istri', 'status_pekerjaan' => 'tidak_bekerja', 'jenis_penyakit_kronis' => 'hipertensi'],
             ['nama_lengkap' => 'Rahmat', 'jenis_kelamin' => 'laki-laki', 'tanggal_lahir' => now()->subYears(10)->format('Y-m-d'),
-                'hubungan_keluarga' => 'anak', 'disabilitas' => '1'],
-            ['nama_lengkap' => 'Salma', 'jenis_kelamin' => 'perempuan', 'tanggal_lahir' => '1955-01-01', 'hubungan_keluarga' => 'mertua'],
+                'hubungan_keluarga' => 'anak', 'status_pekerjaan' => 'pelajar', 'status_sekolah' => 'sedang_sekolah', 'disabilitas' => '1'],
+            ['nama_lengkap' => 'Salma', 'jenis_kelamin' => 'perempuan', 'tanggal_lahir' => '1955-01-01',
+                'hubungan_keluarga' => 'mertua', 'status_pekerjaan' => 'tidak_bekerja'],
         ],
-        'kondisi_sosial' => ['jumlah_anak_bersekolah' => '1'],
     ]))->assertSessionHasNoErrors();
 
     $keluarga = Keluarga::with(['kondisiEkonomi', 'kondisiSosial'])->sole();
@@ -270,3 +275,78 @@ it('mewajibkan tepat satu kepala keluarga dengan nik 16 digit', function (array 
         'anggota.0.nik',
     ],
 ]);
+
+it('menyimpan isian kemiskinan sesuai catatan pengembangan dan menurunkan nilai otomatis', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)->post(route('kemiskinan.store'), payloadPendataan($kecamatan, $desa, [
+        'anggota' => [
+            ['nik' => '8271011203880001', 'nama_lengkap' => 'Ahmad', 'jenis_kelamin' => 'laki-laki', 'tanggal_lahir' => '1988-03-12',
+                'hubungan_keluarga' => 'kepala_keluarga', 'status_pekerjaan' => 'lainnya', 'pekerjaan_lainnya' => 'Penjaga Kebun'],
+            ['nama_lengkap' => 'Rahmat', 'jenis_kelamin' => 'laki-laki', 'tanggal_lahir' => now()->subYears(12)->format('Y-m-d'),
+                'hubungan_keluarga' => 'anak', 'status_pekerjaan' => 'pelajar', 'status_sekolah' => 'sedang_sekolah'],
+            ['nama_lengkap' => 'Rina', 'jenis_kelamin' => 'perempuan', 'tanggal_lahir' => now()->subYears(15)->format('Y-m-d'),
+                'hubungan_keluarga' => 'anak', 'status_pekerjaan' => 'tidak_bekerja', 'status_sekolah' => 'putus_sekolah'],
+        ],
+        'kondisi_ekonomi' => [
+            'pekerjaan_utama' => 'lainnya', 'pekerjaan_utama_lainnya' => 'Penjaga Kebun',
+            'perlindungan_ketenagakerjaan' => '1', 'bahan_bakar_memasak' => 'lpg_3kg',
+            'pengeluaran_makanan' => 500000, 'pengeluaran_pakaian' => 100000,
+        ],
+        'kondisi_rumah' => [
+            'status_kepemilikan' => 'milik_sendiri', 'kondisi_bangunan' => 'permanen', 'daya_listrik' => '900',
+            'jenis_jamban' => 'leher_angsa', 'jenis_septic_tank' => 'tangki_septik',
+        ],
+        'aset' => [['jenis_aset' => 'lainnya', 'jenis_aset_lainnya' => 'Perahu Ketinting', 'jumlah' => 1]],
+        'kondisi_sosial' => ['bantuan_pendidikan' => 'prasarana_sekolah', 'memiliki_pbi' => '1'],
+    ]))->assertSessionHasNoErrors();
+
+    $keluarga = Keluarga::with(['kondisiEkonomi', 'kondisiRumah', 'kondisiSosial', 'asetKeluarga', 'anggotaKeluarga'])->sole();
+
+    expect($keluarga->kondisiEkonomi->pekerjaan_utama_label)->toBe('Penjaga Kebun')
+        ->and($keluarga->kondisiEkonomi->perlindungan_ketenagakerjaan)->toBeTrue()
+        ->and((float) $keluarga->kondisiEkonomi->total_pengeluaran)->toBe(600000.0)
+        ->and($keluarga->anggotaKeluarga->firstWhere('nama_lengkap', 'Ahmad')->status_pekerjaan_label)->toBe('Penjaga Kebun')
+        ->and($keluarga->kondisiRumah->daya_listrik)->toBe('900')
+        ->and($keluarga->kondisiRumah->jamban)->toBeTrue()
+        ->and($keluarga->kondisiRumah->septic_tank)->toBeTrue()
+        ->and($keluarga->asetKeluarga->first()->jenis_aset_label)->toBe('Perahu Ketinting')
+        ->and($keluarga->kondisiSosial->jumlah_anak_bersekolah)->toBe(1)
+        ->and($keluarga->kondisiSosial->jumlah_anak_putus_sekolah)->toBe(1)
+        ->and($keluarga->kondisiSosial->memiliki_pbi)->toBeTrue()
+        ->and($keluarga->kondisiSosial->memiliki_jkn)->toBeTrue();
+});
+
+it('tidak menyimpan kapasitas daya listrik untuk rumah yang bukan milik sendiri', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)->post(route('kemiskinan.store'), payloadPendataan($kecamatan, $desa, [
+        'kondisi_rumah' => ['status_kepemilikan' => 'sewa', 'kondisi_bangunan' => 'permanen', 'daya_listrik' => '1300'],
+    ]))->assertSessionHasNoErrors();
+
+    expect(Keluarga::with('kondisiRumah')->sole()->kondisiRumah->daya_listrik)->toBeNull();
+});
+
+it('mewajibkan pekerjaan setiap anggota dan isian manual bila memilih lainnya', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)->post(route('kemiskinan.store'), payloadPendataan($kecamatan, $desa, [
+        'anggota' => [
+            ['nik' => '1234567890123457', 'nama_lengkap' => 'A', 'jenis_kelamin' => 'laki-laki', 'tanggal_lahir' => '1980-01-01',
+                'hubungan_keluarga' => 'kepala_keluarga', 'status_pekerjaan' => 'lainnya'],
+            ['nama_lengkap' => 'B', 'jenis_kelamin' => 'perempuan', 'tanggal_lahir' => '1982-01-01', 'hubungan_keluarga' => 'istri'],
+        ],
+        'kondisi_ekonomi' => ['pekerjaan_utama' => ''],
+        'aset' => [['jenis_aset' => 'lainnya']],
+    ]))->assertSessionHasErrors([
+        'anggota.0.pekerjaan_lainnya', 'anggota.1.status_pekerjaan', 'kondisi_ekonomi.pekerjaan_utama', 'aset.0.jenis_aset_lainnya',
+    ]);
+
+    expect(Keluarga::count())->toBe(0);
+});

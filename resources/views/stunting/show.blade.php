@@ -111,10 +111,20 @@
             <div class="panel h-100">
                 <div class="sec-title"><i class="bi bi-card-text"></i> Identitas</div>
             <dl class="kv">
-                                <dt>NIK Anak</dt><dd>{{ $anak->nik_anak }}</dd>
+                                <dt>NIK Anak</dt><dd>{{ $anak->nik_anak ?: 'Belum ada' }}</dd>
                                 <dt>Akta Kelahiran</dt><dd>{{ $anak->memiliki_akta_kelahiran ? 'Ada' : 'Belum Ada' }}</dd>
                                 <dt>Nomor KK</dt><dd>{{ $anak->nomor_kk }}</dd>
-                                <dt>Jenis Kelamin</dt><dd>{{ ucfirst($anak->jenis_kelamin) }}</dd>
+                                <dt>Jenis Kelamin</dt><dd>{{ ucfirst($anak->jenis_kelamin) }}{{ $anak->anak_ke ? ' · anak ke-'.$anak->anak_ke : '' }}</dd>
+                                <dt>Status Pemantauan</dt>
+                                <dd>
+                                    @if ($anak->status_pemantauan === 'nonaktif')
+                                        <span class="badge text-bg-secondary">Nonaktif</span>
+                                        {{ config('referensi.alasan_nonaktif_stunting.'.$anak->alasan_nonaktif, $anak->alasan_nonaktif) }}
+                                        {{ $anak->tanggal_nonaktif ? '('.$anak->tanggal_nonaktif->translatedFormat('d M Y').')' : '' }}
+                                    @else
+                                        <span class="badge text-bg-success">Aktif</span>
+                                    @endif
+                                </dd>
                                 <dt>Tempat, Tanggal Lahir</dt><dd>{{ $anak->tempat_lahir }}, {{ optional($anak->tanggal_lahir)->format('d M Y') }}</dd>
                                 <dt>Nama Ayah / Ibu</dt><dd>{{ $anak->nama_ayah }} / {{ $anak->nama_ibu }}</dd>
                                 <dt>Nomor HP Orang Tua</dt><dd>{{ $anak->nomor_hp_orang_tua ?: '-' }}</dd>
@@ -282,7 +292,7 @@
         <div class="sec-title"><i class="bi bi-rulers"></i> Pengukuran <span class="badge text-bg-secondary">{{ $anak->pengukurans->count() }}</span></div>
             <div class="table-responsive mb-3">
                 <table class="table table-sm table-hover align-middle mb-0 show-table">
-                    <thead><tr><th>Tanggal</th><th>Usia</th><th>BB (kg)</th><th>TB/PB (cm)</th><th>LK (cm)</th><th>LILA (cm)</th><th>Kategori</th><th>Status Gizi</th><th>Petugas</th><th></th></tr></thead>
+                    <thead><tr><th>Tanggal</th><th>Usia</th><th>BB (kg)</th><th>TB/PB (cm)</th><th>LK (cm)</th><th>LILA (cm)</th><th>Kategori</th><th>Status Gizi</th><th>BB/U</th><th>Petugas</th><th></th></tr></thead>
                     <tbody>
                         @forelse ($anak->pengukurans as $p)
                             <tr>
@@ -294,6 +304,7 @@
                                 <td>{{ $p->lingkar_lengan_atas }}</td>
                                 <td>{{ $p->hasil_kategori ? str($p->hasil_kategori)->replace('_', ' ')->title() : '-' }}</td>
                                 <td>{{ $p->status_gizi ? str($p->status_gizi)->replace('_', ' ')->title() : '-' }}</td>
+                                <td>{{ $p->status_bb_u ? config('referensi.status_bb_u.'.$p->status_bb_u, $p->status_bb_u) : '-' }}</td>
                                 <td>{{ $p->petugasPengukur?->nama }}</td>
                                 <td>
                                     <form method="POST" action="{{ route('stunting.pengukuran.destroy', [$anak, $p]) }}"
@@ -305,7 +316,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="10" class="text-center text-muted py-3">Belum ada data pengukuran.</td></tr>
+                            <tr><td colspan="11" class="text-center text-muted py-3">Belum ada data pengukuran.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -347,6 +358,15 @@
                         <option value="gizi_kurang">Gizi Kurang</option>
                         <option value="gizi_baik">Gizi Baik</option>
                         <option value="gizi_lebih">Gizi Lebih</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Status BB/U</label>
+                    <select name="status_bb_u" class="form-select form-select-sm">
+                        <option value="">Pilih</option>
+                        @foreach (config('referensi.status_bb_u') as $kode => $label)
+                            <option value="{{ $kode }}">{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-2">

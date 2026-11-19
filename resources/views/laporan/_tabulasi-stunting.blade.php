@@ -38,38 +38,58 @@
     </table>
 </div>
 
-<h3 class="judul-tabel">Tabel 2: Prevalensi Stunting Berdasarkan Perdesa/Kelurahan di Kabupaten Kota Ternate {{ $judulTahun }}</h3>
+<h3 class="judul-tabel">Tabel 2: Prevalensi Stunting dan Masalah Gizi Berdasarkan Perdesa/Kelurahan di Kabupaten Kota Ternate {{ $judulTahun }}</h3>
+@php
+    $kategoriPrevalensi = \App\Http\Controllers\LaporanController::KATEGORI_PREVALENSI;
+@endphp
 <div class="{{ $wrapClass ?? '' }}">
     <table class="tabel-ansit {{ $tableClass ?? '' }}">
         <thead>
             <tr>
-                <th class="kol-desa">Desa/Kelurahan</th>
-                <th>Prevalensi Stunting (%)</th>
-                <th>Jumlah Kasus</th>
+                <th rowspan="2" class="kol-desa">Desa/Kelurahan</th>
+                <th rowspan="2">Jumlah Anak Diukur</th>
+                @foreach ($kategoriPrevalensi as $label)
+                    <th colspan="2">{{ $label }}</th>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach ($kategoriPrevalensi as $label)
+                    <th>Jumlah Kasus</th>
+                    <th>Prevalensi (%)</th>
+                @endforeach
             </tr>
         </thead>
         <tbody>
             @forelse ($tabulasi['prevalensi']['desa'] as $desa)
                 <tr>
                     <td>Kelurahan {{ $desa['nama'] }}</td>
-                    <td class="angka">{{ $persen($desa['prevalensi']) }}</td>
-                    <td class="angka">{{ $angka($desa['kasus']) }}</td>
+                    <td class="angka">{{ $angka($desa['diukur']) }}</td>
+                    @foreach (array_keys($kategoriPrevalensi) as $kunci)
+                        <td class="angka">{{ $angka($desa['kategori'][$kunci]['kasus']) }}</td>
+                        <td class="angka">{{ $persen($desa['kategori'][$kunci]['persen']) }}</td>
+                    @endforeach
                 </tr>
             @empty
-                <tr><td colspan="3" class="tengah">Belum ada data.</td></tr>
+                <tr><td colspan="{{ 2 + count($kategoriPrevalensi) * 2 }}" class="tengah">Belum ada data.</td></tr>
             @endforelse
         </tbody>
         @if ($tabulasi['prevalensi']['desa']->isNotEmpty())
             <tfoot>
                 <tr class="baris-total">
                     <td>Jumlah Kabupaten</td>
-                    <td class="angka">{{ $persen($tabulasi['prevalensi']['total']['prevalensi']) }}</td>
-                    <td class="angka">{{ $angka($tabulasi['prevalensi']['total']['kasus']) }}</td>
+                    <td class="angka">{{ $angka($tabulasi['prevalensi']['total']['diukur']) }}</td>
+                    @foreach (array_keys($kategoriPrevalensi) as $kunci)
+                        <td class="angka">{{ $angka($tabulasi['prevalensi']['total']['kategori'][$kunci]['kasus']) }}</td>
+                        <td class="angka">{{ $persen($tabulasi['prevalensi']['total']['kategori'][$kunci]['persen']) }}</td>
+                    @endforeach
                 </tr>
             </tfoot>
         @endif
     </table>
 </div>
+<p class="keterangan">Stunting dari tinggi badan menurut umur (TB/U), gizi buruk & gizi kurang dari berat badan menurut tinggi
+    badan (BB/TB), berat badan kurang dari berat badan menurut umur (BB/U). Anak nonaktif karena usia lewat, pindah, atau
+    meninggal tidak dihitung.</p>
 
 @php
     $sumbuRadar = collect(\App\Http\Controllers\LaporanController::RADAR_STUNTING)

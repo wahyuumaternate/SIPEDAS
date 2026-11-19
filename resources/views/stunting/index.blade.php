@@ -60,6 +60,14 @@
                     <option value="perempuan" @selected(($filters['jenis_kelamin'] ?? null) === 'perempuan')>Perempuan</option>
                 </select>
             </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small" for="status_pemantauan">Status Pemantauan</label>
+                <select class="form-select form-select-sm" id="status_pemantauan" name="status_pemantauan">
+                    <option value="">Semua</option>
+                    <option value="aktif" @selected(($filters['status_pemantauan'] ?? null) === 'aktif')>Aktif</option>
+                    <option value="nonaktif" @selected(($filters['status_pemantauan'] ?? null) === 'nonaktif')>Nonaktif</option>
+                </select>
+            </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small" for="kecamatan_id">Kecamatan</label>
                 <select class="form-select form-select-sm" id="kecamatan_id" name="kecamatan_id">
@@ -108,7 +116,11 @@
                         <tr>
                             <td>
                                 <p class="fw-semibold mb-0">{{ $anak->nama_anak }}</p>
-                                <p class="text-muted small mb-0">NIK: {{ $anak->nik_anak }}</p>
+                                <p class="text-muted small mb-0">NIK: {{ $anak->nik_anak ?: '-' }}
+                                    @if ($anak->status_pemantauan === 'nonaktif')
+                                        <span class="badge text-bg-secondary ms-1">Nonaktif</span>
+                                    @endif
+                                </p>
                             </td>
                             <td>{{ $anak->usia_terkini_bulan }} bln</td>
                             <td>

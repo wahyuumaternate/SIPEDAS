@@ -15,16 +15,19 @@ class Anak extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'kode_pendataan', 'nik_anak', 'memiliki_akta_kelahiran', 'nomor_kk', 'nama_anak', 'jenis_kelamin',
+        'kode_pendataan', 'nik_anak', 'memiliki_akta_kelahiran', 'nomor_kk', 'nama_anak', 'jenis_kelamin', 'anak_ke',
         'tempat_lahir', 'tanggal_lahir', 'usia_bulan',
         'nama_ayah', 'nama_ibu', 'nomor_hp_orang_tua',
         'alamat', 'kecamatan_id', 'desa_kelurahan_id',
         'petugas_id', 'tanggal_input', 'status_data', 'tanggal_pendataan',
+        'status_pemantauan', 'alasan_nonaktif', 'tanggal_nonaktif',
     ];
 
     protected $casts = [
         'tanggal_lahir' => 'date',
         'memiliki_akta_kelahiran' => 'boolean',
+        'anak_ke' => 'integer',
+        'tanggal_nonaktif' => 'date',
         'tanggal_input' => 'datetime',
         'tanggal_pendataan' => 'datetime',
     ];

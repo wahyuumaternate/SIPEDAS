@@ -19,7 +19,7 @@
         .tabel-ansit .tengah { text-align: center; }
         .tabel-ansit th.kol-no { width: 18px; }
         .tabel-ansit th.kol-kecamatan { width: 80px; }
-        .tabel-ansit th.kol-desa { width: 26%; }
+        .tabel-ansit th.kol-desa { width: 20%; }
         .tabel-ansit tr.baris-total td { font-size: 11px; font-weight: bold; }
         .tabel-ansit.kecil th, .tabel-ansit.kecil td { font-size: 6px; padding: 2px; }
         .tabel-ansit.kecil tr.baris-total td { font-size: 7px; }

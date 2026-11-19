@@ -44,13 +44,18 @@ return [
     ],
 
     'status_pekerjaan' => [
-        'tidak_bekerja' => 'Tidak Bekerja',
+        'tidak_bekerja' => 'Belum/Tidak Bekerja',
+        'pelajar' => 'Pelajar/Mahasiswa',
+        'mengurus_rumah_tangga' => 'Mengurus Rumah Tangga',
         'buruh_harian' => 'Buruh Harian',
         'nelayan' => 'Nelayan',
         'petani' => 'Petani/Pekebun',
         'pedagang' => 'Pedagang/Wiraswasta',
+        'tukang' => 'Tukang/Pekerja Bangunan',
+        'sopir_ojek' => 'Sopir/Ojek',
         'karyawan_swasta' => 'Karyawan Swasta',
         'pns_tni_polri' => 'PNS/TNI/POLRI',
+        'pensiunan' => 'Pensiunan',
         'lainnya' => 'Lainnya',
     ],
 
@@ -121,6 +126,81 @@ return [
         'cemplung' => 'Cemplung',
         'jamban_umum' => 'Jamban Umum/Bersama',
         'tidak_ada' => 'Tidak Ada',
+    ],
+
+    // ===== Kemiskinan: anggota keluarga =====
+    'status_sekolah' => [
+        'belum_sekolah' => 'Belum Sekolah',
+        'sedang_sekolah' => 'Sedang Sekolah',
+        'putus_sekolah' => 'Putus Sekolah',
+        'tamat_sekolah' => 'Tamat Sekolah',
+        'tidak_pernah_sekolah' => 'Tidak Pernah Sekolah',
+    ],
+
+    'penyakit_kronis' => [
+        'hipertensi' => 'Hipertensi (Darah Tinggi)',
+        'diabetes' => 'Diabetes Melitus',
+        'jantung' => 'Penyakit Jantung',
+        'stroke' => 'Stroke',
+        'tbc' => 'TBC (Tuberkulosis)',
+        'asma_ppok' => 'Asma/PPOK',
+        'ginjal' => 'Gagal Ginjal',
+        'kanker' => 'Kanker',
+        'hiv' => 'HIV/AIDS',
+        'gangguan_jiwa' => 'Gangguan Jiwa',
+        'lainnya' => 'Lainnya',
+    ],
+
+    // ===== Kemiskinan: ekonomi & rumah =====
+    'bahan_bakar_memasak' => [
+        'listrik' => 'Kompor Listrik',
+        'lpg_3kg' => 'Gas LPG 3 kg',
+        'lpg_besar' => 'Gas LPG 5,5 kg/12 kg',
+        'minyak_tanah' => 'Kompor Minyak Tanah',
+        'kayu_bakar' => 'Tungku Kayu Bakar',
+        'arang' => 'Arang/Briket',
+        'tidak_memasak' => 'Tidak Memasak di Rumah',
+        'lainnya' => 'Lainnya',
+    ],
+
+    'jenis_septic_tank' => [
+        'tangki_septik' => 'Tangki Septik Pribadi',
+        'ipal_komunal' => 'IPAL/Septik Tank Komunal',
+        'lubang_tanah' => 'Lubang Tanah/Cubluk',
+        'langsung_dibuang' => 'Langsung ke Sungai/Laut/Kolam',
+        'tidak_ada' => 'Tidak Ada',
+    ],
+
+    'daya_listrik' => [
+        '450' => '450 VA',
+        '900' => '900 VA',
+        '1300' => '1.300 VA',
+        '2200' => '2.200 VA',
+        '3500' => '3.500 VA ke atas',
+        'tanpa_meteran' => 'Tanpa Meteran (menyalur)',
+    ],
+
+    // ===== Kemiskinan: pendidikan & kesehatan =====
+    'bantuan_pendidikan' => [
+        'prasarana_sekolah' => 'Dukungan Prasarana Anak Sekolah (seragam, buku, tas, sepatu)',
+        'pip_kip' => 'Program Indonesia Pintar (PIP/KIP)',
+        'beasiswa' => 'Beasiswa',
+        'lainnya' => 'Lainnya',
+    ],
+
+    // ===== Stunting =====
+    'status_bb_u' => [
+        'bb_sangat_kurang' => 'Berat Badan Sangat Kurang',
+        'bb_kurang' => 'Berat Badan Kurang',
+        'bb_normal' => 'Berat Badan Normal',
+        'risiko_bb_lebih' => 'Risiko Berat Badan Lebih',
+    ],
+
+    'alasan_nonaktif_stunting' => [
+        'sudah_tidak_stunting' => 'Sudah Tidak Stunting',
+        'usia_lewat' => 'Usia Lewat 59 Bulan',
+        'pindah_domisili' => 'Pindah Domisili',
+        'meninggal' => 'Meninggal Dunia',
     ],
 
 ];

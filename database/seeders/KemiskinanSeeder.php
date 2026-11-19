@@ -138,13 +138,18 @@ class KemiskinanSeeder extends Seeder
                     'hubungan_keluarga' => $anggota['hubungan'],
                     'status_perkawinan' => in_array($anggota['hubungan'], ['kepala_keluarga', 'istri'], true) ? 'kawin' : null,
                     'pendidikan_terakhir' => $anggota['pendidikan'],
-                    'status_pekerjaan' => $anggota['pekerjaan'],
+                    'status_sekolah' => $anggota['hubungan'] === 'anak'
+                        ? (now()->diffInYears($tanggalLahir, true) >= 7 ? 'sedang_sekolah' : 'belum_sekolah')
+                        : null,
+                    'status_pekerjaan' => $anggota['pekerjaan'] ?? (now()->diffInYears($tanggalLahir, true) >= 7 ? 'pelajar' : 'tidak_bekerja'),
                 ]);
             }
 
             $keluarga->kondisiEkonomi()->create([
                 'status_pekerjaan_kepala_keluarga' => $kepala['pekerjaan'],
-                'pekerjaan_utama' => config("referensi.status_pekerjaan.{$kepala['pekerjaan']}"),
+                'pekerjaan_utama' => $kepala['pekerjaan'],
+                'perlindungan_ketenagakerjaan' => false,
+                'bahan_bakar_memasak' => $data['desil'] === 1 ? 'kayu_bakar' : 'lpg_3kg',
                 'jumlah_anggota_bekerja' => 1,
                 'jumlah_anggota_tidak_bekerja' => count($data['anggota']) - 1,
                 'pendapatan_kepala_keluarga' => 1_500_000,
@@ -156,6 +161,7 @@ class KemiskinanSeeder extends Seeder
                 'pengeluaran_listrik' => 100_000,
                 'pengeluaran_air' => 50_000,
                 'pengeluaran_transportasi' => 100_000,
+                'pengeluaran_pakaian' => 50_000,
                 'pengeluaran_lainnya' => 0,
             ]);
 
@@ -163,8 +169,10 @@ class KemiskinanSeeder extends Seeder
                 'status_kepemilikan' => 'milik_sendiri',
                 'kondisi_bangunan' => $data['desil'] === 1 ? 'tidak_layak_huni' : 'semi_permanen',
                 'jamban' => true,
+                'jenis_jamban' => $data['desil'] === 1 ? 'cemplung' : 'leher_angsa',
                 'septic_tank' => $data['desil'] !== 1,
-                'drainase' => false,
+                'jenis_septic_tank' => $data['desil'] === 1 ? 'lubang_tanah' : 'tangki_septik',
+                'daya_listrik' => null,
                 'luas_tanah' => 100,
                 'luas_bangunan' => 36,
                 'jumlah_kamar' => 2,

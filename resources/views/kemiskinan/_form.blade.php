@@ -1,35 +1,66 @@
 @php
     $keluarga = $keluarga ?? null;
     $isEdit = (bool) $keluarga;
-    $kunciDraft = $keluarga ? 'kemiskinan.edit.'.$keluarga->id : 'kemiskinan.create';
+    $kunciDraft = $keluarga ? 'kemiskinan.edit.' . $keluarga->id : 'kemiskinan.create';
 
-    $anggotaRows = old('anggota', $isEdit ? $keluarga->anggotaKeluarga->map(fn ($a) => [
-        'nik' => $a->nik,
-        'nama_lengkap' => $a->nama_lengkap,
-        'jenis_kelamin' => $a->jenis_kelamin,
-        'tempat_lahir' => $a->tempat_lahir,
-        'tanggal_lahir' => optional($a->tanggal_lahir)->format('Y-m-d'),
-        'hubungan_keluarga' => $a->hubungan_keluarga,
-        'status_perkawinan' => $a->status_perkawinan,
-        'pendidikan_terakhir' => $a->pendidikan_terakhir,
-        'status_pekerjaan' => $a->status_pekerjaan,
-        'disabilitas' => $a->disabilitas,
-        'jenis_disabilitas' => $a->jenis_disabilitas,
-        'penyakit_kronis' => $a->penyakit_kronis,
-        'jenis_penyakit_kronis' => $a->jenis_penyakit_kronis,
-    ])->all() : [[]]);
+    $anggotaRows = old(
+        'anggota',
+        $isEdit
+            ? $keluarga->anggotaKeluarga
+                ->map(
+                    fn($a) => [
+                        'nik' => $a->nik,
+                        'nama_lengkap' => $a->nama_lengkap,
+                        'jenis_kelamin' => $a->jenis_kelamin,
+                        'tempat_lahir' => $a->tempat_lahir,
+                        'tanggal_lahir' => optional($a->tanggal_lahir)->format('Y-m-d'),
+                        'hubungan_keluarga' => $a->hubungan_keluarga,
+                        'status_perkawinan' => $a->status_perkawinan,
+                        'pendidikan_terakhir' => $a->pendidikan_terakhir,
+                        'status_sekolah' => $a->status_sekolah,
+                        'status_pekerjaan' => $a->status_pekerjaan,
+                        'pekerjaan_lainnya' => $a->pekerjaan_lainnya,
+                        'disabilitas' => $a->disabilitas,
+                        'jenis_disabilitas' => $a->jenis_disabilitas,
+                        'penyakit_kronis' => $a->penyakit_kronis,
+                        'jenis_penyakit_kronis' => $a->jenis_penyakit_kronis,
+                    ],
+                )
+                ->all()
+            : [[]],
+    );
 
-    $ekonomi = old('kondisi_ekonomi', $isEdit ? ($keluarga->kondisiEkonomi?->toArray() ?? []) : []);
-    $rumah = old('kondisi_rumah', $isEdit ? ($keluarga->kondisiRumah?->toArray() ?? []) : []);
-    $sosial = old('kondisi_sosial', $isEdit ? ($keluarga->kondisiSosial?->toArray() ?? []) : []);
+    $ekonomi = old('kondisi_ekonomi', $isEdit ? $keluarga->kondisiEkonomi?->toArray() ?? [] : []);
+    $rumah = old('kondisi_rumah', $isEdit ? $keluarga->kondisiRumah?->toArray() ?? [] : []);
+    $sosial = old('kondisi_sosial', $isEdit ? $keluarga->kondisiSosial?->toArray() ?? [] : []);
 
-    $asetRows = old('aset', $isEdit ? $keluarga->asetKeluarga->map(fn ($a) => $a->only([
-        'jenis_aset', 'jumlah', 'status_kepemilikan', 'perkiraan_nilai', 'keterangan',
-    ]))->all() : []);
+    $asetRows = old(
+        'aset',
+        $isEdit
+            ? $keluarga->asetKeluarga
+                ->map(
+                    fn($a) => $a->only(['jenis_aset', 'jenis_aset_lainnya', 'jumlah', 'status_kepemilikan', 'perkiraan_nilai', 'keterangan']),
+                )
+                ->all()
+            : [],
+    );
 
-    $programRows = old('program', $isEdit ? $keluarga->kepesertaanProgram->map(fn ($p) => $p->only([
-        'nama_program', 'status_penerima', 'tahun_menerima', 'sumber_instansi', 'keterangan',
-    ]))->all() : []);
+    $programRows = old(
+        'program',
+        $isEdit
+            ? $keluarga->kepesertaanProgram
+                ->map(
+                    fn($p) => $p->only([
+                        'nama_program',
+                        'status_penerima',
+                        'tahun_menerima',
+                        'sumber_instansi',
+                        'keterangan',
+                    ]),
+                )
+                ->all()
+            : [],
+    );
 @endphp
 
 <style>
@@ -76,14 +107,14 @@
                 type="button">2. Anggota Keluarga</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ekonomi"
                 type="button">3. Ekonomi</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rumah"
-                type="button">4. Rumah</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-aset"
-                type="button">5. Aset</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rumah" type="button">4.
+                Rumah</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-aset" type="button">5.
+                Aset</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sosial"
-                type="button">6. Sosial</button></li>
+                type="button">6. Pendidikan &amp; Kesehatan</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-program"
-                type="button">7. Program</button></li>
+                type="button">7. Program Perlindungan Sosial</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-dokumen"
                 type="button">8. Dokumentasi</button></li>
     </ul>
@@ -98,9 +129,12 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Nomor KK <span class="text-danger">*</span></label>
-                    <input type="text" name="nomor_kk" maxlength="16" class="form-control @error('nomor_kk') is-invalid @enderror"
+                    <input type="text" name="nomor_kk" maxlength="16"
+                        class="form-control @error('nomor_kk') is-invalid @enderror"
                         value="{{ old('nomor_kk', $keluarga?->nomor_kk) }}" required>
-                    @error('nomor_kk') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('nomor_kk')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Nomor HP</label>
@@ -111,11 +145,14 @@
                     <label class="form-label">Desil DTSEN</label>
                     <select name="desil" class="form-select @error('desil') is-invalid @enderror">
                         <option value="">Belum Pemeringkatan</option>
-                        @foreach (range(1, 10) as $desil)
-                            <option value="{{ $desil }}" @selected((string) old('desil', $keluarga?->desil) === (string) $desil)>Desil {{ $desil }}</option>
+                        @foreach (range(1, 5) as $desil)
+                            <option value="{{ $desil }}" @selected((string) old('desil', $keluarga?->desil) === (string) $desil)>Desil {{ $desil }}
+                            </option>
                         @endforeach
                     </select>
-                    @error('desil') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('desil')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Status DTSEN</label>
@@ -123,12 +160,16 @@
                         <option value="aktif" @selected(old('status_dtsen', $keluarga?->status_dtsen ?? 'aktif') === 'aktif')>Aktif</option>
                         <option value="nonaktif" @selected(old('status_dtsen', $keluarga?->status_dtsen) === 'nonaktif')>Nonaktif</option>
                     </select>
-                    @error('status_dtsen') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('status_dtsen')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-12">
                     <label class="form-label">Alamat <span class="text-danger">*</span></label>
                     <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="2" required>{{ old('alamat', $keluarga?->alamat) }}</textarea>
-                    @error('alamat') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('alamat')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">RT <span class="text-danger">*</span></label>
@@ -146,10 +187,13 @@
                         class="form-select @error('kecamatan_id') is-invalid @enderror" required>
                         <option value="">Pilih Kecamatan</option>
                         @foreach ($kecamatans as $kecamatan)
-                            <option value="{{ $kecamatan->id }}" @selected(old('kecamatan_id', $keluarga?->kecamatan_id) == $kecamatan->id)>{{ $kecamatan->nama }}</option>
+                            <option value="{{ $kecamatan->id }}" @selected(old('kecamatan_id', $keluarga?->kecamatan_id) == $kecamatan->id)>{{ $kecamatan->nama }}
+                            </option>
                         @endforeach
                     </select>
-                    @error('kecamatan_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('kecamatan_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Desa/Kelurahan <span class="text-danger">*</span></label>
@@ -157,14 +201,17 @@
                         class="form-select @error('desa_kelurahan_id') is-invalid @enderror" required>
                         <option value="">Pilih Kecamatan Terlebih Dahulu</option>
                     </select>
-                    @error('desa_kelurahan_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('desa_kelurahan_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
         </div>
 
         {{-- ========== 2. ANGGOTA KELUARGA (PRD Bagian 10) ========== --}}
         <div class="tab-pane fade panel" id="tab-anggota">
-            <p class="text-muted small">Minimal satu anggota keluarga harus diisi. Usia dihitung otomatis dari tanggal lahir.</p>
+            <p class="text-muted small">Minimal satu anggota keluarga harus diisi. Usia dihitung otomatis dari tanggal
+                lahir.</p>
             @if ($errors->has('anggota') || $errors->has('anggota.*'))
                 <div class="alert alert-danger py-2" data-error-tab>
                     <ul class="mb-0 ps-3">
@@ -185,26 +232,61 @@
             <h2 class="h6">Pekerjaan</h2>
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
-                    <label class="form-label">Pekerjaan Utama</label>
-                    <input type="text" name="kondisi_ekonomi[pekerjaan_utama]" class="form-control"
-                        value="{{ $ekonomi['pekerjaan_utama'] ?? '' }}">
+                    <label class="form-label">Pekerjaan Utama <span class="text-danger">*</span></label>
+                    <select name="kondisi_ekonomi[pekerjaan_utama]" id="pekerjaan_utama"
+                        class="form-select @error('kondisi_ekonomi.pekerjaan_utama') is-invalid @enderror" required>
+                        <option value="">Pilih</option>
+                        @foreach ($refStatusPekerjaan as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($ekonomi['pekerjaan_utama'] ?? null) === $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('kondisi_ekonomi.pekerjaan_utama')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-4" data-tampil-nama="kondisi_ekonomi[pekerjaan_utama]" data-tampil-nilai="lainnya">
+                    <label class="form-label">Pekerjaan Utama Lainnya <span class="text-danger">*</span></label>
+                    <input type="text" name="kondisi_ekonomi[pekerjaan_utama_lainnya]"
+                        class="form-control @error('kondisi_ekonomi.pekerjaan_utama_lainnya') is-invalid @enderror"
+                        value="{{ $ekonomi['pekerjaan_utama_lainnya'] ?? '' }}" placeholder="Tuliskan pekerjaan">
+                    @error('kondisi_ekonomi.pekerjaan_utama_lainnya')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Pekerjaan Tambahan</label>
                     <input type="text" name="kondisi_ekonomi[pekerjaan_tambahan]" class="form-control"
                         value="{{ $ekonomi['pekerjaan_tambahan'] ?? '' }}">
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Peralatan/Bahan Bakar Memasak</label>
+                    <select name="kondisi_ekonomi[bahan_bakar_memasak]" class="form-select">
+                        <option value="">Pilih</option>
+                        @foreach ($refBahanBakarMasak as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($ekonomi['bahan_bakar_memasak'] ?? null) === $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4 form-check pt-4 mt-2">
+                    <input type="hidden" name="kondisi_ekonomi[perlindungan_ketenagakerjaan]" value="0">
+                    <input type="checkbox" class="form-check-input" name="kondisi_ekonomi[perlindungan_ketenagakerjaan]"
+                        value="1" id="perlindungan_ketenagakerjaan" @checked($ekonomi['perlindungan_ketenagakerjaan'] ?? false)>
+                    <label class="form-check-label" for="perlindungan_ketenagakerjaan">Memiliki Akses Perlindungan
+                        Ketenagakerjaan (BPJS Ketenagakerjaan)</label>
+                </div>
                 <div class="col-12">
-                    <div class="form-text">Status pekerjaan kepala keluarga dan jumlah anggota (tidak) bekerja dihitung otomatis dari Status Pekerjaan tiap anggota keluarga.</div>
+                    <div class="form-text">Status pekerjaan kepala keluarga dan jumlah anggota (tidak) bekerja dihitung
+                        otomatis dari Status Pekerjaan tiap anggota keluarga.</div>
                 </div>
             </div>
 
-            <h2 class="h6">Pendapatan (Rp)</h2>
+            <h2 class="h6">Pendapatan per Bulan (Rp)</h2>
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Pendapatan Kepala Keluarga</label>
-                    <input type="number" min="0" step="0.01" name="kondisi_ekonomi[pendapatan_kepala_keluarga]"
-                        class="form-control" value="{{ $ekonomi['pendapatan_kepala_keluarga'] ?? 0 }}">
+                    <input type="number" min="0" step="0.01"
+                        name="kondisi_ekonomi[pendapatan_kepala_keluarga]" class="form-control"
+                        value="{{ $ekonomi['pendapatan_kepala_keluarga'] ?? 0 }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Pendapatan Pasangan</label>
@@ -213,26 +295,29 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Pendapatan Anggota Lainnya</label>
-                    <input type="number" min="0" step="0.01" name="kondisi_ekonomi[pendapatan_anggota_lainnya]"
-                        class="form-control" value="{{ $ekonomi['pendapatan_anggota_lainnya'] ?? 0 }}">
+                    <input type="number" min="0" step="0.01"
+                        name="kondisi_ekonomi[pendapatan_anggota_lainnya]" class="form-control"
+                        value="{{ $ekonomi['pendapatan_anggota_lainnya'] ?? 0 }}">
                 </div>
             </div>
 
-            <h2 class="h6">Pengeluaran (Rp)</h2>
+            <h2 class="h6">Pengeluaran Keluarga per Bulan (Rp)</h2>
             <div class="row g-3">
                 @foreach ([
-                    'pengeluaran_makanan' => 'Makanan',
-                    'pengeluaran_pendidikan' => 'Pendidikan',
-                    'pengeluaran_kesehatan' => 'Kesehatan',
-                    'pengeluaran_listrik' => 'Listrik',
-                    'pengeluaran_air' => 'Air',
-                    'pengeluaran_transportasi' => 'Transportasi',
-                    'pengeluaran_lainnya' => 'Lainnya',
-                ] as $field => $label)
+        'pengeluaran_makanan' => 'Makanan',
+        'pengeluaran_pendidikan' => 'Pendidikan',
+        'pengeluaran_kesehatan' => 'Kesehatan',
+        'pengeluaran_listrik' => 'Listrik',
+        'pengeluaran_air' => 'Air',
+        'pengeluaran_transportasi' => 'Transportasi',
+        'pengeluaran_pakaian' => 'Pakaian',
+        'pengeluaran_lainnya' => 'Lainnya',
+    ] as $field => $label)
                     <div class="col-md-3">
                         <label class="form-label">{{ $label }}</label>
-                        <input type="number" min="0" step="0.01" name="kondisi_ekonomi[{{ $field }}]"
-                            class="form-control" value="{{ $ekonomi[$field] ?? 0 }}">
+                        <input type="number" min="0" step="0.01"
+                            name="kondisi_ekonomi[{{ $field }}]" class="form-control"
+                            value="{{ $ekonomi[$field] ?? 0 }}">
                     </div>
                 @endforeach
             </div>
@@ -244,10 +329,11 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Status Kepemilikan <span class="text-danger">*</span></label>
-                    <select name="kondisi_rumah[status_kepemilikan]" class="form-select" data-required-kirim="1">
+                    <select name="kondisi_rumah[status_kepemilikan]" id="status_kepemilikan_rumah" class="form-select" data-required-kirim="1">
                         <option value="">Pilih</option>
-                        @foreach (['milik_sendiri' => 'Milik Sendiri', 'sewa' => 'Sewa', 'menumpang' => 'Menumpang', 'rumah_dinas' => 'Rumah Dinas', 'lainnya' => 'Lainnya'] as $val => $label)
-                            <option value="{{ $val }}" @selected(($rumah['status_kepemilikan'] ?? null) === $val)>{{ $label }}</option>
+                        @foreach (['milik_sendiri' => 'Milik Sendiri', 'sewa' => 'Sewa', 'menumpang' => 'Menumpang', 'lainnya' => 'Lainnya'] as $val => $label)
+                            <option value="{{ $val }}" @selected(($rumah['status_kepemilikan'] ?? null) === $val)>{{ $label }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -256,52 +342,66 @@
                     <select name="kondisi_rumah[kondisi_bangunan]" class="form-select" data-required-kirim="1">
                         <option value="">Pilih</option>
                         @foreach (['permanen' => 'Permanen', 'semi_permanen' => 'Semi Permanen', 'tidak_layak_huni' => 'Tidak Layak Huni'] as $val => $label)
-                            <option value="{{ $val }}" @selected(($rumah['kondisi_bangunan'] ?? null) === $val)>{{ $label }}</option>
+                            <option value="{{ $val }}" @selected(($rumah['kondisi_bangunan'] ?? null) === $val)>{{ $label }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
                 @foreach ([
-                    'jenis_atap' => ['Jenis Atap', $refJenisAtap],
-                    'jenis_dinding' => ['Jenis Dinding', $refJenisDinding],
-                    'jenis_lantai' => ['Jenis Lantai', $refJenisLantai],
-                    'sumber_listrik' => ['Sumber Listrik', $refSumberListrik],
-                    'sumber_air' => ['Sumber Air', $refSumberAir],
-                    'pengelolaan_sampah' => ['Pengelolaan Sampah', $refPengelolaanSampah],
-                ] as $field => [$label, $refs])
+        'jenis_atap' => ['Jenis Atap', $refJenisAtap],
+        'jenis_dinding' => ['Jenis Dinding', $refJenisDinding],
+        'jenis_lantai' => ['Jenis Lantai', $refJenisLantai],
+        'sumber_listrik' => ['Sumber Listrik', $refSumberListrik],
+        'sumber_air' => ['Sumber Air', $refSumberAir],
+        'pengelolaan_sampah' => ['Pengelolaan Sampah', $refPengelolaanSampah],
+    ] as $field => [$label, $refs])
                     <div class="col-md-4">
                         <label class="form-label">{{ $label }}</label>
                         <select name="kondisi_rumah[{{ $field }}]" class="form-select">
                             <option value="">Pilih</option>
                             @foreach ($refs as $kode => $refLabel)
-                                <option value="{{ $kode }}" @selected(($rumah[$field] ?? null) === $kode)>{{ $refLabel }}</option>
+                                <option value="{{ $kode }}" @selected(($rumah[$field] ?? null) === $kode)>{{ $refLabel }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                 @endforeach
-                <div class="col-md-3 form-check pt-4 mt-2">
-                    <input type="checkbox" class="form-check-input" name="kondisi_rumah[jamban]" value="1"
-                        id="jamban" @checked($rumah['jamban'] ?? false)>
-                    <label class="form-check-label" for="jamban">Memiliki Jamban</label>
+                <div class="col-md-4" data-tampil-nama="kondisi_rumah[status_kepemilikan]" data-tampil-nilai="milik_sendiri">
+                    <label class="form-label">Kapasitas Daya Listrik</label>
+                    <select name="kondisi_rumah[daya_listrik]" class="form-select">
+                        <option value="">Pilih</option>
+                        @foreach ($refDayaListrik as $kode => $label)
+                            <option value="{{ $kode }}" @selected((string) ($rumah['daya_listrik'] ?? '') === (string) $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="col-md-3 form-check pt-4 mt-2">
-                    <input type="checkbox" class="form-check-input" name="kondisi_rumah[septic_tank]" value="1"
-                        id="septic_tank" @checked($rumah['septic_tank'] ?? false)>
-                    <label class="form-check-label" for="septic_tank">Memiliki Septic Tank</label>
+                <div class="col-md-4">
+                    <label class="form-label">Jamban</label>
+                    <select name="kondisi_rumah[jenis_jamban]" class="form-select">
+                        <option value="">Pilih</option>
+                        @foreach ($refJenisJamban as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($rumah['jenis_jamban'] ?? null) === $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="col-md-3 form-check pt-4 mt-2">
-                    <input type="checkbox" class="form-check-input" name="kondisi_rumah[drainase]" value="1"
-                        id="drainase" @checked($rumah['drainase'] ?? false)>
-                    <label class="form-check-label" for="drainase">Memiliki Drainase</label>
+                <div class="col-md-4">
+                    <label class="form-label">Septic Tank / Pembuangan Tinja</label>
+                    <select name="kondisi_rumah[jenis_septic_tank]" class="form-select">
+                        <option value="">Pilih</option>
+                        @foreach ($refJenisSepticTank as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($rumah['jenis_septic_tank'] ?? null) === $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Luas Tanah (m²)</label>
-                    <input type="number" min="0" step="0.01" name="kondisi_rumah[luas_tanah]" class="form-control"
-                        value="{{ $rumah['luas_tanah'] ?? '' }}">
+                    <input type="number" min="0" step="0.01" name="kondisi_rumah[luas_tanah]"
+                        class="form-control" value="{{ $rumah['luas_tanah'] ?? '' }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Luas Bangunan (m²)</label>
-                    <input type="number" min="0" step="0.01" name="kondisi_rumah[luas_bangunan]" class="form-control"
-                        value="{{ $rumah['luas_bangunan'] ?? '' }}">
+                    <input type="number" min="0" step="0.01" name="kondisi_rumah[luas_bangunan]"
+                        class="form-control" value="{{ $rumah['luas_bangunan'] ?? '' }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Jumlah Kamar</label>
@@ -324,57 +424,85 @@
             </button>
         </div>
 
-        {{-- ========== 6. KONDISI SOSIAL & LAYANAN DASAR (PRD Bagian 14) ========== --}}
+        {{-- ========== 6. PENDIDIKAN & KESEHATAN (PRD Bagian 14) ========== --}}
         <div class="tab-pane fade panel" id="tab-sosial">
-            <div class="row g-3">
+            <h2 class="h6">Pendidikan</h2>
+            <div class="row g-3 mb-3">
                 <div class="col-12">
-                    <div class="form-text">Jumlah anak usia sekolah (7–18 th), lansia (≥ 60 th), penyandang disabilitas, dan anggota berpenyakit kronis dihitung otomatis dari data anggota keluarga.</div>
-                </div>
-                @foreach ([
-                    'jumlah_anak_bersekolah' => 'Jumlah Anak Bersekolah',
-                    'jumlah_anak_putus_sekolah' => 'Jumlah Anak Putus Sekolah',
-                ] as $field => $label)
-                    <div class="col-md-4">
-                        <label class="form-label">{{ $label }}</label>
-                        <input type="number" min="0" name="kondisi_sosial[{{ $field }}]" class="form-control"
-                            value="{{ $sosial[$field] ?? 0 }}">
-                    </div>
-                @endforeach
-                <div class="col-md-4 form-check pt-4 mt-2">
-                    <input type="checkbox" class="form-check-input" name="kondisi_sosial[akses_fasilitas_kesehatan]"
-                        value="1" id="akses_faskes" @checked($sosial['akses_fasilitas_kesehatan'] ?? false)>
-                    <label class="form-check-label" for="akses_faskes">Memiliki Akses Fasilitas Kesehatan</label>
+                    <div class="form-text">Jumlah anak bersekolah, putus sekolah, dan usia sekolah (7–18 th) dihitung
+                        otomatis dari <strong>Status Sekolah</strong> anggota keluarga berhubungan "Anak".</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Jarak Fasilitas Kesehatan (km)</label>
-                    <input type="number" min="0" step="0.01" name="kondisi_sosial[jarak_fasilitas_kesehatan_km]"
-                        class="form-control" value="{{ $sosial['jarak_fasilitas_kesehatan_km'] ?? '' }}">
+                    <label class="form-label">Bantuan Pendidikan</label>
+                    <select name="kondisi_sosial[bantuan_pendidikan]" id="bantuan_pendidikan" class="form-select">
+                        <option value="">Tidak Ada</option>
+                        @foreach ($refBantuanPendidikan as $kode => $label)
+                            <option value="{{ $kode }}" @selected(($sosial['bantuan_pendidikan'] ?? null) === $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="col-md-4 form-check pt-4 mt-2">
-                    <input type="checkbox" class="form-check-input" name="kondisi_sosial[akses_pendidikan]" value="1"
-                        id="akses_pendidikan" @checked($sosial['akses_pendidikan'] ?? false)>
-                    <label class="form-check-label" for="akses_pendidikan">Memiliki Akses Pendidikan</label>
+                <div class="col-md-4" data-tampil-nama="kondisi_sosial[bantuan_pendidikan]" data-tampil-nilai="lainnya">
+                    <label class="form-label">Bantuan Pendidikan Lainnya <span class="text-danger">*</span></label>
+                    <input type="text" name="kondisi_sosial[bantuan_pendidikan_lainnya]"
+                        class="form-control @error('kondisi_sosial.bantuan_pendidikan_lainnya') is-invalid @enderror"
+                        value="{{ $sosial['bantuan_pendidikan_lainnya'] ?? '' }}" placeholder="Tuliskan jenis bantuan">
+                    @error('kondisi_sosial.bantuan_pendidikan_lainnya')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Jarak Sekolah (km)</label>
                     <input type="number" min="0" step="0.01" name="kondisi_sosial[jarak_sekolah_km]"
                         class="form-control" value="{{ $sosial['jarak_sekolah_km'] ?? '' }}">
                 </div>
+            </div>
+
+            <h2 class="h6">Kesehatan</h2>
+            <div class="row g-3">
+                <div class="col-md-4 form-check pt-2">
+                    <input type="hidden" name="kondisi_sosial[memiliki_jkn]" value="0">
+                    <input type="checkbox" class="form-check-input" name="kondisi_sosial[memiliki_jkn]" value="1"
+                        id="memiliki_jkn" @checked($sosial['memiliki_jkn'] ?? false)>
+                    <label class="form-check-label" for="memiliki_jkn">Memiliki JKN/BPJS Kesehatan</label>
+                </div>
+                <div class="col-md-4 form-check pt-2">
+                    <input type="hidden" name="kondisi_sosial[memiliki_pbi]" value="0">
+                    <input type="checkbox" class="form-check-input" name="kondisi_sosial[memiliki_pbi]" value="1"
+                        id="memiliki_pbi" @checked($sosial['memiliki_pbi'] ?? false)>
+                    <label class="form-check-label" for="memiliki_pbi">Peserta PBI (Penerima Bantuan Iuran JKN)</label>
+                </div>
+                <div class="col-md-4 form-check pt-2">
+                    <input type="checkbox" class="form-check-input" name="kondisi_sosial[akses_fasilitas_kesehatan]"
+                        value="1" id="akses_faskes" @checked($sosial['akses_fasilitas_kesehatan'] ?? false)>
+                    <label class="form-check-label" for="akses_faskes">Memiliki Akses Layanan Kesehatan</label>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Jarak Fasilitas Kesehatan (km)</label>
+                    <input type="number" min="0" step="0.01"
+                        name="kondisi_sosial[jarak_fasilitas_kesehatan_km]" class="form-control"
+                        value="{{ $sosial['jarak_fasilitas_kesehatan_km'] ?? '' }}">
+                </div>
                 <div class="col-md-4 form-check pt-4 mt-2">
                     <input type="checkbox" class="form-check-input"
                         name="kondisi_sosial[kepemilikan_dokumen_kependudukan]" value="1" id="dok_kependudukan"
                         @checked($sosial['kepemilikan_dokumen_kependudukan'] ?? false)>
-                    <label class="form-check-label" for="dok_kependudukan">Memiliki Dokumen Kependudukan Lengkap</label>
+                    <label class="form-check-label" for="dok_kependudukan">Memiliki Dokumen Kependudukan
+                        Lengkap</label>
+                </div>
+                <div class="col-12">
+                    <div class="form-text">Jumlah lansia (≥ 60 th), penyandang disabilitas, dan anggota berpenyakit
+                        kronis dihitung otomatis dari data anggota keluarga. Peserta PBI otomatis tercatat memiliki JKN.</div>
                 </div>
             </div>
         </div>
 
-        {{-- ========== 7. KEPESERTAAN PROGRAM/BANTUAN (PRD Bagian 15) ========== --}}
+        {{-- ========== 7. PROGRAM PERLINDUNGAN SOSIAL (PRD Bagian 15) ========== --}}
         <div class="tab-pane fade panel" id="tab-program">
-            <p class="text-muted small">Pendataan status kepesertaan saja, bukan pengajuan atau penyaluran bantuan.</p>
+            <p class="text-muted small">Kepesertaan keluarga pada program perlindungan sosial (mis. PKH, BPNT/Sembako,
+                BLT). Pendataan status kepesertaan saja, bukan pengajuan atau penyaluran bantuan.</p>
             <div id="program-container"></div>
             <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-program">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i> Tambah Program
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Tambah Program Perlindungan Sosial
             </button>
         </div>
 
@@ -395,7 +523,8 @@
                         </div>
                     @endforeach
                 </div>
-                <p class="text-muted small">Untuk menambah dokumentasi baru, simpan form ini terlebih dahulu lalu unggah dari halaman detail.</p>
+                <p class="text-muted small">Untuk menambah dokumentasi baru, simpan form ini terlebih dahulu lalu
+                    unggah dari halaman detail.</p>
             @else
                 <p class="text-muted small">Unggah foto rumah, kondisi lingkungan, atau dokumen pendukung lainnya.</p>
                 <div id="dokumen-container"></div>
@@ -438,7 +567,7 @@
 @push('scripts')
     <script src="{{ asset('assets/js/draft-formulir.js') }}"></script>
     <script>
-        (function () {
+        (function() {
             // ===== Navigasi Sebelumnya / Selanjutnya antar tab =====
             const tabButtons = Array.from(document.querySelectorAll('#formTab button[data-bs-toggle="tab"]'));
             const btnPrev = document.getElementById('btn-tab-prev');
@@ -489,7 +618,7 @@
             function renderDesaOptions() {
                 const list = kecamatanData[kecamatanSelect.value] || [];
                 desaSelect.innerHTML = '<option value="">Pilih Desa/Kelurahan</option>';
-                list.forEach(function (desa) {
+                list.forEach(function(desa) {
                     const opt = document.createElement('option');
                     opt.value = desa.id;
                     opt.textContent = desa.nama;
@@ -504,14 +633,47 @@
             const refs = {
                 statusPerkawinan: @json($refStatusPerkawinan),
                 hubunganKeluarga: @json($refHubunganKeluarga),
+                statusSekolah: @json($refStatusSekolah),
+                penyakitKronis: @json($refPenyakitKronis),
                 pendidikan: @json($refPendidikanTerakhir),
                 pekerjaan: @json($refStatusPekerjaan),
                 jenisAset: @json($refJenisAset),
             };
 
-            function selectOptions(map, selected) {
-                return '<option value="">Pilih</option>' + Object.entries(map).map(function ([kode, label]) {
-                    return '<option value="' + kode + '"' + (String(selected) === kode ? ' selected' : '') + '>' + label + '</option>';
+            // ===== Field yang tampil sesuai pilihan lain (data-tampil-nama / -nilai / -kecuali) =====
+            function perbaruiTampilan() {
+                form.querySelectorAll('[data-tampil-nama]').forEach(function(wadah) {
+                    const sumber = form.querySelector('[name="' + wadah.dataset.tampilNama + '"]');
+                    const nilai = (wadah.dataset.tampilNilai || '').split(',');
+                    const cocok = !!sumber && nilai.includes(sumber.value);
+                    const tampil = wadah.dataset.tampilKecuali === '1' ? !cocok : cocok;
+                    wadah.classList.toggle('d-none', !tampil);
+                    wadah.querySelectorAll('input, select, textarea').forEach(function(el) {
+                        el.disabled = !tampil;
+                    });
+                });
+            }
+
+            form.addEventListener('change', perbaruiTampilan);
+
+            // Pekerjaan utama keluarga terisi dari pekerjaan kepala keluarga bila masih kosong.
+            form.addEventListener('change', function(event) {
+                const cocok = event.target.name && event.target.name.match(/^anggota\[(\d+)\]\[status_pekerjaan\]$/);
+                const pekerjaanUtama = document.getElementById('pekerjaan_utama');
+                if (!cocok || !pekerjaanUtama || pekerjaanUtama.value) {
+                    return;
+                }
+                const hubungan = form.querySelector('[name="anggota[' + cocok[1] + '][hubungan_keluarga]"]');
+                if (hubungan && hubungan.value === 'kepala_keluarga') {
+                    pekerjaanUtama.value = event.target.value;
+                    perbaruiTampilan();
+                }
+            });
+
+            function selectOptions(map, selected, labelKosong) {
+                return '<option value="">' + (labelKosong || 'Pilih') + '</option>' + Object.entries(map).map(function([kode, label]) {
+                    return '<option value="' + kode + '"' + (String(selected) === kode ? ' selected' : '') +
+                        '>' + label + '</option>';
                 }).join('');
             }
 
@@ -547,19 +709,31 @@
                             <select name="anggota[${i}][status_perkawinan]" class="form-select form-select-sm">${selectOptions(refs.statusPerkawinan, data.status_perkawinan)}</select></div>
                         <div class="col-md-3"><label class="form-label small">Pendidikan Terakhir</label>
                             <select name="anggota[${i}][pendidikan_terakhir]" class="form-select form-select-sm">${selectOptions(refs.pendidikan, data.pendidikan_terakhir)}</select></div>
-                        <div class="col-md-3"><label class="form-label small">Status Pekerjaan</label>
-                            <select name="anggota[${i}][status_pekerjaan]" class="form-select form-select-sm">${selectOptions(refs.pekerjaan, data.status_pekerjaan)}</select></div>
-                        <div class="col-md-3 d-flex align-items-end gap-3">
+                        <div class="col-md-3" data-tampil-nama="anggota[${i}][hubungan_keluarga]" data-tampil-nilai="anak"><label class="form-label small">Status Sekolah</label>
+                            <select name="anggota[${i}][status_sekolah]" class="form-select form-select-sm">${selectOptions(refs.statusSekolah, data.status_sekolah)}</select></div>
+                        <div class="col-md-3"><label class="form-label small">Pekerjaan *</label>
+                            <select name="anggota[${i}][status_pekerjaan]" class="form-select form-select-sm" data-required-kirim="1" required>${selectOptions(refs.pekerjaan, data.status_pekerjaan)}</select></div>
+                        <div class="col-md-3" data-tampil-nama="anggota[${i}][status_pekerjaan]" data-tampil-nilai="lainnya"><label class="form-label small">Pekerjaan Lainnya *</label>
+                            <input type="text" name="anggota[${i}][pekerjaan_lainnya]" class="form-control form-control-sm" value="${data.pekerjaan_lainnya || ''}" placeholder="Tuliskan pekerjaan"></div>
+                        <div class="col-md-3"><label class="form-label small">Penyakit Kronis</label>
+                            <select name="anggota[${i}][jenis_penyakit_kronis]" class="form-select form-select-sm">${selectOptions(refs.penyakitKronis, data.jenis_penyakit_kronis, 'Tidak Ada')}</select></div>
+                        <div class="col-md-3 d-flex align-items-end">
                             <div class="form-check"><input type="hidden" name="anggota[${i}][disabilitas]" value="0"><input type="checkbox" class="form-check-input" name="anggota[${i}][disabilitas]" value="1" ${data.disabilitas ? 'checked' : ''}><label class="form-check-label small">Disabilitas</label></div>
-                            <div class="form-check"><input type="hidden" name="anggota[${i}][penyakit_kronis]" value="0"><input type="checkbox" class="form-check-input" name="anggota[${i}][penyakit_kronis]" value="1" ${data.penyakit_kronis ? 'checked' : ''}><label class="form-check-label small">Penyakit Kronis</label></div>
                         </div>
                     </div>`;
-                div.querySelector('.btn-remove-row').addEventListener('click', function () { div.remove(); });
+                div.querySelector('.btn-remove-row').addEventListener('click', function() {
+                    div.remove();
+                });
                 anggotaContainer.appendChild(div);
+                perbaruiTampilan();
             }
 
-            (anggotaData.length ? anggotaData : [{ hubungan_keluarga: 'kepala_keluarga' }]).forEach(addAnggotaRow);
-            document.getElementById('btn-add-anggota').addEventListener('click', function () { addAnggotaRow(); });
+            (anggotaData.length ? anggotaData : [{
+                hubungan_keluarga: 'kepala_keluarga'
+            }]).forEach(addAnggotaRow);
+            document.getElementById('btn-add-anggota').addEventListener('click', function() {
+                addAnggotaRow();
+            });
 
             // ===== Aset Keluarga =====
             const asetData = @json($asetRows);
@@ -576,6 +750,8 @@
                     <div class="row g-2">
                         <div class="col-md-3"><label class="form-label small">Jenis Aset</label>
                             <select name="aset[${i}][jenis_aset]" class="form-select form-select-sm">${selectOptions(refs.jenisAset, data.jenis_aset)}</select></div>
+                        <div class="col-md-3" data-tampil-nama="aset[${i}][jenis_aset]" data-tampil-nilai="lainnya"><label class="form-label small">Nama Aset Lainnya *</label>
+                            <input type="text" name="aset[${i}][jenis_aset_lainnya]" class="form-control form-control-sm" value="${data.jenis_aset_lainnya || ''}" placeholder="Tuliskan nama aset"></div>
                         <div class="col-md-2"><label class="form-label small">Jumlah</label>
                             <input type="number" min="1" name="aset[${i}][jumlah]" class="form-control form-control-sm" value="${data.jumlah || ''}"></div>
                         <div class="col-md-3"><label class="form-label small">Status Kepemilikan</label>
@@ -589,14 +765,19 @@
                         <div class="col-12"><label class="form-label small">Keterangan</label>
                             <input type="text" name="aset[${i}][keterangan]" class="form-control form-control-sm" value="${data.keterangan || ''}"></div>
                     </div>`;
-                div.querySelector('.btn-remove-row').addEventListener('click', function () { div.remove(); });
+                div.querySelector('.btn-remove-row').addEventListener('click', function() {
+                    div.remove();
+                });
                 asetContainer.appendChild(div);
+                perbaruiTampilan();
             }
 
             asetData.forEach(addAsetRow);
-            document.getElementById('btn-add-aset').addEventListener('click', function () { addAsetRow(); });
+            document.getElementById('btn-add-aset').addEventListener('click', function() {
+                addAsetRow();
+            });
 
-            // ===== Kepesertaan Program =====
+            // ===== Program Perlindungan Sosial =====
             const programData = @json($programRows);
             const programContainer = document.getElementById('program-container');
             let programIndex = 0;
@@ -625,12 +806,16 @@
                         <div class="col-12"><label class="form-label small">Keterangan</label>
                             <input type="text" name="program[${i}][keterangan]" class="form-control form-control-sm" value="${data.keterangan || ''}"></div>
                     </div>`;
-                div.querySelector('.btn-remove-row').addEventListener('click', function () { div.remove(); });
+                div.querySelector('.btn-remove-row').addEventListener('click', function() {
+                    div.remove();
+                });
                 programContainer.appendChild(div);
             }
 
             programData.forEach(addProgramRow);
-            document.getElementById('btn-add-program').addEventListener('click', function () { addProgramRow(); });
+            document.getElementById('btn-add-program').addEventListener('click', function() {
+                addProgramRow();
+            });
 
             // ===== Dokumentasi (hanya untuk data baru) =====
             const dokumenContainer = document.getElementById('dokumen-container');
@@ -656,12 +841,16 @@
                             <div class="col-md-4"><label class="form-label small">Keterangan</label>
                                 <input type="text" name="dokumen[${i}][keterangan]" class="form-control form-control-sm"></div>
                         </div>`;
-                    div.querySelector('.btn-remove-row').addEventListener('click', function () { div.remove(); });
+                    div.querySelector('.btn-remove-row').addEventListener('click', function() {
+                        div.remove();
+                    });
                     dokumenContainer.appendChild(div);
                 }
 
                 document.getElementById('btn-add-dokumen').addEventListener('click', addDokumenRow);
             }
+
+            perbaruiTampilan();
 
             // ===== Draft otomatis =====
             DraftFormulir.pasang(form, {
@@ -673,9 +862,18 @@
                 adaInputLama: @json($errors->any() || session()->hasOldInput()),
                 diperbaruiPada: @json($keluarga?->updated_at?->toIso8601String()),
                 repeaters: {
-                    anggota: { container: anggotaContainer, add: addAnggotaRow },
-                    aset: { container: asetContainer, add: addAsetRow },
-                    program: { container: programContainer, add: addProgramRow }
+                    anggota: {
+                        container: anggotaContainer,
+                        add: addAnggotaRow
+                    },
+                    aset: {
+                        container: asetContainer,
+                        add: addAsetRow
+                    },
+                    program: {
+                        container: programContainer,
+                        add: addProgramRow
+                    }
                 },
             });
         })();

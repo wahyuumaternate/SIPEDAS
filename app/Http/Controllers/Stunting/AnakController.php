@@ -47,6 +47,10 @@ class AnakController extends Controller
             $query->where('jenis_kelamin', $jenisKelamin);
         }
 
+        if (in_array($status = $request->string('status_pemantauan')->value(), ['aktif', 'nonaktif'], true)) {
+            $query->where('status_pemantauan', $status);
+        }
+
         if ($dari = $request->date('dari')) {
             $query->whereDate('tanggal_input', '>=', $dari);
         }
@@ -63,7 +67,7 @@ class AnakController extends Controller
                 ? DraftFormulir::query()->milik($request->user(), 'stunting.create')->first()
                 : null,
             'kecamatans' => Kecamatan::where('is_active', true)->orderBy('nama')->get(),
-            'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'jenis_kelamin', 'dari', 'sampai']),
+            'filters' => $request->only(['q', 'kecamatan_id', 'desa_kelurahan_id', 'jenis_kelamin', 'status_pemantauan', 'dari', 'sampai']),
         ]);
     }
 
@@ -79,11 +83,13 @@ class AnakController extends Controller
         $anak = DB::transaction(function () use ($data, $request) {
             $anak = Anak::create([
                 'kode_pendataan' => $this->generateKodePendataan(),
-                'nik_anak' => $data['nik_anak'],
+                'nik_anak' => $data['nik_anak'] ?? null,
                 'memiliki_akta_kelahiran' => (bool) ($data['memiliki_akta_kelahiran'] ?? false),
                 'nomor_kk' => $data['nomor_kk'],
                 'nama_anak' => $data['nama_anak'],
                 'jenis_kelamin' => $data['jenis_kelamin'],
+                'anak_ke' => $data['anak_ke'] ?? null,
+                ...$this->statusPemantauan($data),
                 'tempat_lahir' => $data['tempat_lahir'],
                 'tanggal_lahir' => $data['tanggal_lahir'],
                 'usia_bulan' => (int) Carbon::parse($data['tanggal_lahir'])->diffInMonths(now()),
@@ -154,11 +160,13 @@ class AnakController extends Controller
 
         DB::transaction(function () use ($data, $request, $anak) {
             $anak->update([
-                'nik_anak' => $data['nik_anak'],
+                'nik_anak' => $data['nik_anak'] ?? null,
                 'memiliki_akta_kelahiran' => (bool) ($data['memiliki_akta_kelahiran'] ?? false),
                 'nomor_kk' => $data['nomor_kk'],
                 'nama_anak' => $data['nama_anak'],
                 'jenis_kelamin' => $data['jenis_kelamin'],
+                'anak_ke' => $data['anak_ke'] ?? null,
+                ...$this->statusPemantauan($data),
                 'tempat_lahir' => $data['tempat_lahir'],
                 'tanggal_lahir' => $data['tanggal_lahir'],
                 'usia_bulan' => (int) Carbon::parse($data['tanggal_lahir'])->diffInMonths(now()),
@@ -203,6 +211,23 @@ class AnakController extends Controller
     }
 
     /**
+     * Status pemantauan anak: nonaktif wajib beralasan (sudah tidak stunting, usia lewat, pindah, meninggal).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{status_pemantauan: string, alasan_nonaktif: ?string, tanggal_nonaktif: ?string}
+     */
+    private function statusPemantauan(array $data): array
+    {
+        $nonaktif = ($data['status_pemantauan'] ?? 'aktif') === 'nonaktif';
+
+        return [
+            'status_pemantauan' => $nonaktif ? 'nonaktif' : 'aktif',
+            'alasan_nonaktif' => $nonaktif ? $data['alasan_nonaktif'] : null,
+            'tanggal_nonaktif' => $nonaktif ? ($data['tanggal_nonaktif'] ?? now()->toDateString()) : null,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function formReferenceData(): array
@@ -210,6 +235,8 @@ class AnakController extends Controller
         return [
             'kecamatans' => Kecamatan::where('is_active', true)->with(['desaKelurahans' => fn ($q) => $q->where('is_active', true)->orderBy('nama')])->orderBy('nama')->get(),
             'refPendidikan' => config('referensi.pendidikan_terakhir'),
+            'refStatusBbU' => config('referensi.status_bb_u'),
+            'refAlasanNonaktif' => config('referensi.alasan_nonaktif_stunting'),
             'refSumberAir' => config('referensi.sumber_air'),
             'refJenisJamban' => config('referensi.jenis_jamban'),
             'refPengelolaanSampah' => config('referensi.pengelolaan_sampah'),
@@ -344,6 +371,7 @@ class AnakController extends Controller
             'indikator_antropometri' => 'BB/U, TB/U, BB/TB',
             'hasil_kategori' => $row['hasil_kategori'] ?? null,
             'status_gizi' => $row['status_gizi'] ?? null,
+            'status_bb_u' => $row['status_bb_u'] ?? null,
         ]);
     }
 

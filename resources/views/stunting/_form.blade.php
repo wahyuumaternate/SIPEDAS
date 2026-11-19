@@ -70,9 +70,9 @@
         <div class="tab-pane fade show active panel" id="tab-identitas">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">NIK Anak <span class="text-danger">*</span></label>
-                    <input type="text" name="nik_anak" maxlength="16" class="form-control @error('nik_anak') is-invalid @enderror"
-                        value="{{ old('nik_anak', $anak?->nik_anak) }}" required>
+                    <label class="form-label">NIK Anak</label>
+                    <input type="text" name="nik_anak" maxlength="16" inputmode="numeric" class="form-control @error('nik_anak') is-invalid @enderror"
+                        value="{{ old('nik_anak', $anak?->nik_anak) }}" placeholder="Kosongkan bila belum memiliki NIK">
                     @error('nik_anak') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     <div class="form-check mt-2">
                         <input type="hidden" name="memiliki_akta_kelahiran" value="0">
@@ -110,6 +110,29 @@
                         <option value="perempuan" @selected(old('jenis_kelamin', $anak?->jenis_kelamin) === 'perempuan')>Perempuan</option>
                     </select>
                     @error('jenis_kelamin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Anak Ke-</label>
+                    <input type="number" min="1" max="20" name="anak_ke" class="form-control @error('anak_ke') is-invalid @enderror"
+                        value="{{ old('anak_ke', $anak?->anak_ke) }}">
+                    @error('anak_ke') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status Pemantauan</label>
+                    <select name="status_pemantauan" id="status_pemantauan" class="form-select">
+                        <option value="aktif" @selected(old('status_pemantauan', $anak?->status_pemantauan ?? 'aktif') === 'aktif')>Aktif</option>
+                        <option value="nonaktif" @selected(old('status_pemantauan', $anak?->status_pemantauan) === 'nonaktif')>Nonaktif</option>
+                    </select>
+                </div>
+                <div class="col-md-4" id="wadah_alasan_nonaktif">
+                    <label class="form-label">Alasan Nonaktif <span class="text-danger">*</span></label>
+                    <select name="alasan_nonaktif" class="form-select @error('alasan_nonaktif') is-invalid @enderror">
+                        <option value="">Pilih</option>
+                        @foreach ($refAlasanNonaktif as $kode => $label)
+                            <option value="{{ $kode }}" @selected(old('alasan_nonaktif', $anak?->alasan_nonaktif) === $kode)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('alasan_nonaktif') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Tempat Lahir <span class="text-danger">*</span></label>
@@ -438,6 +461,15 @@
                         <option value="gizi_lebih">Gizi Lebih</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label small">Status Berat Badan (BB/U)</label>
+                    <select name="pengukuran[status_bb_u]" class="form-select">
+                        <option value="">Pilih</option>
+                        @foreach ($refStatusBbU as $kode => $label)
+                            <option value="{{ $kode }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -764,6 +796,17 @@
 
             kecamatanSelect.addEventListener('change', renderDesaOptions);
             if (kecamatanSelect.value) renderDesaOptions();
+
+            // ===== Alasan nonaktif hanya untuk status pemantauan "Nonaktif" =====
+            const statusPemantauan = document.getElementById('status_pemantauan');
+            const wadahAlasan = document.getElementById('wadah_alasan_nonaktif');
+            function aturAlasanNonaktif() {
+                const nonaktif = statusPemantauan.value === 'nonaktif';
+                wadahAlasan.classList.toggle('d-none', !nonaktif);
+                wadahAlasan.querySelector('select').disabled = !nonaktif;
+            }
+            statusPemantauan.addEventListener('change', aturAlasanNonaktif);
+            aturAlasanNonaktif();
 
             // ===== LILA ibu < 23,5 cm = KEK =====
             const inputLila = document.querySelector('[name="riwayat_kehamilan[lila]"]');

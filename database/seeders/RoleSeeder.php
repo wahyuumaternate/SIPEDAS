@@ -69,6 +69,35 @@ class RoleSeeder extends Seeder
                 ],
             ],
             [
+                'slug' => 'operator-kelurahan',
+                'nama' => 'Operator Kelurahan',
+                'deskripsi' => 'Akun kelurahan untuk menginput dan memperbarui data kemiskinan di wilayahnya.',
+                'hak_akses' => [
+                    Permission::KemiskinanView->value,
+                    Permission::KemiskinanCreate->value,
+                    Permission::KemiskinanEdit->value,
+                ],
+            ],
+            [
+                'slug' => 'petugas-puskesmas',
+                'nama' => 'Petugas Puskesmas',
+                'deskripsi' => 'Akun puskesmas untuk menginput data stunting, pengukuran, dan data sasaran.',
+                'hak_akses' => [
+                    Permission::StuntingView->value,
+                    Permission::StuntingCreate->value,
+                    Permission::StuntingEdit->value,
+                ],
+            ],
+            [
+                'slug' => 'verifikator-puskesmas',
+                'nama' => 'Verifikator Puskesmas',
+                'deskripsi' => 'Memverifikasi dan memvalidasi data stunting yang diinput petugas puskesmas.',
+                'hak_akses' => [
+                    Permission::StuntingView->value,
+                    Permission::StuntingVerify->value,
+                ],
+            ],
+            [
                 'slug' => 'viewer-pimpinan',
                 'nama' => 'Viewer/Pimpinan',
                 'deskripsi' => 'Melihat dashboard, rekapitulasi, laporan, dan melakukan export sesuai hak akses. Tidak dapat membuat, mengubah, menghapus, atau memverifikasi data.',

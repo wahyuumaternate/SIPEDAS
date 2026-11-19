@@ -114,7 +114,34 @@ it('menghitung prevalensi stunting dari pengukuran terakhir tiap anak per kelura
     $baris = $prevalensi['desa']->firstWhere('nama', 'Kastela');
 
     expect($baris)->toMatchArray(['diukur' => 2, 'kasus' => 1, 'prevalensi' => 50.0])
-        ->and($prevalensi['total'])->toBe(['diukur' => 2, 'kasus' => 1, 'prevalensi' => 50.0]);
+        ->and($prevalensi['total'])->toMatchArray(['diukur' => 2, 'kasus' => 1, 'prevalensi' => 50.0]);
+});
+
+it('menghitung prevalensi gizi buruk, gizi kurang, dan berat badan kurang serta mengabaikan anak nonaktif', function () {
+    $user = userLaporan([Permission::StuntingView->value]);
+    $kecamatan = Kecamatan::factory()->create(['nama' => 'Moti']);
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id, 'nama' => 'Tafaga']);
+    $wilayah = ['kecamatan_id' => $kecamatan->id, 'desa_kelurahan_id' => $desa->id];
+
+    $giziBuruk = Anak::factory()->create($wilayah);
+    Pengukuran::factory()->create(['anak_id' => $giziBuruk->id, 'hasil_kategori' => 'normal', 'status_gizi' => 'gizi_buruk', 'status_bb_u' => 'bb_sangat_kurang']);
+    $giziKurang = Anak::factory()->create($wilayah);
+    Pengukuran::factory()->create(['anak_id' => $giziKurang->id, 'hasil_kategori' => 'stunting_ringan', 'status_gizi' => 'gizi_kurang', 'status_bb_u' => 'bb_normal']);
+    $sembuh = Anak::factory()->create([...$wilayah, 'status_pemantauan' => 'nonaktif', 'alasan_nonaktif' => 'sudah_tidak_stunting']);
+    Pengukuran::factory()->create(['anak_id' => $sembuh->id, 'hasil_kategori' => 'normal', 'status_gizi' => 'gizi_baik', 'status_bb_u' => 'bb_normal']);
+    $pindah = Anak::factory()->create([...$wilayah, 'status_pemantauan' => 'nonaktif', 'alasan_nonaktif' => 'pindah_domisili']);
+    Pengukuran::factory()->create(['anak_id' => $pindah->id, 'hasil_kategori' => 'stunting_berat', 'status_gizi' => 'gizi_buruk']);
+
+    $baris = $this->actingAs($user)
+        ->get(route('laporan.index', ['modul' => 'stunting']))
+        ->assertOk()
+        ->viewData('tabulasiStunting')['prevalensi']['desa']->firstWhere('nama', 'Tafaga');
+
+    expect($baris['diukur'])->toBe(3)
+        ->and($baris['kategori']['stunting'])->toBe(['kasus' => 1, 'persen' => 33.33])
+        ->and($baris['kategori']['gizi_buruk'])->toBe(['kasus' => 1, 'persen' => 33.33])
+        ->and($baris['kategori']['gizi_kurang'])->toBe(['kasus' => 1, 'persen' => 33.33])
+        ->and($baris['kategori']['bb_kurang'])->toBe(['kasus' => 1, 'persen' => 33.33]);
 });
 
 it('menghitung capaian layanan sesuai kelompok usia dan mengosongkan indikator tanpa data', function () {

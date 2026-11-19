@@ -19,11 +19,15 @@ class StoreAnakRequest extends FormRequest
     {
         return [
             // Identitas anak (PRD Bagian 17.1) - wajib selalu, sesuai kolom NOT NULL di database.
-            'nik_anak' => ['required', 'digits:16', Rule::unique('anaks', 'nik_anak')->ignore($this->route('anak'))->whereNull('deleted_at')],
+            'nik_anak' => ['nullable', 'digits:16', Rule::unique('anaks', 'nik_anak')->ignore($this->route('anak'))->whereNull('deleted_at')],
             'memiliki_akta_kelahiran' => ['nullable', 'boolean'],
             'nomor_kk' => ['required', 'digits:16'],
             'nama_anak' => ['required', 'string', 'max:255'],
             'jenis_kelamin' => ['required', 'in:laki-laki,perempuan'],
+            'anak_ke' => ['nullable', 'integer', 'between:1,20'],
+            'status_pemantauan' => ['nullable', 'in:aktif,nonaktif'],
+            'alasan_nonaktif' => ['nullable', 'required_if:status_pemantauan,nonaktif', Rule::in($this->kodeReferensi('alasan_nonaktif_stunting'))],
+            'tanggal_nonaktif' => ['nullable', 'date', 'before_or_equal:today'],
             'tempat_lahir' => ['required', 'string', 'max:255'],
             'tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
             'nomor_hp_orang_tua' => ['nullable', 'string', 'max:20'],
@@ -81,6 +85,7 @@ class StoreAnakRequest extends FormRequest
             'pengukuran.tempat_pengukuran' => ['nullable', 'string', 'max:255'],
             'pengukuran.hasil_kategori' => ['nullable', 'in:normal,stunting_ringan,stunting_sedang,stunting_berat'],
             'pengukuran.status_gizi' => ['nullable', 'in:gizi_buruk,gizi_kurang,gizi_baik,gizi_lebih'],
+            'pengukuran.status_bb_u' => ['nullable', Rule::in($this->kodeReferensi('status_bb_u'))],
 
             // Riwayat kesehatan anak (PRD Bagian 22) - opsional untuk draft.
             'riwayat_kesehatan.status_imunisasi' => ['nullable', 'in:lengkap,tidak_lengkap,tidak_imunisasi'],

@@ -13,11 +13,12 @@ class KondisiEkonomi extends Model
 
     protected $fillable = [
         'keluarga_id',
-        'status_pekerjaan_kepala_keluarga', 'pekerjaan_utama', 'pekerjaan_tambahan',
+        'status_pekerjaan_kepala_keluarga', 'pekerjaan_utama', 'pekerjaan_utama_lainnya', 'pekerjaan_tambahan',
+        'perlindungan_ketenagakerjaan', 'bahan_bakar_memasak',
         'jumlah_anggota_bekerja', 'jumlah_anggota_tidak_bekerja',
         'pendapatan_kepala_keluarga', 'pendapatan_pasangan', 'pendapatan_anggota_lainnya', 'total_pendapatan',
         'pengeluaran_makanan', 'pengeluaran_pendidikan', 'pengeluaran_kesehatan',
-        'pengeluaran_listrik', 'pengeluaran_air', 'pengeluaran_transportasi',
+        'pengeluaran_listrik', 'pengeluaran_air', 'pengeluaran_transportasi', 'pengeluaran_pakaian',
         'pengeluaran_lainnya', 'total_pengeluaran',
     ];
 
@@ -32,6 +33,8 @@ class KondisiEkonomi extends Model
         'pengeluaran_listrik' => 'decimal:2',
         'pengeluaran_air' => 'decimal:2',
         'pengeluaran_transportasi' => 'decimal:2',
+        'pengeluaran_pakaian' => 'decimal:2',
+        'perlindungan_ketenagakerjaan' => 'boolean',
         'pengeluaran_lainnya' => 'decimal:2',
         'total_pengeluaran' => 'decimal:2',
     ];
@@ -53,6 +56,7 @@ class KondisiEkonomi extends Model
                 $model->pengeluaran_listrik,
                 $model->pengeluaran_air,
                 $model->pengeluaran_transportasi,
+                $model->pengeluaran_pakaian,
                 $model->pengeluaran_lainnya,
             ])->sum();
         });
@@ -66,5 +70,19 @@ class KondisiEkonomi extends Model
     public function getStatusPekerjaanKepalaKeluargaLabelAttribute(): ?string
     {
         return $this->labelReferensi('status_pekerjaan', $this->status_pekerjaan_kepala_keluarga);
+    }
+
+    public function getPekerjaanUtamaLabelAttribute(): ?string
+    {
+        if ($this->pekerjaan_utama === 'lainnya' && filled($this->pekerjaan_utama_lainnya)) {
+            return $this->pekerjaan_utama_lainnya;
+        }
+
+        return $this->labelReferensi('status_pekerjaan', $this->pekerjaan_utama);
+    }
+
+    public function getBahanBakarMemasakLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('bahan_bakar_memasak', $this->bahan_bakar_memasak);
     }
 }

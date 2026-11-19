@@ -44,6 +44,18 @@ class LaporanController extends Controller
     ];
 
     /**
+     * Kategori masalah gizi pada Tabel 2 Prevalensi.
+     *
+     * @var array<string, string>
+     */
+    public const KATEGORI_PREVALENSI = [
+        'stunting' => 'Stunting',
+        'gizi_buruk' => 'Gizi Buruk',
+        'gizi_kurang' => 'Gizi Kurang',
+        'bb_kurang' => 'Berat Badan Kurang',
+    ];
+
+    /**
      * Kolom Tabel 1 Demografi per kecamatan (format Laporan Analisis Situasi).
      * Kolom yang tidak tersedia di aplikasi bernilai null dan ditampilkan sebagai "–".
      *
@@ -327,6 +339,9 @@ class LaporanController extends Controller
     private function tabulasiStunting(array $filters, int $tahun): array
     {
         $anaks = $this->terapkanFilter(Anak::query(), $filters)
+            // Anak nonaktif (usia lewat, pindah, meninggal) tidak dihitung; yang nonaktif karena sudah
+            // tidak stunting tetap dihitung agar prevalensi tidak terlihat lebih tinggi dari sebenarnya.
+            ->where(fn (Builder $q) => $q->where('anaks.status_pemantauan', 'aktif')->orWhere('anaks.alasan_nonaktif', 'sudah_tidak_stunting'))
             ->with(['pengukuranTerbaru', 'riwayatKehamilan', 'riwayatKelahiran', 'riwayatKesehatan', 'asiMpasi', 'sanitasi'])
             ->withCount('pengukurans')
             ->get();
@@ -389,21 +404,34 @@ class LaporanController extends Controller
     }
 
     /**
-     * Kasus = anak dengan hasil pengukuran terakhir stunting (ringan/sedang/berat);
-     * penyebut = anak yang memiliki hasil pengukuran terakhir.
+     * Prevalensi masalah gizi dari pengukuran terakhir tiap anak; penyebut = anak yang sudah diukur.
+     * Stunting dari TB/U, gizi buruk & gizi kurang dari BB/TB, berat badan kurang dari BB/U.
+     * Kunci 'kasus' & 'prevalensi' adalah angka stunting.
      *
      * @param  Collection<int, Anak>  $anaks
-     * @return array{diukur: int, kasus: int, prevalensi: float}
+     * @return array{diukur: int, kasus: int, prevalensi: float, kategori: array<string, array{kasus: int, persen: float}>}
      */
     private function hitungPrevalensi(Collection $anaks): array
     {
-        $diukur = $anaks->filter(fn (Anak $anak) => filled($anak->pengukuranTerbaru?->hasil_kategori));
-        $kasus = $diukur->filter(fn (Anak $anak) => str_starts_with($anak->pengukuranTerbaru->hasil_kategori, 'stunting'))->count();
+        $diukur = $anaks->filter(fn (Anak $anak) => $anak->pengukuranTerbaru !== null);
+        $syarat = [
+            'stunting' => fn (Anak $a) => str_starts_with((string) $a->pengukuranTerbaru->hasil_kategori, 'stunting'),
+            'gizi_buruk' => fn (Anak $a) => $a->pengukuranTerbaru->status_gizi === 'gizi_buruk',
+            'gizi_kurang' => fn (Anak $a) => $a->pengukuranTerbaru->status_gizi === 'gizi_kurang',
+            'bb_kurang' => fn (Anak $a) => in_array($a->pengukuranTerbaru->status_bb_u, ['bb_kurang', 'bb_sangat_kurang'], true),
+        ];
+
+        $kategori = collect($syarat)->map(function (callable $cocok) use ($diukur) {
+            $kasus = $diukur->filter($cocok)->count();
+
+            return ['kasus' => $kasus, 'persen' => $this->persen($kasus, $diukur->count())];
+        })->all();
 
         return [
             'diukur' => $diukur->count(),
-            'kasus' => $kasus,
-            'prevalensi' => $this->persen($kasus, $diukur->count()),
+            'kasus' => $kategori['stunting']['kasus'],
+            'prevalensi' => $kategori['stunting']['persen'],
+            'kategori' => $kategori,
         ];
     }
 

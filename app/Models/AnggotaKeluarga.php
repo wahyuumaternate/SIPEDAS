@@ -15,7 +15,7 @@ class AnggotaKeluarga extends Model
     protected $fillable = [
         'keluarga_id', 'nik', 'nama_lengkap', 'jenis_kelamin', 'tempat_lahir',
         'tanggal_lahir', 'usia', 'hubungan_keluarga', 'status_perkawinan',
-        'pendidikan_terakhir', 'status_pekerjaan',
+        'pendidikan_terakhir', 'status_sekolah', 'status_pekerjaan', 'pekerjaan_lainnya',
         'disabilitas', 'jenis_disabilitas', 'penyakit_kronis', 'jenis_penyakit_kronis',
     ];
 
@@ -53,6 +53,20 @@ class AnggotaKeluarga extends Model
 
     public function getStatusPekerjaanLabelAttribute(): ?string
     {
+        if ($this->status_pekerjaan === 'lainnya' && filled($this->pekerjaan_lainnya)) {
+            return $this->pekerjaan_lainnya;
+        }
+
         return $this->labelReferensi('status_pekerjaan', $this->status_pekerjaan);
+    }
+
+    public function getStatusSekolahLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('status_sekolah', $this->status_sekolah);
+    }
+
+    public function getJenisPenyakitKronisLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('penyakit_kronis', $this->jenis_penyakit_kronis);
     }
 }

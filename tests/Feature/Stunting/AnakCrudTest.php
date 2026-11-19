@@ -255,3 +255,42 @@ it('menurunkan nilai dari input tunggal sehingga tidak perlu diisi dua kali', fu
         ->and($anak->riwayatKehamilan->usia_ibu_saat_hamil)->toBe(25)
         ->and($anak->sanitasi->kepemilikan_jamban)->toBeFalse();
 });
+
+it('menyimpan anak tanpa NIK beserta anak ke- dan status berat badan menurut umur', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, [
+        'nik_anak' => '',
+        'anak_ke' => '3',
+        'pengukuran' => ['tanggal_pengukuran' => now()->format('Y-m-d'), 'berat_badan' => '7.5', 'panjang_tinggi_badan' => '72', 'status_bb_u' => 'bb_kurang'],
+    ]))->assertSessionHasNoErrors();
+
+    $anak = Anak::with('pengukurans')->sole();
+
+    expect($anak->nik_anak)->toBeNull()
+        ->and($anak->anak_ke)->toBe(3)
+        ->and($anak->status_pemantauan)->toBe('aktif')
+        ->and($anak->pengukurans->first()->status_bb_u)->toBe('bb_kurang');
+});
+
+it('mewajibkan alasan saat status pemantauan anak dinonaktifkan', function () {
+    $user = User::factory()->create();
+    $kecamatan = Kecamatan::factory()->create();
+    $desa = DesaKelurahan::factory()->create(['kecamatan_id' => $kecamatan->id]);
+
+    $this->actingAs($user)
+        ->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, ['status_pemantauan' => 'nonaktif']))
+        ->assertSessionHasErrors('alasan_nonaktif');
+
+    $this->actingAs($user)
+        ->post(route('stunting.store'), payloadPendataanAnak($kecamatan, $desa, ['status_pemantauan' => 'nonaktif', 'alasan_nonaktif' => 'pindah_domisili']))
+        ->assertSessionHasNoErrors();
+
+    $anak = Anak::sole();
+
+    expect($anak->status_pemantauan)->toBe('nonaktif')
+        ->and($anak->alasan_nonaktif)->toBe('pindah_domisili')
+        ->and($anak->tanggal_nonaktif)->not->toBeNull();
+});

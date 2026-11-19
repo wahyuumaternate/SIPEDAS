@@ -12,7 +12,7 @@ class AsetKeluarga extends Model
     use HasFactory, HasReferensiLabel;
 
     protected $fillable = [
-        'keluarga_id', 'jenis_aset', 'jumlah', 'status_kepemilikan',
+        'keluarga_id', 'jenis_aset', 'jenis_aset_lainnya', 'jumlah', 'status_kepemilikan',
         'perkiraan_nilai', 'keterangan',
     ];
 
@@ -28,6 +28,10 @@ class AsetKeluarga extends Model
 
     public function getJenisAsetLabelAttribute(): ?string
     {
+        if ($this->jenis_aset === 'lainnya' && filled($this->jenis_aset_lainnya)) {
+            return $this->jenis_aset_lainnya;
+        }
+
         return $this->labelReferensi('jenis_aset', $this->jenis_aset);
     }
 }

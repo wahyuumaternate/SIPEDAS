@@ -14,14 +14,13 @@ class KondisiRumah extends Model
     protected $fillable = [
         'keluarga_id', 'status_kepemilikan', 'kondisi_bangunan',
         'jenis_atap', 'jenis_dinding', 'jenis_lantai',
-        'sumber_listrik', 'sumber_air', 'jamban', 'septic_tank', 'drainase',
+        'sumber_listrik', 'daya_listrik', 'sumber_air', 'jamban', 'jenis_jamban', 'septic_tank', 'jenis_septic_tank',
         'pengelolaan_sampah', 'luas_tanah', 'luas_bangunan', 'jumlah_kamar', 'jumlah_penghuni',
     ];
 
     protected $casts = [
         'jamban' => 'boolean',
         'septic_tank' => 'boolean',
-        'drainase' => 'boolean',
         'luas_tanah' => 'decimal:2',
         'luas_bangunan' => 'decimal:2',
     ];
@@ -59,5 +58,20 @@ class KondisiRumah extends Model
     public function getPengelolaanSampahLabelAttribute(): ?string
     {
         return $this->labelReferensi('pengelolaan_sampah', $this->pengelolaan_sampah);
+    }
+
+    public function getJenisJambanLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('jenis_jamban', $this->jenis_jamban);
+    }
+
+    public function getJenisSepticTankLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('jenis_septic_tank', $this->jenis_septic_tank);
+    }
+
+    public function getDayaListrikLabelAttribute(): ?string
+    {
+        return $this->labelReferensi('daya_listrik', $this->daya_listrik);
     }
 }

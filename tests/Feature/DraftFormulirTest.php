@@ -82,8 +82,9 @@ it('menghapus draft setelah data kemiskinan berhasil disimpan', function () {
             'desa_kelurahan_id' => $desa->id,
             'anggota' => [[
                 'nik' => '8271010101240098', 'nama_lengkap' => 'Ahmad', 'jenis_kelamin' => 'laki-laki',
-                'tanggal_lahir' => '1985-01-01', 'hubungan_keluarga' => 'kepala_keluarga',
+                'tanggal_lahir' => '1985-01-01', 'hubungan_keluarga' => 'kepala_keluarga', 'status_pekerjaan' => 'nelayan',
             ]],
+            'kondisi_ekonomi' => ['pekerjaan_utama' => 'nelayan'],
             'kondisi_rumah' => ['status_kepemilikan' => 'milik_sendiri', 'kondisi_bangunan' => 'permanen'],
         ])
         ->assertSessionHas('draft_selesai', 'kemiskinan.create');
